@@ -1,9 +1,0 @@
-stack.env
-
-# env
-env/db.env
-env/db.development.env
-
-# catalog-collector
-catalog-collector/.env
-catalog-collector/.env.development

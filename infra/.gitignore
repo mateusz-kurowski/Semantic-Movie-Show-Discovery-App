@@ -1,0 +1,10 @@
+# Root
+infra/.env
+
+# Per-service local overrides
+**/.env
+**/.env.local
+**/.env.development.local
+
+# Always allow examples
+!**/.env.example
