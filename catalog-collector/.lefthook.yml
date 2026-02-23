@@ -1,0 +1,18 @@
+pre-commit:
+  parallel: true
+  commands:
+    golanci-lint-fmt:
+      run: golangci-lint fmt
+      stage_fixed: true
+      root: catalog-collector
+    golanci-lint:
+      run: golangci-lint run
+      stage_fixed: true
+      root: catalog-collector
+pre-push:
+  parallel: true
+  commands:
+    test-go:
+      run: go test ./...
+      glob: "*.go"
+      root: catalog-collector

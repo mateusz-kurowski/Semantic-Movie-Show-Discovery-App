@@ -1,22 +1,17 @@
 package main
 
-import "time"
+import (
+	"context"
+	"os"
 
-func main() {
-    db := connectDB()
-    client := connectTMDB()
+	"github.com/jackc/pgx/v5"
+)
 
-    run(db, client) // run once immediately on startup
-
-    ticker := time.NewTicker(6 * time.Hour)
-    defer ticker.Stop()
-
-    for {
-        select {
-        case <-ticker.C:
-            run(db, client)
-        case <-ctx.Done():
-            return
-        }
-    }
+func connectDB(genv GlobalEnv, dbURL string) *pgx.Conn {
+	conn, err := pgx.Connect(context.Background(), dbURL)
+	if err != nil {
+		genv.Logger.Error("Connection to DB could not be established")
+		os.Exit(1)
+	}
+	return conn
 }
