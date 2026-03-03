@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
 
@@ -19,4 +20,6 @@ func main() {
 	}
 	vars := ReadAndValidateEnvs(env)
 	_ = connectDB(env, vars.DatabaseURL)
+	ctx := context.Background()
+	initTracer(ctx)
 }
