@@ -13,7 +13,7 @@ func TestWithPostgres(t *testing.T) {
 	ctx := context.Background()
 	postgresPort := "5432/tcp"
 
-	postgresC, err := testcontainers.Run(ctx, "postgres:18",
+	postgresC, errRunCt := testcontainers.Run(ctx, "postgres:18",
 		testcontainers.WithExposedPorts(postgresPort),
 		testcontainers.WithEnv(map[string]string{
 			"POSTGRES_USER":     "user",
@@ -27,18 +27,18 @@ func TestWithPostgres(t *testing.T) {
 		),
 	)
 
-	if err != nil {
-		t.Fatalf("Nie udało się uruchomić kontenera PostgreSQL: %v", err)
+	if errRunCt != nil {
+		t.Fatalf("Nie udało się uruchomić kontenera PostgreSQL: %v", errRunCt)
 	}
 
 	defer func() {
-		if err := postgresC.Terminate(ctx); err != nil {
-			t.Fatalf("Błąd podczas zamykania kontenera: %v", err)
+		if errTerminateCt := postgresC.Terminate(ctx); errTerminateCt != nil {
+			t.Fatalf("Błąd podczas zamykania kontenera: %v", errTerminateCt)
 		}
 	}()
 
 }
 
-func TestDBConnection(t *testing.T) {
-	// ...
-}
+// func TestDBConnection(t *testing.T) {
+// 	// ...
+// }

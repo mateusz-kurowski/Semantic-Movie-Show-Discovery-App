@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"os"
 
@@ -10,17 +11,18 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func connectDB(genv GlobalEnv, dbURL string) *sql.DB {
-	db, err := otelsql.Open("pgx", dbURL, otelsql.WithAttributes(
+func connectDB(ctx context.Context, genv GlobalEnv, dbURL string) *sql.DB {
+	db, connectionErr := otelsql.Open("pgx", dbURL, otelsql.WithAttributes(
 		attribute.String("db.system", "postgresql"),
 	))
-	if err != nil {
-		genv.Logger.Error("Connection to DB could not be established", "error", err)
+	if connectionErr != nil {
+		genv.Logger.Error("Connection to DB could not be established", "error", connectionErr)
 		os.Exit(1)
 	}
-	if err := db.Ping(); err != nil {
-		genv.Logger.Error("Connection to DB could not be established", "error", err)
+	if pingErr := db.PingContext(ctx); pingErr != nil {
+		genv.Logger.Error("Connection to DB could not be established", "error", pingErr)
 		os.Exit(1)
 	}
+	genv.Logger.Info("Successfully connected to DB")
 	return db
 }

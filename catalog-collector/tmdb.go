@@ -1,16 +1,13 @@
 package main
 
 import (
-	"fmt"
-
 	tmdb "github.com/cyruzin/golang-tmdb"
 )
 
-func createTMDBClient(tmdbApiKey string) (*tmdb.Client, error) {
+func createTMDBClient(tmdbAPIKey string) (*tmdb.Client, error) {
 
-	tmdbClient, err := tmdb.Init(tmdbApiKey)
+	tmdbClient, err := tmdb.Init(tmdbAPIKey)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
