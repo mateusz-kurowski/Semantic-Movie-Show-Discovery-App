@@ -1,18 +1,11 @@
 pre-commit:
   parallel: true
   commands:
-    golanci-lint-fmt:
-      run: golangci-lint fmt
+    ruff-check:
+      glob: "*.py"
+      run: uv run ruff check --fix {staged_files}
       stage_fixed: true
-      root: catalog-collector
-    golanci-lint:
-      run: golangci-lint run
+    ruff-format:
+      glob: "*.py"
+      run: uv run ruff format {staged_files}
       stage_fixed: true
-      root: catalog-collector
-pre-push:
-  parallel: true
-  commands:
-    test-go:
-      run: go test ./...
-      glob: "*.go"
-      root: catalog-collector
