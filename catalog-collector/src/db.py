@@ -3,7 +3,8 @@ from sqlmodel import Field, SQLModel, create_engine
 from env import get_envs
 from pydantic import BaseModel, ConfigDict
 import polars as pl
-import asyncio
+from sqlalchemy.dialects.postgresql import insert
+from sqlmodel import Session
 
 
 class MyModel(BaseModel):
@@ -15,13 +16,13 @@ class MyModel(BaseModel):
 Base = declarative_base()
 
 
-class MovieModel2(SQLModel, table=True):
+class MovieModel(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     title: str = Field()
     vote_average: float
     vote_count: float
     status: str
-    release_date: str
+    release_date: str | None = None
     revenue: int
     runtime: int
     adult: bool
@@ -54,36 +55,37 @@ print("Connected to db")
 
 def create_db_and_tables():
     try:
+        SQLModel.metadata.drop_all(engine)
         SQLModel.metadata.create_all(engine)
     except Exception as e:
         print(f"Creating db and tables failed: {e}")
 
 
-def get_session():
-    from sqlmodel import Session
-
-    with Session(engine) as session:
-        yield session
+def create_models_chunk(chunk: pl.DataFrame) -> list[MovieModel]:
+    return [MovieModel(**row) for row in chunk.to_dicts()]
 
 
-def create_models_chunk(chunk: pl.DataFrame) -> list[MovieModel2]:
-    return [MovieModel2(**row) for row in chunk.to_dicts()]
-
-
-async def create_models_batched_async(
+def create_models_batched(
     df: pl.DataFrame, batch_size: int = 5000
-) -> list[MovieModel2]:
+) -> list[list[MovieModel]]:
     """
     Splits the dataframe into batches and processes them asynchronously
     using a thread pool, preventing the main thread from blocking.
     """
-    tasks = []
+    results = []
     # iter_slices divides the huge dataframe into smaller logical DataFrame chunks
     for chunk in df.iter_slices(batch_size):
-        tasks.append(asyncio.to_thread(create_models_chunk, chunk))
-
-    # Wait for all chunks to finish instantiating
-    results = await asyncio.gather(*tasks)
+        results.append(create_models_chunk(chunk))
 
     # Flatten the list of lists into a single list
-    return [model for batch in results for model in batch]
+    return results
+
+
+def insert_models(models: list[list[MovieModel]]):
+    with Session(engine) as session:
+        for batch in models:
+            for model in batch:
+                stmt = insert(MovieModel).values(**model.model_dump())
+                stmt = stmt.on_conflict_do_nothing(index_elements=["id"])
+                session.exec(stmt)
+            session.commit()
