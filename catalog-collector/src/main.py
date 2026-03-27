@@ -1,10 +1,9 @@
 from dotenv import load_dotenv
 
-from dataset import get_tmdb_dataset, scan_and_load_dataset
-from rich import print
-from db import create_db_and_tables, create_models_batched, insert_models
+from dataset import get_tmdb_dataset, scan_and_load_dataset, explore_dataset
+from db import create_db_and_tables, insert_movies_in_batches
 import logging
-
+from env import get_envs
 
 logging.basicConfig(level=logging.INFO)
 load_dotenv()
@@ -13,14 +12,19 @@ load_dotenv()
 def main():
 
     path = get_tmdb_dataset()
-    print("Downloading dataset...")
+    logging.info("Downloading dataset...")
     df = scan_and_load_dataset(path)
-    print(f"Loaded dataset: {len(df)} records")
+    logging.info(f"Loaded dataset. {len(df)} Rows.")
+    envs = get_envs()
+
+    if envs.debug:
+        explore_dataset(df)
+
+    logging.info(f"Loaded dataset: {len(df)} records")
     create_db_and_tables()
-    print("Processing batches...")
-    models = create_models_batched(df)
-    logging.info("Models created")
-    insert_models(models)
+    logging.info("Processing batches...")
+    insert_movies_in_batches(df)
+    logging.info("Finished inserting items to database")
 
 
 if __name__ == "__main__":

@@ -1,10 +1,12 @@
 from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, BigInteger
 from sqlmodel import Field, SQLModel, create_engine
 from env import get_envs
 from pydantic import BaseModel, ConfigDict
 import polars as pl
 from sqlalchemy.dialects.postgresql import insert
 from sqlmodel import Session
+from datetime import date
 
 
 class MyModel(BaseModel):
@@ -16,31 +18,33 @@ class MyModel(BaseModel):
 Base = declarative_base()
 
 
-class MovieModel(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    title: str = Field()
+class Movie(SQLModel, table=True):
+    id: int | None = Field(
+        default=None, sa_column=Column(BigInteger(), primary_key=True)
+    )
+    title: str | None = None
     vote_average: float
-    vote_count: float
+    vote_count: int
     status: str
-    release_date: str | None = None
-    revenue: int
+    release_date: date | None = None
+    revenue: int = Field(default=0, sa_column=Column(BigInteger()))
     runtime: int
     adult: bool
-    backdrop_path: str
-    budget: int
-    homepage: str
-    imdb_id: str
+    backdrop_path: str | None = None
+    budget: int = Field(default=0, sa_column=Column(BigInteger()))
+    homepage: str | None = None
+    imdb_id: str | None = None
     original_language: str
-    original_title: str
-    overview: str
+    original_title: str | None = None
+    overview: str | None = None
     popularity: float
-    poster_path: str
-    tagline: str
-    genres: str
-    production_companies: str
-    production_countries: str
-    spoken_languages: str
-    keywords: str
+    poster_path: str | None = None
+    tagline: str | None = None
+    genres: str | None = None
+    production_companies: str | None = None
+    production_countries: str | None = None
+    spoken_languages: str | None = None
+    keywords: str | None = None
     is_present_in_search: bool = Field(default=False)
 
 
@@ -61,31 +65,25 @@ def create_db_and_tables():
         print(f"Creating db and tables failed: {e}")
 
 
-def create_models_chunk(chunk: pl.DataFrame) -> list[MovieModel]:
-    return [MovieModel(**row) for row in chunk.to_dicts()]
-
-
-def create_models_batched(
-    df: pl.DataFrame, batch_size: int = 5000
-) -> list[list[MovieModel]]:
+def insert_movies_in_batches(df: pl.DataFrame, batch_size: int = 10_000):
     """
-    Splits the dataframe into batches and processes them asynchronously
-    using a thread pool, preventing the main thread from blocking.
+    Takes the raw Polars DataFrame, converts it into chunks of dictionaries,
+    and uses SQLAlchemy bulk inserts.
     """
-    results = []
-    # iter_slices divides the huge dataframe into smaller logical DataFrame chunks
-    for chunk in df.iter_slices(batch_size):
-        results.append(create_models_chunk(chunk))
-
-    # Flatten the list of lists into a single list
-    return results
-
-
-def insert_models(models: list[list[MovieModel]]):
     with Session(engine) as session:
-        for batch in models:
-            for model in batch:
-                stmt = insert(MovieModel).values(**model.model_dump())
-                stmt = stmt.on_conflict_do_nothing(index_elements=["id"])
-                session.exec(stmt)
-            session.commit()
+        # iter_slices divides the huge dataframe into smaller logical chunks
+        for chunk_idx, chunk in enumerate(df.iter_slices(batch_size)):
+            records = chunk.to_dicts()
+
+            # Create a single bulk insert statement for the entire batch
+            stmt = insert(Movie).values(records)
+
+            # Keep your safe insert logic entirely in SQL!
+            stmt = stmt.on_conflict_do_nothing(index_elements=["id"])
+
+            # Execute the batch (1 query per 10,000 rows instead of 10,000 queries)
+            session.exec(stmt)
+
+            print(f"Inserted batch {chunk_idx + 1}")
+
+        session.commit()
