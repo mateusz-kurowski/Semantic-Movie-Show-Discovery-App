@@ -10,5 +10,5 @@ Run:
 
 ```bash
 uv sync
-uv run watchfiles 'opentelemetry-instrument python src/main.py'
+uv run --env-file .env watchfiles 'opentelemetry-instrument python src/main.py'
 ```

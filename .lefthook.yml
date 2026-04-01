@@ -2,3 +2,4 @@ assert_lefthook_installed: true
 colors: true
 extends:
   - catalog-collector/.lefthook.yml
+  - catalog-ingester/.lefthook.yml

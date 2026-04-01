@@ -8,3 +8,5 @@ infra/.env
 
 # Always allow examples
 !**/.env.example
+
+/data
