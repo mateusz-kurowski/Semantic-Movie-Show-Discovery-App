@@ -1,17 +1,10 @@
 services:
   catalog-collector:
-    image: mmateuszkurowski/catalog-collector:latest
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
-      - OTEL_LOGS_EXPORTER=otlp
-      - DATASET_OUTPUT_DIR=dataset
-      - OTEL_EXPORTER_OTLP_INSECURE=false
-      - OTEL_PYTHON_LOG_CORRELATION=true
-      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-      - OTEL_SERVICE_NAME=catalog-collector
-      - DEBUG=false
-
+    build:
+      context: catalog-collector
+      dockerfile: Dockerfile
+    env_file:
+      - catalog-collector/.env
   text-embeddings-inference:
     ports:
       - 8080:80

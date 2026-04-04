@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"strings"
 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
@@ -50,7 +51,7 @@ func createProvider(processor *log.BatchProcessor) (*log.LoggerProvider, func())
 	return provider, func() {
 		err := provider.Shutdown(context.Background())
 		if err != nil {
-			fmt.Println(err)
+			_, _ = fmt.Fprintln(os.Stderr, err)
 		}
 	}
 }

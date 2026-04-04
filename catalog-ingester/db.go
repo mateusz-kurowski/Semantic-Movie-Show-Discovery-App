@@ -16,15 +16,15 @@ const (
 
 func initDB(logger *slog.Logger, dsn string) (*gorm.DB, error) {
 	gormLogger := slogGorm.New(
-		slogGorm.WithLogger(logger),
+		slogGorm.WithHandler(logger.Handler()),
 		slogGorm.WithTraceAll(), // to log all queries
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	db, openErr := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: gormLogger,
 	})
-	if err != nil {
-		return nil, err
+	if openErr != nil {
+		return nil, openErr
 	}
 
 	// Add OpenTelemetry tracing plugin to instrument all operations
@@ -32,9 +32,9 @@ func initDB(logger *slog.Logger, dsn string) (*gorm.DB, error) {
 		return nil, err
 	}
 	// Set connection pool
-	sqlDB, err := db.DB()
-	if err != nil {
-		return nil, err
+	sqlDB, connErr := db.DB()
+	if connErr != nil {
+		return nil, connErr
 	}
 
 	sqlDB.SetMaxIdleConns(defaultMaxIdleConns)

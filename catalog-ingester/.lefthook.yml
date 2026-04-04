@@ -1,13 +1,11 @@
 pre-commit:
   parallel: true
   commands:
-    golangci-check:
-      run: golangci-lint run .
+    golangci-lint:
+      glob: "*.{go,mod,sum}"
+      run: golangci-lint run --fix
       stage_fixed: true
-    golangci-fmt:
-      run: golangci-lint fmt {staged_files}
-      glob:
-        - "*.go"
-        - "*.mod"
-        - "*.sum"
+    go-fmt:
+      glob: "*.go"
+      run: go fmt {staged_files}
       stage_fixed: true

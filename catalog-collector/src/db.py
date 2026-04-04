@@ -47,7 +47,7 @@ def insert_movies_in_batches(df: pl.DataFrame, batch_size: int = 10_000):
             stmt = insert(Movie).values(records)
 
             # Keep your safe insert logic entirely in SQL!
-            stmt = stmt.on_conflict_do_nothing(index_elements=["id"])
+            stmt = stmt.on_conflict_do_update(index_elements=["id"])
 
             # Execute the batch (1 query per 10,000 rows instead of 10,000 queries)
             session.exec(stmt)

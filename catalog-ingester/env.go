@@ -45,8 +45,9 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		QdrantPort:             qdrantPortInt,
 		QdrantCollectionName:   os.Getenv("QDRANT_COLLECTION_NAME"),
 	}
-	if err := genv.Validate.Struct(&env); err != nil {
-		genv.Logger.Error("Environment variables validation failed.", "Error", err.Error())
+	errVal := genv.Validate.Struct(&env)
+	if errVal != nil {
+		genv.Logger.Error("Environment variables validation failed.", "Error", errVal.Error())
 		os.Exit(1)
 	}
 	return env

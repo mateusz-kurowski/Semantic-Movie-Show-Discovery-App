@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,6 +16,7 @@ const (
 	defaultTimeout     = 10 * time.Second
 )
 
+//nolint:gochecknoglobals // A shared HTTP client is required for connection pooling
 var httpClient = &http.Client{
 	Timeout: defaultTimeout,
 }
@@ -36,12 +38,13 @@ func GetEmbeddings(ctx context.Context, text string, env EnvVars) ([]float32, er
 	}
 	req.Header.Set("Content-Type", "application/json")
 
+	//nolint:gosec // SSRF is avoided as `env.EmbeddingModelEndpoint` is a trusted configured URL.
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	defer io.Copy(io.Discard, resp.Body)
+	defer func() { _, _ = io.Copy(io.Discard, resp.Body) }()
 
 	// ALWAYS check the status code before unmarshaling.
 	// If TEI returns a 400/500, the body will be an error string/object,
@@ -55,13 +58,14 @@ func GetEmbeddings(ctx context.Context, text string, env EnvVars) ([]float32, er
 	// so the JSON looks like: [ [0.1, 0.2, 0.3...] ]
 	var result [][]float32
 
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, err
+	errDecode := json.NewDecoder(resp.Body).Decode(&result)
+	if errDecode != nil {
+		return nil, errDecode
 	}
 
 	// Guard against empty responses
 	if len(result) == 0 {
-		return nil, fmt.Errorf("received empty embedding array")
+		return nil, errors.New("received empty embedding array")
 	}
 
 	// Return the first vector from the batch

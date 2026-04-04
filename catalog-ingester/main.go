@@ -13,7 +13,7 @@ type GlobalEnv struct {
 	Validate       *validator.Validate
 	Logger         *slog.Logger
 	TracingContext *context.Context
-	Db             *gorm.DB
+	DB             *gorm.DB
 }
 
 type MovieEmbedding struct {
@@ -48,7 +48,7 @@ func main() {
 	if err != nil {
 		env.Logger.Error(err.Error())
 	} else {
-		defer shutdownTrace(ctx)
+		defer func() { _ = shutdownTrace(ctx) }()
 	}
 
 	// connect to DB
@@ -56,11 +56,12 @@ func main() {
 	if err != nil {
 		env.Logger.Error("Connection to DB failed", "error", err.Error())
 		shutdownLog() // Ensure logs are flushed before exiting
-		os.Exit(1)
+		return
 	}
-	env.Db = db
+	env.DB = db
 
-	if sqlDB, err := db.DB(); err == nil {
+	sqlDB, errDB := db.DB()
+	if errDB == nil {
 		defer sqlDB.Close()
 	}
 
@@ -68,22 +69,23 @@ func main() {
 	movies, err := getMovies(env)
 	if err != nil {
 		env.Logger.Error("Failed to fetch movies from DB", "error", err.Error())
+		return
 	}
 
 	var movieEmbeddings []MovieEmbedding
 
 	for _, m := range movies {
-		env.Logger.Info("Movie fetched", "id", m.Id, "title", m.Title)
+		env.Logger.Info("Movie fetched", "id", m.ID, "title", m.Title)
 		if m.Overview != nil {
-			overviewEmbedding, err := GetEmbeddings(ctx, *m.Overview, vars)
-			if err != nil {
-				env.Logger.Error("Failed to get embeddings", "error", err.Error())
+			overviewEmbedding, errGetEmb := GetEmbeddings(ctx, *m.Overview, vars)
+			if errGetEmb != nil {
+				env.Logger.Error("Failed to get embeddings", "error", errGetEmb.Error())
 			} else {
 				movieEmbeddings = append(movieEmbeddings, MovieEmbedding{
 					Movie:     m,
 					Embedding: overviewEmbedding,
 				})
-				env.Logger.Info("Overview embeddings generated", "id", m.Id, "embedding_length", len(overviewEmbedding))
+				env.Logger.Info("Overview embeddings generated", "id", m.ID, "embedding_length", len(overviewEmbedding))
 			}
 		}
 	}
@@ -95,14 +97,16 @@ func main() {
 		env.Logger.Info("Qdrant client created successfully")
 	}
 
-	if err := ingestMovies(ctx, qdrantClient, vars.QdrantCollectionName, movieEmbeddings); err != nil {
-		env.Logger.Error("Failed to ingest movies into Qdrant", "error", err.Error())
+	errIngest := ingestMovies(ctx, qdrantClient, vars.QdrantCollectionName, movieEmbeddings)
+	if errIngest != nil {
+		env.Logger.Error("Failed to ingest movies into Qdrant", "error", errIngest.Error())
 	} else {
 		env.Logger.Info("Movies ingested successfully into Qdrant", "count", len(movieEmbeddings))
 	}
 
-	if err := updateMoviesExistInSearch(movies, env); err != nil {
-		env.Logger.Error("Failed to update movies in DB", "error", err.Error())
+	errUpdate := updateMoviesExistInSearch(movies, env)
+	if errUpdate != nil {
+		env.Logger.Error("Failed to update movies in DB", "error", errUpdate.Error())
 	} else {
 		env.Logger.Info("Movies updated successfully in DB", "count", len(movies))
 	}
