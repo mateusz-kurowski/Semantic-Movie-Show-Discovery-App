@@ -38,7 +38,7 @@ func GetEmbeddings(ctx context.Context, text string, env EnvVars) ([]float32, er
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	//nolint:gosec // SSRF is avoided as `env.EmbeddingModelEndpoint` is a trusted configured URL.
+	//nolint:gosec,nolintlint // SSRF is avoided as `env.EmbeddingModelEndpoint` is a trusted configured URL.
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
