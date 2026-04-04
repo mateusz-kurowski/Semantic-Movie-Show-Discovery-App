@@ -1,6 +1,6 @@
 services:
   catalog-collector:
-    image: mmateuszkurowski/catalog-collector:latest
+    image: mateuszkurowski/catalog-collector:latest
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
