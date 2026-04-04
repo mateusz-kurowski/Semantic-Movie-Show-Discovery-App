@@ -10,6 +10,7 @@ services:
       - OTEL_PYTHON_LOG_CORRELATION=true
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
       - OTEL_SERVICE_NAME=catalog-collector
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=production
       - DEBUG=false
 
   text-embeddings-inference:
