@@ -17,11 +17,16 @@ type EnvVars struct {
 	QdrantPort             int    `validate:"required,gt=0"`
 	QdrantCollectionName   string `validate:"required"`
 	IngestPeriodSeconds    int    `validate:"required,gt=0"`
+	Production             bool   `validate:"required"`
 }
 
 func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
-	if err := godotenv.Load(".env.development.local", ".env"); err != nil {
-		genv.Logger.Error("Error while reading envs.", "Error", err)
+	isProduction := os.Getenv("PRODUCTION") == "true"
+	if !isProduction {
+		if err := godotenv.Load(".env.development.local", ".env.development", ".env"); err != nil {
+			genv.Logger.Error("Error while reading envs.", "Error", err)
+			os.Exit(1)
+		}
 	}
 
 	serviceName := os.Getenv("OTEL_SERVICE_NAME")
@@ -53,6 +58,7 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		QdrantPort:             qdrantPortInt,
 		QdrantCollectionName:   os.Getenv("QDRANT_COLLECTION_NAME"),
 		IngestPeriodSeconds:    ingestPeriodSecondsInt,
+		Production:             isProduction,
 	}
 	errVal := genv.Validate.Struct(&env)
 	if errVal != nil {

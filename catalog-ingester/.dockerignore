@@ -1,0 +1,7 @@
+.env*
+tmp/
+.vscode/
+.gitignore
+testcoverage.yml
+catalog-ingester
+cover.out

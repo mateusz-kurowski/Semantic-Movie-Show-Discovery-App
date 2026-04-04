@@ -1,2 +1,4 @@
 tmp/
 catalog-ingester
+cover.out
+.env*
