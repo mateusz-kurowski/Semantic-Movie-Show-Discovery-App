@@ -5,12 +5,12 @@ on:
     branches: [main]
     paths:
       - "catalog-ingester/**"
-      - "compose.yml"
+      - ".github/workflows/catalog-ingester.yml"
   pull_request:
     branches: [main]
     paths:
       - "catalog-ingester/**"
-      - "compose.yml"
+      - ".github/workflows/catalog-ingester.yml"
 
 env:
   DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
@@ -33,6 +33,7 @@ jobs:
         uses: golangci/golangci-lint-action@v9
         with:
           version: v2.11
+          working-directory: ${{ env.SERVICE_NAME }}
 
       - name: Test Go code
         run: cd ${{ env.SERVICE_NAME }} && go test -v ./... -coverprofile=cover.out

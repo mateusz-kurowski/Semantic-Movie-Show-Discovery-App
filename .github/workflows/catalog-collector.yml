@@ -5,12 +5,12 @@ on:
     branches: [main]
     paths:
       - "catalog-collector/**"
-      - "compose.yml"
+      - ".github/workflows/catalog-collector.yml"
   pull_request:
     branches: [main]
     paths:
       - "catalog-collector/**"
-      - "compose.yml"
+      - ".github/workflows/catalog-collector.yml"
 
 env:
   DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
