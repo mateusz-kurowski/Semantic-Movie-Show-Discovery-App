@@ -21,7 +21,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - DEBUG=false
-      - EMBEDDING_MODEL_ENDPOINT=http://text-embeddings-inference:80/embeddings
+      - EMBEDDING_MODEL_ENDPOINT=http://text-embeddings-inference:80/embed
       - INGEST_PERIOD_SECONDS=15
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
       - OTEL_EXPORTER_OTLP_INSECURE=false
