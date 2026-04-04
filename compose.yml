@@ -32,7 +32,6 @@ services:
       - QDRANT_COLLECTION_NAME=${QDRANT_COLLECTION_NAME}
       - QDRANT_HOST=${QDRANT_HOST}
       - QDRANT_PORT=${QDRANT_PORT}
-      - QDRANT_URL=${QDRANT_URL}
       - PRODUCTION=true
   text-embeddings-inference:
     ports:
