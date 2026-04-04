@@ -27,7 +27,7 @@ print("Connected to db")
 
 def create_db_and_tables():
     try:
-        SQLModel.metadata.drop_all(engine)
+        # Create tables only if they don't exist in the database yet
         SQLModel.metadata.create_all(engine)
     except Exception as e:
         print(f"Creating db and tables failed: {e}")
