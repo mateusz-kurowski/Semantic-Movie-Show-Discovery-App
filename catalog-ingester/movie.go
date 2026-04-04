@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"time"
 
 	"github.com/qdrant/go-client/qdrant"
@@ -34,6 +35,11 @@ type Movie struct {
 	SpokenLanguages     *string
 	Keywords            *string
 	IsPresentInSearch   bool
+}
+
+// TableName overrides the default GORM table name (which pluralizes "Movie" to "movies").
+func (Movie) TableName() string {
+	return "movie"
 }
 
 func (m Movie) toMap() map[string]any {
@@ -112,7 +118,7 @@ func getMovieIDs(movies []Movie) []int {
 	return ids
 }
 
-func getMovies(env GlobalEnv) ([]Movie, error) {
+func getMovies(ctx context.Context, env GlobalEnv) ([]Movie, error) {
 	movies := make([]Movie, 0)
 
 	tx := env.DB.Where(Movie{IsPresentInSearch: false}).Limit(defaultIngestCount).Find(&movies)
@@ -120,12 +126,12 @@ func getMovies(env GlobalEnv) ([]Movie, error) {
 		return nil, tx.Error
 	}
 
-	env.Logger.Info("Fetched movies from DB", "count", len(movies))
-	env.Logger.Debug("Movie IDs fetched", "ids", getMovieIDs(movies))
+	env.Logger.InfoContext(ctx, "Fetched movies from DB", "count", len(movies))
+	env.Logger.DebugContext(ctx, "Movie IDs fetched", "ids", getMovieIDs(movies))
 	return movies, nil
 }
 
-func updateMoviesExistInSearch(movies []Movie, env GlobalEnv) error {
+func updateMoviesExistInSearch(ctx context.Context, movies []Movie, env GlobalEnv) error {
 	ids := make([]int, len(movies))
 	for i, m := range movies {
 		ids[i] = m.ID
@@ -135,7 +141,55 @@ func updateMoviesExistInSearch(movies []Movie, env GlobalEnv) error {
 	if result.Error != nil {
 		return result.Error
 	}
-	env.Logger.Info("Updated movies to be present in search", "count", result.RowsAffected)
-	env.Logger.Debug("Movie IDs updated to present in search", "ids", ids)
+	env.Logger.InfoContext(ctx, "Updated movies to be present in search", "count", result.RowsAffected)
+	env.Logger.DebugContext(ctx, "Movie IDs updated to present in search", "ids", ids)
 	return nil
+}
+
+func getMoviesAndIngest(ctx context.Context, env GlobalEnv, qdrantClient *qdrant.Client, vars EnvVars) {
+	movies, err := getMovies(ctx, env)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "Failed to fetch movies from DB", "error", err.Error())
+		return
+	}
+
+	var movieEmbeddings []MovieEmbedding
+
+	for _, m := range movies {
+		env.Logger.InfoContext(ctx, "Movie fetched", "id", m.ID, "title", m.Title)
+		if m.Overview != nil {
+			overviewEmbedding, errGetEmb := GetEmbeddings(ctx, *m.Overview, vars)
+			if errGetEmb != nil {
+				env.Logger.ErrorContext(ctx, "Failed to get embeddings", "error", errGetEmb.Error())
+			} else {
+				movieEmbeddings = append(movieEmbeddings, MovieEmbedding{
+					Movie:     m,
+					Embedding: overviewEmbedding,
+				})
+				env.Logger.InfoContext(
+					ctx,
+					"Overview embeddings generated",
+					"id",
+					m.ID,
+					"embedding_length",
+					len(overviewEmbedding),
+				)
+			}
+		}
+	}
+
+	errIngest := ingestMovies(ctx, qdrantClient, vars.QdrantCollectionName, movieEmbeddings)
+	if errIngest != nil {
+		env.Logger.ErrorContext(ctx, "Failed to ingest movies into Qdrant", "error", errIngest.Error())
+		return
+	}
+
+	env.Logger.InfoContext(ctx, "Movies ingested successfully into Qdrant", "count", len(movieEmbeddings))
+
+	errUpdate := updateMoviesExistInSearch(ctx, movies, env)
+	if errUpdate != nil {
+		env.Logger.ErrorContext(ctx, "Failed to update movies in DB", "error", errUpdate.Error())
+		return
+	}
+	env.Logger.InfoContext(ctx, "Movies updated successfully in DB", "count", len(movies))
 }

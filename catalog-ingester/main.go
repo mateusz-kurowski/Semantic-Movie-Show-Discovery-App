@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
@@ -65,31 +66,6 @@ func main() {
 		defer sqlDB.Close()
 	}
 
-	env.Logger.Info("Successfully started application and connected to database")
-	movies, err := getMovies(env)
-	if err != nil {
-		env.Logger.Error("Failed to fetch movies from DB", "error", err.Error())
-		return
-	}
-
-	var movieEmbeddings []MovieEmbedding
-
-	for _, m := range movies {
-		env.Logger.Info("Movie fetched", "id", m.ID, "title", m.Title)
-		if m.Overview != nil {
-			overviewEmbedding, errGetEmb := GetEmbeddings(ctx, *m.Overview, vars)
-			if errGetEmb != nil {
-				env.Logger.Error("Failed to get embeddings", "error", errGetEmb.Error())
-			} else {
-				movieEmbeddings = append(movieEmbeddings, MovieEmbedding{
-					Movie:     m,
-					Embedding: overviewEmbedding,
-				})
-				env.Logger.Info("Overview embeddings generated", "id", m.ID, "embedding_length", len(overviewEmbedding))
-			}
-		}
-	}
-
 	qdrantClient, err := initQdrant(vars)
 	if err != nil {
 		env.Logger.Error("Failed to create Qdrant client", "error", err.Error())
@@ -97,17 +73,17 @@ func main() {
 		env.Logger.Info("Qdrant client created successfully")
 	}
 
-	errIngest := ingestMovies(ctx, qdrantClient, vars.QdrantCollectionName, movieEmbeddings)
-	if errIngest != nil {
-		env.Logger.Error("Failed to ingest movies into Qdrant", "error", errIngest.Error())
-	} else {
-		env.Logger.Info("Movies ingested successfully into Qdrant", "count", len(movieEmbeddings))
-	}
+	env.Logger.Info("Successfully started application and connected to database")
 
-	errUpdate := updateMoviesExistInSearch(movies, env)
-	if errUpdate != nil {
-		env.Logger.Error("Failed to update movies in DB", "error", errUpdate.Error())
-	} else {
-		env.Logger.Info("Movies updated successfully in DB", "count", len(movies))
+	ticker := time.NewTicker(time.Duration(vars.IngestPeriodSeconds) * time.Second)
+	defer ticker.Stop()
+
+	// Initial ingestion before starting the ticker
+	getMoviesAndIngest(ctx, env, qdrantClient, vars)
+
+	for range ticker.C {
+		env.Logger.Info("Ingestion cycle started")
+		getMoviesAndIngest(ctx, env, qdrantClient, vars)
+		env.Logger.Info("Ingestion cycle completed")
 	}
 }

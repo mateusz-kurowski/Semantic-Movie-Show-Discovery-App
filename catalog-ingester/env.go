@@ -16,10 +16,11 @@ type EnvVars struct {
 	QdrantHost             string `validate:"required"`
 	QdrantPort             int    `validate:"required,gt=0"`
 	QdrantCollectionName   string `validate:"required"`
+	IngestPeriodSeconds    int    `validate:"required,gt=0"`
 }
 
 func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load(".env.development.local", ".env"); err != nil {
 		genv.Logger.Error("Error while reading envs.", "Error", err)
 	}
 
@@ -35,6 +36,13 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		os.Exit(1)
 	}
 
+	ingestPeriodSeconds := os.Getenv("INGEST_PERIOD_SECONDS")
+	ingestPeriodSecondsInt, err := strconv.Atoi(ingestPeriodSeconds)
+	if err != nil {
+		genv.Logger.Error("Error while converting INGEST_PERIOD_SECONDS to int.", "Error", err)
+		os.Exit(1)
+	}
+
 	env := EnvVars{
 		DatabaseURL:            os.Getenv("DATABASE_URL"),
 		OtlpEndpoint:           os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
@@ -44,6 +52,7 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		QdrantHost:             os.Getenv("QDRANT_HOST"),
 		QdrantPort:             qdrantPortInt,
 		QdrantCollectionName:   os.Getenv("QDRANT_COLLECTION_NAME"),
+		IngestPeriodSeconds:    ingestPeriodSecondsInt,
 	}
 	errVal := genv.Validate.Struct(&env)
 	if errVal != nil {
