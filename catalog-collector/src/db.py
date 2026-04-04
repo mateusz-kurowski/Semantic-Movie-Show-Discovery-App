@@ -34,7 +34,7 @@ def create_db_and_tables():
 
 
 def insert_movies_in_batches(
-    df: pl.DataFrame, batch_size: int = 10_000, commit_every_n_batches: int = 10
+    df: pl.DataFrame, batch_size: int = 1_000, commit_every_n_batches: int = 100
 ):
     """
     Takes the raw Polars DataFrame, converts it into chunks of dictionaries,
