@@ -1,3 +1,5 @@
+import logging
+
 import polars as pl
 from env import get_envs
 from movie import Movie
@@ -23,15 +25,16 @@ connect_args = {}
 # Turning echo=False drastically speeds up execution (no terminal printout loops for 1.4m queries)
 engine = create_engine(str(envs.database_url), echo=False, connect_args=connect_args)
 
-print("Connected to db")
+logging.info("Connected to db")
 
 
 def create_db_and_tables():
     try:
         # Create tables only if they don't exist in the database yet
         SQLModel.metadata.create_all(engine)
+        logging.info("Ensured database tables exist")
     except Exception as e:
-        print(f"Creating db and tables failed: {e}")
+        logging.error(f"Creating db and tables failed: {e}")
 
 
 def insert_movies_in_batches(
@@ -61,13 +64,13 @@ def insert_movies_in_batches(
             # Instead of compiling 250,000 parameters in Python into a giant string, this offloads it directly to the C driver!
             session.exec(stmt, params=records)
 
-            print(f"Inserted batch {chunk_idx + 1}")
+            logging.info(f"Inserted batch {chunk_idx + 1}")
 
             # Commit periodically to keep transactions optimized without ballooning memory
             if (chunk_idx + 1) % commit_every_n_batches == 0:
                 session.commit()
-                print(f"Committed up to batch {chunk_idx + 1}")
+                logging.info(f"Committed up to batch {chunk_idx + 1}")
 
         # Commit any remaining uncommitted batches
         session.commit()
-        print("Final missing batches committed.")
+        logging.info("Final missing batches committed.")

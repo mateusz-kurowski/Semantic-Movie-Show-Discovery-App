@@ -8,6 +8,7 @@ dependencies = [
     "kagglehub>=1.0.0",
     "opentelemetry-distro>=0.61b0",
     "opentelemetry-exporter-otlp>=1.40.0",
+    "opentelemetry-instrumentation-logging>=0.61b0",
     "polars>=1.39.3",
     "psycopg2-binary>=2.9.11",
     "pydantic>=2.12.5",

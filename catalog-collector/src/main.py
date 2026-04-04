@@ -1,12 +1,21 @@
-from dotenv import load_dotenv
-
-from dataset import get_tmdb_dataset, scan_and_load_dataset, explore_dataset
-from db import create_db_and_tables, insert_movies_in_batches
 import logging
-from env import get_envs
 
-logging.basicConfig(level=logging.INFO)
+from dataset import explore_dataset, get_tmdb_dataset, scan_and_load_dataset
+from db import create_db_and_tables, insert_movies_in_batches
+from dotenv import load_dotenv
+from env import get_envs
+from rich.logging import RichHandler
+
 load_dotenv()
+
+# Set up beautiful and clear logging for local dev,
+# which seamlessly intercepts via OpenTelemetry for production to SigNoz
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler(rich_tracebacks=True, show_path=False)],
+)
 
 
 def main():
