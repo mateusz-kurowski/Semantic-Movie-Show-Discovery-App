@@ -33,10 +33,13 @@ def create_db_and_tables():
         print(f"Creating db and tables failed: {e}")
 
 
-def insert_movies_in_batches(df: pl.DataFrame, batch_size: int = 10_000):
+def insert_movies_in_batches(
+    df: pl.DataFrame, batch_size: int = 10_000, commit_every_n_batches: int = 10
+):
     """
     Takes the raw Polars DataFrame, converts it into chunks of dictionaries,
     and uses SQLAlchemy bulk inserts.
+    Combines execution of `batch_size` inserts into transactions committed every `commit_every_n_batches` batches.
     """
     with Session(engine) as session:
         # iter_slices divides the huge dataframe into smaller logical chunks
@@ -52,9 +55,16 @@ def insert_movies_in_batches(df: pl.DataFrame, batch_size: int = 10_000):
             # Keep your safe insert logic entirely in SQL!
             stmt = stmt.on_conflict_do_update(index_elements=["id"], set_=update_dict)
 
-            # Execute the batch (1 query per 10,000 rows instead of 10,000 queries)
+            # Execute the batch
             session.exec(stmt)
 
             print(f"Inserted batch {chunk_idx + 1}")
 
+            # Commit periodically to keep transactions optimized without ballooning memory
+            if (chunk_idx + 1) % commit_every_n_batches == 0:
+                session.commit()
+                print(f"Committed up to batch {chunk_idx + 1}")
+
+        # Commit any remaining uncommitted batches
         session.commit()
+        print("Final missing batches committed.")

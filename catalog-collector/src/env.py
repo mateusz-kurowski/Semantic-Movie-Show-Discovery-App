@@ -1,7 +1,7 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
-from pydantic import PostgresDsn, AnyUrl
 from functools import lru_cache
+
+from pydantic import AnyUrl, Field, PostgresDsn
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class EnvConfig(BaseSettings):
@@ -11,6 +11,9 @@ class EnvConfig(BaseSettings):
     otel_exporter_otlp_insecure: bool = Field(alias="OTEL_EXPORTER_OTLP_INSECURE")
     otel_service_name: str = Field(
         alias="OTEL_SERVICE_NAME", default="catalog-collector"
+    )
+    otel_resource_attributes: str = Field(
+        alias="OTEL_RESOURCE_ATTRIBUTES", default="deployment.environment=development"
     )
     # otel_python_logging_auto_instrumentation_enabled: bool = Field(
     #     alias="OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED", default=True
