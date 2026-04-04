@@ -1,6 +1,8 @@
 services:
   catalog-collector:
     image: mateuszkurowski/catalog-collector:latest
+    restart: unless-stopped
+    pull_policy: always
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
@@ -15,14 +17,18 @@ services:
 
   text-embeddings-inference:
     ports:
-      - "${TEXT_EMBEDDINGS_PORT}:80"
+      - "${TEXT_EMBEDDINGS_PORT:-38080}:80"
     volumes:
       - hf_cache:/data
     pull_policy: always
+    restart: unless-stopped
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.1
-    command:
-      --model-id Qwen/Qwen3-Embedding-0.6B --revision refs/pr/27 --pooling
-      mean --max-batch-tokens 2048 --max-client-batch-size 16
+    command: >
+      --model-id Qwen/Qwen3-Embedding-0.6B 
+      --revision pr/27 
+      --pooling mean 
+      --max-batch-tokens 2048 
+      --max-client-batch-size 16 
       --auto-truncate
 volumes:
   hf_cache:
