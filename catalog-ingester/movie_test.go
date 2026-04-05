@@ -14,9 +14,9 @@ func TestGetMovieIds(t *testing.T) {
 		{
 			name: "Basic case with 3 movies",
 			movies: []Movie{
-				{ID: 1, Title: ptr("Movie 1")},
-				{ID: 2, Title: ptr("Movie 2")},
-				{ID: 3, Title: ptr("Movie 3")},
+				{ID: 1, Title: new("Movie 1")},
+				{ID: 2, Title: new("Movie 2")},
+				{ID: 3, Title: new("Movie 3")},
 			},
 			expectedIDs: []int{1, 2, 3},
 		},
