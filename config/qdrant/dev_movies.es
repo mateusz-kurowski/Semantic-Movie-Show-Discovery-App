@@ -98,3 +98,9 @@ PUT /collections/dev_movies/index
     "lowercase": true
   }
 }
+
+PUT /collections/dev_movies/index 
+{
+  "field_name": "original_id",
+  "field_schema": "integer"
+}

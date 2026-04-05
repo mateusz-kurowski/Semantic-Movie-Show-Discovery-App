@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/qdrant/go-client/qdrant"
 )
 
@@ -45,6 +47,7 @@ func (Movie) TableName() string {
 
 func (m Movie) toMap() map[string]any {
 	result := map[string]any{
+		"point_id":          m.resolveQdrantPointID(),
 		"vote_average":      m.VoteAverage,
 		"vote_count":        m.VoteCount,
 		"status":            m.Status,
@@ -110,15 +113,10 @@ func (m Movie) toMap() map[string]any {
 }
 
 func (m Movie) ToQdrantPayload(vectors []float32) *qdrant.PointStruct {
-	// Fall back to original ID if no ChunkID is provided (for non-chunked workflows)
-	idToUse := m.ChunkID
-	if idToUse == 0 {
-		//nolint:gosec // Movie IDs are positive
-		idToUse = uint64(m.ID)
-	}
+	idToUse := m.resolveQdrantPointID()
 
 	return &qdrant.PointStruct{
-		Id: qdrant.NewIDNum(idToUse),
+		Id: qdrant.NewID(idToUse),
 		Vectors: qdrant.NewVectorsMap(map[string]*qdrant.Vector{
 			"overview-dense-vector": qdrant.NewVectorDense(vectors),
 		}),
@@ -127,15 +125,10 @@ func (m Movie) ToQdrantPayload(vectors []float32) *qdrant.PointStruct {
 }
 
 func (m Movie) ToQdrantCloudPayload(text, model, denseVectorName string) *qdrant.PointStruct {
-	// Fall back to original ID if no ChunkID is provided (for non-chunked workflows)
-	idToUse := m.ChunkID
-	if idToUse == 0 {
-		//nolint:gosec // Movie IDs are positive
-		idToUse = uint64(m.ID)
-	}
+	idToUse := m.resolveQdrantPointID()
 
 	return &qdrant.PointStruct{
-		Id: qdrant.NewIDNum(idToUse),
+		Id: qdrant.NewID(idToUse),
 		Vectors: qdrant.NewVectorsMap(map[string]*qdrant.Vector{
 			denseVectorName: qdrant.NewVectorDocument(&qdrant.Document{
 				Text:  text,
@@ -144,6 +137,11 @@ func (m Movie) ToQdrantCloudPayload(text, model, denseVectorName string) *qdrant
 		}),
 		Payload: qdrant.NewValueMap(m.toMap()),
 	}
+}
+
+func (m Movie) resolveQdrantPointID() string {
+	identity := fmt.Sprintf("movie:%d:chunk:%d", m.ID, m.ChunkOrder)
+	return uuid.NewSHA1(uuid.NameSpaceURL, []byte(identity)).String()
 }
 
 func getMovieIDs(movies []Movie) []int {
@@ -157,7 +155,7 @@ func getMovieIDs(movies []Movie) []int {
 func getMovies(ctx context.Context, env GlobalEnv, vars EnvVars) ([]Movie, error) {
 	movies := make([]Movie, 0)
 
-	tx := env.DB.Where(Movie{IsPresentInSearch: false}).Limit(vars.IngestBatchSize).Find(&movies)
+	tx := env.DB.Where("is_present_in_search = ?", false).Limit(vars.IngestBatchSize).Find(&movies)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
