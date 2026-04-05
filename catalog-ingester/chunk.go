@@ -2,16 +2,15 @@ package main
 
 import (
 	"fmt"
-	"hash/fnv"
-	"strconv"
 	"strings"
 
 	"github.com/tmc/langchaingo/textsplitter"
 )
 
 const (
-	chunkSize    = 1200
-	chunkOverlap = 120
+	chunkSize         = 1200
+	chunkOverlap      = 120
+	chunkIDMultiplier = 1_000_000
 )
 
 // We configure the text splitter to safely fit within E5's 512-token context window
@@ -62,15 +61,20 @@ func divideMovieIntoChunks(movie Movie) []Movie {
 	for i, chunk := range chunks {
 		movies[i] = movie
 		movies[i].SemanticText = chunk
-
-		// Create a deterministic chunk ID from movie ID + chunk order.
-		// This avoids collisions that can happen with multiplier-based IDs.
-		h := fnv.New64a()
-		_, _ = h.Write([]byte(strconv.Itoa(movie.ID)))
-		_, _ = h.Write([]byte(":"))
-		_, _ = h.Write([]byte(strconv.Itoa(i)))
-		movies[i].ChunkID = h.Sum64()
+		movies[i].ChunkID = createChunkID(movie.ID, i)
 		movies[i].ChunkOrder = i
 	}
 	return movies
+}
+
+func createChunkID(movieID, chunkOrder int) uint64 {
+	if movieID < 0 {
+		movieID = -movieID
+	}
+	if chunkOrder < 0 {
+		chunkOrder = 0
+	}
+
+	//nolint:gosec // movieID/chunkOrder are normalized to non-negative values above.
+	return uint64(movieID)*chunkIDMultiplier + uint64(chunkOrder)
 }
