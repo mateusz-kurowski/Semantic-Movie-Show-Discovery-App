@@ -13,15 +13,19 @@ import (
 
 const (
 	truncateDimDefault = 512
-	defaultTimeout     = 10 * time.Second
+	fallbackTimeoutSec = 30
 )
 
-//nolint:gochecknoglobals // A shared HTTP client is required for connection pooling
-var httpClient = &http.Client{
-	Timeout: defaultTimeout,
-}
-
 func GetEmbeddings(ctx context.Context, texts []string, env EnvVars) ([][]float32, error) {
+	timeout := time.Duration(env.EmbeddingTimeoutSec) * time.Second
+	if timeout <= 0 {
+		timeout = fallbackTimeoutSec * time.Second
+	}
+
+	httpClient := &http.Client{
+		Timeout: timeout,
+	}
+
 	payload, _ := json.Marshal(map[string]any{
 		"inputs":       texts,
 		"truncate_dim": truncateDimDefault,

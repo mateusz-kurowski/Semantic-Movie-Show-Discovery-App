@@ -7,6 +7,12 @@ import (
 	"github.com/qdrant/go-client/qdrant"
 )
 
+const e5PassagePrefix = "passage: "
+
+func toE5PassageInput(text string) string {
+	return e5PassagePrefix + text
+}
+
 func initQdrant(vars EnvVars) (*qdrant.Client, error) {
 	client, err := qdrant.NewClient(&qdrant.Config{
 		APIKey: vars.QdrantAPIKey,
@@ -111,7 +117,7 @@ func processBatch(ctx context.Context, vars EnvVars, b []Movie) ([]*qdrant.Point
 	for _, chunkMovie := range b {
 		text := chunkMovie.SemanticText
 		if text != "" {
-			texts = append(texts, text)
+			texts = append(texts, toE5PassageInput(text))
 			validB = append(validB, chunkMovie)
 		}
 	}
@@ -147,7 +153,10 @@ func processLocalChunks(ctx context.Context, vars EnvVars, localChunks []Movie) 
 	var wg sync.WaitGroup
 	errCh := make(chan error, (chunkSize/batchSize)+1)
 
-	const maxConcurrentEmbeddings = 4
+	maxConcurrentEmbeddings := vars.EmbeddingMaxParallel
+	if maxConcurrentEmbeddings <= 0 {
+		maxConcurrentEmbeddings = 2
+	}
 	// Limit concurrency to avoid connection timeouts
 	sem := make(chan struct{}, maxConcurrentEmbeddings)
 

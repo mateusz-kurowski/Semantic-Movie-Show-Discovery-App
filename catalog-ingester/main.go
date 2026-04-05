@@ -74,6 +74,15 @@ func main() {
 
 	env.Logger.Info("Successfully started application and connected to database")
 
+	if vars.IngestPeriodSeconds == 0 {
+		env.Logger.Info("INGEST_PERIOD_SECONDS is 0, running ingestion in continuous loop mode")
+		for {
+			env.Logger.Info("Ingestion cycle started")
+			getMoviesAndIngest(ctx, env, qdrantClient, vars)
+			env.Logger.Info("Ingestion cycle completed")
+		}
+	}
+
 	ticker := time.NewTicker(time.Duration(vars.IngestPeriodSeconds) * time.Second)
 	defer ticker.Stop()
 

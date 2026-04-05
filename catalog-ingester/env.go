@@ -10,8 +10,10 @@ import (
 type EnvVars struct {
 	DatabaseURL            string `validate:"required,uri,startswith=postgresql"`
 	EmbeddingModelEndpoint string
+	EmbeddingMaxParallel   int `validate:"gte=1"`
+	EmbeddingTimeoutSec    int `validate:"gte=1"`
 	IngestBatchSize        int
-	IngestPeriodSeconds    int `validate:"required,gt=0"`
+	IngestPeriodSeconds    int `validate:"gte=0"`
 	OtlpEndpoint           string
 	Production             bool
 	QdrantAPIKey           string
@@ -26,6 +28,9 @@ type EnvVars struct {
 }
 
 const defaultIngestBatchSize = 8
+const defaultEmbeddingTimeoutSec = 30
+const defaultEmbeddingMaxParallel = 2
+const loopModeEmbeddingMaxParallel = 1
 const trueStr = "true"
 
 func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
@@ -66,11 +71,29 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		ingestBatchSizeInt = defaultIngestBatchSize
 	}
 
+	embeddingTimeoutSec := os.Getenv("EMBEDDING_TIMEOUT_SECONDS")
+	embeddingTimeoutSecInt, err := strconv.Atoi(embeddingTimeoutSec)
+	if err != nil || embeddingTimeoutSecInt <= 0 {
+		embeddingTimeoutSecInt = defaultEmbeddingTimeoutSec
+	}
+
+	embeddingMaxParallel := os.Getenv("EMBEDDING_MAX_PARALLEL")
+	embeddingMaxParallelInt, err := strconv.Atoi(embeddingMaxParallel)
+	if err != nil || embeddingMaxParallelInt <= 0 {
+		embeddingMaxParallelInt = defaultEmbeddingMaxParallel
+	}
+
+	if ingestPeriodSecondsInt == 0 && os.Getenv("EMBEDDING_MAX_PARALLEL") == "" {
+		embeddingMaxParallelInt = loopModeEmbeddingMaxParallel
+	}
+
 	qdrantUseSSL := os.Getenv("QDRANT_USE_SSL") == trueStr
 
 	env := EnvVars{
 		DatabaseURL:            os.Getenv("DATABASE_URL"),
 		EmbeddingModelEndpoint: os.Getenv("EMBEDDING_MODEL_ENDPOINT"),
+		EmbeddingMaxParallel:   embeddingMaxParallelInt,
+		EmbeddingTimeoutSec:    embeddingTimeoutSecInt,
 		IngestBatchSize:        ingestBatchSizeInt,
 		IngestPeriodSeconds:    ingestPeriodSecondsInt,
 		OtlpEndpoint:           os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
