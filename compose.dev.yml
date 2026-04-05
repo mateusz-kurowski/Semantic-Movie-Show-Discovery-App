@@ -16,16 +16,17 @@ services:
       - catalog-ingester/.env.development
   text-embeddings-inference:
     ports:
-      - 8080:80
+      - "${TEXT_EMBEDDINGS_PORT:-38080}:80"
     volumes:
       - hf_cache:/data
     pull_policy: always
+    restart: unless-stopped
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.1
     command: >
-      --model-id intfloat/multilingual-e5-large-instruct
-      --pooling mean
-      --max-batch-tokens 2048
-      --max-client-batch-size 16
+      --model-id intfloat/multilingual-e5-small
+      --pooling mean 
+      --max-batch-tokens 16384 
+      --max-client-batch-size 8
       --auto-truncate
 volumes:
   hf_cache:

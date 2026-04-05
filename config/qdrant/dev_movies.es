@@ -20,7 +20,6 @@ PUT /collections/dev_movies
     }
   }
 }
-
 // Payload Indexes
 PUT /collections/dev_movies/index 
 {

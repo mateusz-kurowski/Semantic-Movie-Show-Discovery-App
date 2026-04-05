@@ -9,26 +9,27 @@ import (
 
 type EnvVars struct {
 	DatabaseURL            string `validate:"required,uri,startswith=postgresql"`
-	OtlpEndpoint           string
-	ServiceName            string
 	EmbeddingModelEndpoint string
-	QdrantAPIKey           string
-	QdrantHost             string `validate:"required"`
-	QdrantPort             int    `validate:"required,gt=0"`
-	QdrantCollectionName   string `validate:"required"`
-	IngestPeriodSeconds    int    `validate:"required,gt=0"`
+	IngestBatchSize        int
+	IngestPeriodSeconds    int `validate:"required,gt=0"`
+	OtlpEndpoint           string
 	Production             bool
-
-	UseQdrantInference    bool
-	QdrantInferenceModel  string
-	QdrantDenseVectorName string `validate:"required"`
-	IngestBatchSize       int
+	QdrantAPIKey           string
+	QdrantCollectionName   string `validate:"required"`
+	QdrantDenseVectorName  string `validate:"required"`
+	QdrantHost             string `validate:"required"`
+	QdrantInferenceModel   string
+	QdrantPort             int `validate:"required,gt=0"`
+	QdrantUseSSL           bool
+	ServiceName            string
+	UseQdrantInference     bool
 }
 
 const defaultIngestBatchSize = 8
+const trueStr = "true"
 
 func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
-	isProduction := os.Getenv("PRODUCTION") == "true"
+	isProduction := os.Getenv("PRODUCTION") == trueStr
 	if !isProduction {
 		// Ignore the error if no local .env files are found,
 		// because docker-compose might be injecting env vars directly via env_file.
@@ -55,7 +56,7 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 	}
 
 	qdrantCollectionName := os.Getenv("QDRANT_COLLECTION_NAME")
-	useQdrantInference := os.Getenv("USE_QDRANT_INFERENCE") == "true"
+	useQdrantInference := os.Getenv("USE_QDRANT_INFERENCE") == trueStr
 	qdrantInferenceModel := os.Getenv("QDRANT_INFERENCE_MODEL")
 
 	ingestBatchSize := os.Getenv("INGEST_BATCH_SIZE")
@@ -65,21 +66,24 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		ingestBatchSizeInt = defaultIngestBatchSize
 	}
 
+	qdrantUseSSL := os.Getenv("QDRANT_USE_SSL") == trueStr
+
 	env := EnvVars{
 		DatabaseURL:            os.Getenv("DATABASE_URL"),
-		OtlpEndpoint:           os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
-		ServiceName:            serviceName,
 		EmbeddingModelEndpoint: os.Getenv("EMBEDDING_MODEL_ENDPOINT"),
-		QdrantAPIKey:           os.Getenv("QDRANT_API_KEY"),
-		QdrantHost:             os.Getenv("QDRANT_HOST"),
-		QdrantPort:             qdrantPortInt,
-		QdrantCollectionName:   qdrantCollectionName,
-		IngestPeriodSeconds:    ingestPeriodSecondsInt,
-		Production:             isProduction,
-		UseQdrantInference:     useQdrantInference,
-		QdrantInferenceModel:   qdrantInferenceModel,
-		QdrantDenseVectorName:  os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
 		IngestBatchSize:        ingestBatchSizeInt,
+		IngestPeriodSeconds:    ingestPeriodSecondsInt,
+		OtlpEndpoint:           os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
+		Production:             isProduction,
+		QdrantAPIKey:           os.Getenv("QDRANT_API_KEY"),
+		QdrantCollectionName:   qdrantCollectionName,
+		QdrantDenseVectorName:  os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
+		QdrantHost:             os.Getenv("QDRANT_HOST"),
+		QdrantInferenceModel:   qdrantInferenceModel,
+		QdrantPort:             qdrantPortInt,
+		QdrantUseSSL:           qdrantUseSSL,
+		ServiceName:            serviceName,
+		UseQdrantInference:     useQdrantInference,
 	}
 	if !env.UseQdrantInference && env.EmbeddingModelEndpoint == "" {
 		genv.Logger.Error("EMBEDDING_MODEL_ENDPOINT is required when USE_QDRANT_INFERENCE is false.")

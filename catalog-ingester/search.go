@@ -2,16 +2,19 @@ package main
 
 import (
 	"context"
+	"sync"
 
 	"github.com/qdrant/go-client/qdrant"
 )
+
+const maxConcurrentEmbeddings = 4
 
 func initQdrant(vars EnvVars) (*qdrant.Client, error) {
 	client, err := qdrant.NewClient(&qdrant.Config{
 		APIKey: vars.QdrantAPIKey,
 		Host:   vars.QdrantHost,
 		Port:   vars.QdrantPort,
-		UseTLS: true,
+		UseTLS: vars.QdrantUseSSL,
 	})
 	return client, err
 }
@@ -107,26 +110,58 @@ func processMovies(ctx context.Context, env GlobalEnv, vars EnvVars, movies []Mo
 func processLocalChunks(ctx context.Context, vars EnvVars, localChunks []Movie) ([]*qdrant.PointStruct, error) {
 	var points []*qdrant.PointStruct
 	chunkSize := len(localChunks)
-	batchSize := 8
+	batchSize := vars.IngestBatchSize
+	if batchSize <= 0 {
+		batchSize = 8
+	}
+
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	errCh := make(chan error, (chunkSize/batchSize)+1)
+
+	// Limit concurrency to avoid connection timeouts
+	sem := make(chan struct{}, maxConcurrentEmbeddings)
 
 	for i := 0; i < chunkSize; i += batchSize {
 		end := min(i+batchSize, chunkSize)
-
 		batch := localChunks[i:end]
-		texts := make([]string, len(batch))
-		for j, chunkMovie := range batch {
-			texts[j] = *chunkMovie.Overview
-		}
 
-		embeddings, errGetEmb := GetEmbeddings(ctx, texts, vars)
-		if errGetEmb != nil {
-			return nil, errGetEmb
-		}
+		wg.Add(1)
+		go func(b []Movie) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
 
-		for j, chunkMovie := range batch {
-			if j < len(embeddings) {
-				points = append(points, chunkMovie.ToQdrantPayload(embeddings[j]))
+			texts := make([]string, len(b))
+			for j, chunkMovie := range b {
+				texts[j] = *chunkMovie.Overview
 			}
+
+			embeddings, errGetEmb := GetEmbeddings(ctx, texts, vars)
+			if errGetEmb != nil {
+				errCh <- errGetEmb
+				return
+			}
+
+			var localPoints []*qdrant.PointStruct
+			for j, chunkMovie := range b {
+				if j < len(embeddings) {
+					localPoints = append(localPoints, chunkMovie.ToQdrantPayload(embeddings[j]))
+				}
+			}
+
+			mu.Lock()
+			points = append(points, localPoints...)
+			mu.Unlock()
+		}(batch)
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	for err := range errCh {
+		if err != nil {
+			return nil, err
 		}
 	}
 
