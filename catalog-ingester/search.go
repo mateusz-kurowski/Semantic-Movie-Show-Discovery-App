@@ -49,7 +49,7 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 	var points []*qdrant.PointStruct
 
 	for _, m := range movies {
-		env.Logger.InfoContext(ctx, "Processing movie", "id", m.ID, "title", m.Title)
+		env.Logger.DebugContext(ctx, "Processing movie", "id", m.ID, "title", m.Title)
 
 		chunks := divideMovieIntoChunks(m)
 		for _, chunkMovie := range chunks {
