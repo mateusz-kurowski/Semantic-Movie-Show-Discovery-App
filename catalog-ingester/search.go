@@ -36,7 +36,7 @@ func upsertPoints(
 
 func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 	qdrantClient *qdrant.Client, vars EnvVars) {
-	movies, err := getMovies(ctx, env)
+	movies, err := getMovies(ctx, env, vars)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "Failed to fetch movies from DB", "error", err.Error())
 		return

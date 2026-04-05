@@ -22,7 +22,10 @@ type EnvVars struct {
 	UseQdrantInference    bool
 	QdrantInferenceModel  string
 	QdrantDenseVectorName string `validate:"required"`
+	IngestBatchSize       int
 }
+
+const defaultIngestBatchSize = 16
 
 func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 	isProduction := os.Getenv("PRODUCTION") == "true"
@@ -55,6 +58,13 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 	useQdrantInference := os.Getenv("USE_QDRANT_INFERENCE") == "true"
 	qdrantInferenceModel := os.Getenv("QDRANT_INFERENCE_MODEL")
 
+	ingestBatchSize := os.Getenv("INGEST_BATCH_SIZE")
+	ingestBatchSizeInt, err := strconv.Atoi(ingestBatchSize)
+	if err != nil {
+		genv.Logger.Error("Error while converting INGEST_BATCH_SIZE to int.", "Error", err)
+		ingestBatchSizeInt = defaultIngestBatchSize
+	}
+
 	env := EnvVars{
 		DatabaseURL:            os.Getenv("DATABASE_URL"),
 		OtlpEndpoint:           os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
@@ -69,6 +79,7 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		UseQdrantInference:     useQdrantInference,
 		QdrantInferenceModel:   qdrantInferenceModel,
 		QdrantDenseVectorName:  os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
+		IngestBatchSize:        ingestBatchSizeInt,
 	}
 	if !env.UseQdrantInference && env.EmbeddingModelEndpoint == "" {
 		genv.Logger.Error("EMBEDDING_MODEL_ENDPOINT is required when USE_QDRANT_INFERENCE is false.")

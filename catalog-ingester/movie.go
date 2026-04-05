@@ -7,8 +7,6 @@ import (
 	"github.com/qdrant/go-client/qdrant"
 )
 
-const defaultIngestCount = 8
-
 type Movie struct {
 	Adult               bool
 	BackdropPath        *string
@@ -149,10 +147,10 @@ func getMovieIDs(movies []Movie) []int {
 	return ids
 }
 
-func getMovies(ctx context.Context, env GlobalEnv) ([]Movie, error) {
+func getMovies(ctx context.Context, env GlobalEnv, vars EnvVars) ([]Movie, error) {
 	movies := make([]Movie, 0)
 
-	tx := env.DB.Where(Movie{IsPresentInSearch: false}).Limit(defaultIngestCount).Find(&movies)
+	tx := env.DB.Where(Movie{IsPresentInSearch: false}).Limit(vars.IngestBatchSize).Find(&movies)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
