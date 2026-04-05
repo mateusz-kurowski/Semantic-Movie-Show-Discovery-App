@@ -56,9 +56,7 @@ func (m Movie) toMap() map[string]any {
 		"original_language": m.OriginalLanguage,
 		"popularity":        m.Popularity,
 		"original_id":       m.ID,
-		"chunk_id":          m.ChunkID,
 		"chunk_order":       m.ChunkOrder,
-		"semantic_text":     m.SemanticText,
 	}
 
 	if m.Title != nil {
