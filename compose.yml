@@ -4,6 +4,7 @@ services:
     restart: on-failure
     pull_policy: always
     environment:
+      - CATALOG_COLLECTOR_SERVICE_ON=${CATALOG_COLLECTOR_SERVICE_ON}
       - DATABASE_URL=${DATABASE_URL}
       - DATASET_OUTPUT_DIR=dataset
       - DEBUG=false
@@ -21,18 +22,21 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - DEBUG=false
-      - EMBEDDING_MODEL_ENDPOINT=http://text-embeddings-inference:80/embed
-      - INGEST_PERIOD_SECONDS=15
+      - INGEST_BATCH_SIZE=${INGEST_BATCH_SIZE}
+      - INGEST_PERIOD_SECONDS=${INGEST_PERIOD_SECONDS}
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
       - OTEL_EXPORTER_OTLP_INSECURE=false
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
       - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=production
       - OTEL_SERVICE_NAME=catalog-ingester
+      - PRODUCTION=true
       - QDRANT_API_KEY=${QDRANT_API_KEY}
       - QDRANT_COLLECTION_NAME=${QDRANT_COLLECTION_NAME}
+      - QDRANT_DENSE_VECTOR_NAME=${QDRANT_DENSE_VECTOR_NAME}
       - QDRANT_HOST=${QDRANT_HOST}
+      - QDRANT_INFERENCE_MODEL=${QDRANT_INFERENCE_MODEL}
       - QDRANT_PORT=${QDRANT_PORT}
-      - PRODUCTION=true
+      - USE_QDRANT_INFERENCE=${USE_QDRANT_INFERENCE}
   text-embeddings-inference:
     ports:
       - "${TEXT_EMBEDDINGS_PORT:-38080}:80"
