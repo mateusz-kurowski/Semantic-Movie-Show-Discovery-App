@@ -7,8 +7,6 @@ import (
 	"github.com/qdrant/go-client/qdrant"
 )
 
-const maxConcurrentEmbeddings = 4
-
 func initQdrant(vars EnvVars) (*qdrant.Client, error) {
 	client, err := qdrant.NewClient(&qdrant.Config{
 		APIKey: vars.QdrantAPIKey,
@@ -82,12 +80,12 @@ func processMovies(ctx context.Context, env GlobalEnv, vars EnvVars, movies []Mo
 
 		chunks := divideMovieIntoChunks(m)
 		for _, chunkMovie := range chunks {
-			if chunkMovie.Overview == nil {
+			if chunkMovie.SemanticText == "" {
 				continue
 			}
 
 			if vars.UseQdrantInference {
-				cloudPayload := chunkMovie.ToQdrantCloudPayload(*chunkMovie.Overview,
+				cloudPayload := chunkMovie.ToQdrantCloudPayload(chunkMovie.SemanticText,
 					vars.QdrantInferenceModel, vars.QdrantDenseVectorName)
 				points = append(points, cloudPayload)
 			} else {
@@ -107,6 +105,36 @@ func processMovies(ctx context.Context, env GlobalEnv, vars EnvVars, movies []Mo
 	return points, nil
 }
 
+func processBatch(ctx context.Context, vars EnvVars, b []Movie) ([]*qdrant.PointStruct, error) {
+	var texts []string
+	var validB []Movie
+	for _, chunkMovie := range b {
+		text := chunkMovie.SemanticText
+		if text != "" {
+			texts = append(texts, text)
+			validB = append(validB, chunkMovie)
+		}
+	}
+
+	if len(texts) == 0 {
+		return nil, nil
+	}
+
+	embeddings, errGetEmb := GetEmbeddings(ctx, texts, vars)
+	if errGetEmb != nil {
+		return nil, errGetEmb
+	}
+
+	var localPoints []*qdrant.PointStruct
+	for j, chunkMovie := range validB {
+		if j < len(embeddings) {
+			localPoints = append(localPoints, chunkMovie.ToQdrantPayload(embeddings[j]))
+		}
+	}
+
+	return localPoints, nil
+}
+
 func processLocalChunks(ctx context.Context, vars EnvVars, localChunks []Movie) ([]*qdrant.PointStruct, error) {
 	var points []*qdrant.PointStruct
 	chunkSize := len(localChunks)
@@ -119,6 +147,7 @@ func processLocalChunks(ctx context.Context, vars EnvVars, localChunks []Movie) 
 	var wg sync.WaitGroup
 	errCh := make(chan error, (chunkSize/batchSize)+1)
 
+	const maxConcurrentEmbeddings = 4
 	// Limit concurrency to avoid connection timeouts
 	sem := make(chan struct{}, maxConcurrentEmbeddings)
 
@@ -132,22 +161,10 @@ func processLocalChunks(ctx context.Context, vars EnvVars, localChunks []Movie) 
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
-			texts := make([]string, len(b))
-			for j, chunkMovie := range b {
-				texts[j] = *chunkMovie.Overview
-			}
-
-			embeddings, errGetEmb := GetEmbeddings(ctx, texts, vars)
-			if errGetEmb != nil {
-				errCh <- errGetEmb
+			localPoints, err := processBatch(ctx, vars, b)
+			if err != nil {
+				errCh <- err
 				return
-			}
-
-			var localPoints []*qdrant.PointStruct
-			for j, chunkMovie := range b {
-				if j < len(embeddings) {
-					localPoints = append(localPoints, chunkMovie.ToQdrantPayload(embeddings[j]))
-				}
 			}
 
 			mu.Lock()

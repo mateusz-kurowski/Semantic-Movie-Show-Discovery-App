@@ -59,6 +59,13 @@ func (m Movie) toMap() map[string]any {
 		"chunk_order":       m.ChunkOrder,
 	}
 
+	if m.ChunkID != 0 {
+		result["chunk_id"] = m.ChunkID
+	}
+	if m.SemanticText != "" {
+		result["semantic_text"] = m.SemanticText
+	}
+
 	if m.Title != nil {
 		result["title"] = *m.Title
 	}
