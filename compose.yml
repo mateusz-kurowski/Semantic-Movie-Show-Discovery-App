@@ -1,7 +1,7 @@
 services:
   catalog-collector:
     image: mateuszkurowski/catalog-collector:latest
-    restart: unless-stopped
+    restart: on-failure
     pull_policy: always
     environment:
       - DATABASE_URL=${DATABASE_URL}

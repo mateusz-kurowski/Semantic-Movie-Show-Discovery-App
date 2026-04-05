@@ -25,6 +25,7 @@ class EnvConfig(BaseSettings):
     )
     debug: bool = Field(alias="DEBUG")
     production: bool = Field(alias="PRODUCTION")
+    catalog_collector_service_on: bool = Field(alias="CATALOG_COLLECTOR_SERVICE_ON")
 
 
 @lru_cache

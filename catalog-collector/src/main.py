@@ -37,4 +37,8 @@ def main():
 
 
 if __name__ == "__main__":
+    envs = get_envs()
+    if not envs.catalog_collector_service_on:
+        logging.info("Service is not running")
+        exit(0)
     main()

@@ -1,6 +1,7 @@
 # Root
 infra/.env
 
+stack.env
 # Per-service local overrides
 .env
 .env.local
