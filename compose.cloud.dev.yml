@@ -1,0 +1,14 @@
+services:
+  catalog-collector:
+    build:
+      context: catalog-collector
+      dockerfile: Dockerfile
+    env_file:
+      - catalog-collector/.env.development
+  catalog-ingester:
+    build:
+      context: catalog-ingester
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - catalog-ingester/.env.cloud.development

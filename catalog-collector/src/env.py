@@ -24,6 +24,7 @@ class EnvConfig(BaseSettings):
         alias="OTEL_PYTHON_LOG_CORRELATION", default=True
     )
     debug: bool = Field(alias="DEBUG")
+    production: bool = Field(alias="PRODUCTION")
 
 
 @lru_cache

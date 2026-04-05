@@ -69,8 +69,7 @@ func main() {
 	qdrantClient, err := initQdrant(vars)
 	if err != nil {
 		env.Logger.Error("Failed to create Qdrant client", "error", err.Error())
-	} else {
-		env.Logger.Info("Qdrant client created successfully")
+		return
 	}
 
 	env.Logger.Info("Successfully started application and connected to database")

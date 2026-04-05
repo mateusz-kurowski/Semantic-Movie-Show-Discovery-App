@@ -63,3 +63,24 @@ jobs:
           context: ${{ env.SERVICE_NAME }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest
+
+      - name: Run Trivy (CRITICAL)
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: 'docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: ${{ env.TRIVY_VULN_TYPE }}
+          severity: 'CRITICAL'
+
+      - name: Run Trivy (HIGH)
+        uses: aquasecurity/trivy-action@0.35.0
+        if: always()
+        with:
+          image-ref: 'docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: ${{ env.TRIVY_VULN_TYPE }}
+          severity: 'HIGH'

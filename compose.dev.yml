@@ -21,9 +21,11 @@ services:
       - hf_cache:/data
     pull_policy: always
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.1
-    command:
-      --model-id Qwen/Qwen3-Embedding-0.6B --revision refs/pr/27 --pooling
-      mean --max-batch-tokens 2048 --max-client-batch-size 16
+    command: >
+      --model-id intfloat/multilingual-e5-large-instruct
+      --pooling mean
+      --max-batch-tokens 2048
+      --max-client-batch-size 16
       --auto-truncate
 volumes:
   hf_cache:

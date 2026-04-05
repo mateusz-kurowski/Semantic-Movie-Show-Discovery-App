@@ -11,20 +11,19 @@ func initQdrant(vars EnvVars) (*qdrant.Client, error) {
 		APIKey: vars.QdrantAPIKey,
 		Host:   vars.QdrantHost,
 		Port:   vars.QdrantPort,
-		UseTLS: false,
+		UseTLS: true,
 	})
 	return client, err
 }
 
-func ingestMovies(
+func upsertPoints(
 	ctx context.Context,
 	client *qdrant.Client,
 	collectionName string,
-	movies []MovieEmbedding,
+	points []*qdrant.PointStruct,
 ) error {
-	var points []*qdrant.PointStruct
-	for _, me := range movies {
-		points = append(points, me.Movie.ToQdrantPayload(me.Embedding))
+	if len(points) == 0 {
+		return nil
 	}
 	wait := true
 	_, err := client.Upsert(ctx, &qdrant.UpsertPoints{
@@ -33,4 +32,63 @@ func ingestMovies(
 		Wait:           &wait,
 	})
 	return err
+}
+
+func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
+	qdrantClient *qdrant.Client, vars EnvVars) {
+	movies, err := getMovies(ctx, env)
+	if err != nil {
+		env.Logger.ErrorContext(ctx, "Failed to fetch movies from DB", "error", err.Error())
+		return
+	}
+
+	if len(movies) == 0 {
+		return
+	}
+
+	var points []*qdrant.PointStruct
+
+	for _, m := range movies {
+		env.Logger.InfoContext(ctx, "Processing movie", "id", m.ID, "title", m.Title)
+
+		chunks := divideMovieIntoChunks(m)
+		for _, chunkMovie := range chunks {
+			if chunkMovie.Overview == nil {
+				continue
+			}
+
+			if vars.UseQdrantInference {
+				cloudPayload := chunkMovie.ToQdrantCloudPayload(*chunkMovie.Overview,
+					vars.QdrantInferenceModel, vars.QdrantDenseVectorName)
+				points = append(points, cloudPayload)
+				continue
+			}
+
+			chunkEmbedding, errGetEmb := GetEmbeddings(ctx, *chunkMovie.Overview, vars)
+			if errGetEmb != nil {
+				env.Logger.ErrorContext(ctx, "Failed to get embeddings", "error",
+					errGetEmb.Error())
+				return
+			}
+
+			points = append(points, chunkMovie.ToQdrantPayload(chunkEmbedding))
+		}
+	}
+
+	errIngest := upsertPoints(ctx, qdrantClient, vars.QdrantCollectionName, points)
+	if errIngest != nil {
+		env.Logger.ErrorContext(ctx, "Failed to ingest movies into Qdrant", "error",
+			errIngest.Error())
+		return
+	}
+
+	env.Logger.InfoContext(ctx, "Movies ingested successfully into Qdrant", "points_count",
+		len(points))
+
+	errUpdate := updateMoviesExistInSearch(ctx, movies, env)
+	if errUpdate != nil {
+		env.Logger.ErrorContext(ctx, "Failed to update movies in DB", "error", errUpdate.Error())
+		return
+	}
+	env.Logger.InfoContext(ctx, "Movies updated successfully in DB", "movies_count", len(movies))
 }

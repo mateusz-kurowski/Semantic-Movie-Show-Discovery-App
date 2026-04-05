@@ -42,11 +42,10 @@ services:
     restart: unless-stopped
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.1
     command: >
-      --model-id Qwen/Qwen3-Embedding-0.6B 
-      --revision pr/27 
+      --model-id intfloat/multilingual-e5-small
       --pooling mean 
-      --max-batch-tokens 2048 
-      --max-client-batch-size 16 
+      --max-batch-tokens 16384 
+      --max-client-batch-size 32 
       --auto-truncate
 volumes:
   hf_cache:

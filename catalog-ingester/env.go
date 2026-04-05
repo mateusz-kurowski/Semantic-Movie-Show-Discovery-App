@@ -11,22 +11,25 @@ type EnvVars struct {
 	DatabaseURL            string `validate:"required,uri,startswith=postgresql"`
 	OtlpEndpoint           string
 	ServiceName            string
-	EmbeddingModelEndpoint string `validate:"required,uri"`
+	EmbeddingModelEndpoint string
 	QdrantAPIKey           string
 	QdrantHost             string `validate:"required"`
 	QdrantPort             int    `validate:"required,gt=0"`
 	QdrantCollectionName   string `validate:"required"`
 	IngestPeriodSeconds    int    `validate:"required,gt=0"`
-	Production             bool   `validate:"required"`
+	Production             bool
+
+	UseQdrantInference    bool
+	QdrantInferenceModel  string
+	QdrantDenseVectorName string `validate:"required"`
 }
 
 func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 	isProduction := os.Getenv("PRODUCTION") == "true"
 	if !isProduction {
-		if err := godotenv.Load(".env.development.local", ".env.development", ".env"); err != nil {
-			genv.Logger.Error("Error while reading envs.", "Error", err)
-			os.Exit(1)
-		}
+		// Ignore the error if no local .env files are found,
+		// because docker-compose might be injecting env vars directly via env_file.
+		_ = godotenv.Load(".env.development.local", ".env.development", ".env")
 	}
 
 	serviceName := os.Getenv("OTEL_SERVICE_NAME")
@@ -48,6 +51,10 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		os.Exit(1)
 	}
 
+	qdrantCollectionName := os.Getenv("QDRANT_COLLECTION_NAME")
+	useQdrantInference := os.Getenv("USE_QDRANT_INFERENCE") == "true"
+	qdrantInferenceModel := os.Getenv("QDRANT_INFERENCE_MODEL")
+
 	env := EnvVars{
 		DatabaseURL:            os.Getenv("DATABASE_URL"),
 		OtlpEndpoint:           os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
@@ -56,10 +63,18 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		QdrantAPIKey:           os.Getenv("QDRANT_API_KEY"),
 		QdrantHost:             os.Getenv("QDRANT_HOST"),
 		QdrantPort:             qdrantPortInt,
-		QdrantCollectionName:   os.Getenv("QDRANT_COLLECTION_NAME"),
+		QdrantCollectionName:   qdrantCollectionName,
 		IngestPeriodSeconds:    ingestPeriodSecondsInt,
 		Production:             isProduction,
+		UseQdrantInference:     useQdrantInference,
+		QdrantInferenceModel:   qdrantInferenceModel,
+		QdrantDenseVectorName:  os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
 	}
+	if !env.UseQdrantInference && env.EmbeddingModelEndpoint == "" {
+		genv.Logger.Error("EMBEDDING_MODEL_ENDPOINT is required when USE_QDRANT_INFERENCE is false.")
+		os.Exit(1)
+	}
+
 	errVal := genv.Validate.Struct(&env)
 	if errVal != nil {
 		genv.Logger.Error("Environment variables validation failed.", "Error", errVal.Error())
