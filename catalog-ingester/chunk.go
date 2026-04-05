@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
+	"hash/fnv"
+	"strconv"
 	"strings"
 
 	"github.com/tmc/langchaingo/textsplitter"
 )
 
 const (
-	chunkSize         = 1200
-	chunkOverlap      = 120
-	chunkIDMultiplier = 100
+	chunkSize    = 1200
+	chunkOverlap = 120
 )
 
 // We configure the text splitter to safely fit within E5's 512-token context window
@@ -62,10 +63,13 @@ func divideMovieIntoChunks(movie Movie) []Movie {
 		movies[i] = movie
 		movies[i].SemanticText = chunk
 
-		// Create a unique ChunkID based on the original Movie ID + Chunk Index.
-		// (TMDB IDs are currently up to ~1.3 million. 1.3M * 100 = 130,000,000 - extremely safe inside uint64 limits)
-		//nolint:gosec // Safe integer conversion
-		movies[i].ChunkID = uint64(movie.ID)*chunkIDMultiplier + uint64(i)
+		// Create a deterministic chunk ID from movie ID + chunk order.
+		// This avoids collisions that can happen with multiplier-based IDs.
+		h := fnv.New64a()
+		_, _ = h.Write([]byte(strconv.Itoa(movie.ID)))
+		_, _ = h.Write([]byte(":"))
+		_, _ = h.Write([]byte(strconv.Itoa(i)))
+		movies[i].ChunkID = h.Sum64()
 		movies[i].ChunkOrder = i
 	}
 	return movies
