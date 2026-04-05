@@ -21,8 +21,8 @@ services:
     pull_policy: always
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      - DEBUG=false
-      - INGEST_BATCH_SIZE=${INGEST_BATCH_SIZE}
+      - DEBUG=${DEBUG}
+      - INGEST_BATCH_SIZE=8
       - INGEST_PERIOD_SECONDS=${INGEST_PERIOD_SECONDS}
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
       - OTEL_EXPORTER_OTLP_INSECURE=false
@@ -49,7 +49,7 @@ services:
       --model-id intfloat/multilingual-e5-small
       --pooling mean 
       --max-batch-tokens 16384 
-      --max-client-batch-size 32 
+      --max-client-batch-size 8
       --auto-truncate
 volumes:
   hf_cache:

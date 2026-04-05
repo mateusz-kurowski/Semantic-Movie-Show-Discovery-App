@@ -21,9 +21,9 @@ var httpClient = &http.Client{
 	Timeout: defaultTimeout,
 }
 
-func GetEmbeddings(ctx context.Context, text string, env EnvVars) ([]float32, error) {
+func GetEmbeddings(ctx context.Context, texts []string, env EnvVars) ([][]float32, error) {
 	payload, _ := json.Marshal(map[string]any{
-		"inputs":       text,
+		"inputs":       texts,
 		"truncate_dim": truncateDimDefault,
 	})
 
@@ -68,6 +68,6 @@ func GetEmbeddings(ctx context.Context, text string, env EnvVars) ([]float32, er
 		return nil, errors.New("received empty embedding array")
 	}
 
-	// Return the first vector from the batch
-	return result[0], nil
+	// Return the entire batch of vectors
+	return result, nil
 }

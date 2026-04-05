@@ -25,7 +25,7 @@ type EnvVars struct {
 	IngestBatchSize       int
 }
 
-const defaultIngestBatchSize = 16
+const defaultIngestBatchSize = 8
 
 func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 	isProduction := os.Getenv("PRODUCTION") == "true"

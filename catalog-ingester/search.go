@@ -46,33 +46,10 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 		return
 	}
 
-	var points []*qdrant.PointStruct
-
-	for _, m := range movies {
-		env.Logger.DebugContext(ctx, "Processing movie", "id", m.ID, "title", m.Title)
-
-		chunks := divideMovieIntoChunks(m)
-		for _, chunkMovie := range chunks {
-			if chunkMovie.Overview == nil {
-				continue
-			}
-
-			if vars.UseQdrantInference {
-				cloudPayload := chunkMovie.ToQdrantCloudPayload(*chunkMovie.Overview,
-					vars.QdrantInferenceModel, vars.QdrantDenseVectorName)
-				points = append(points, cloudPayload)
-				continue
-			}
-
-			chunkEmbedding, errGetEmb := GetEmbeddings(ctx, *chunkMovie.Overview, vars)
-			if errGetEmb != nil {
-				env.Logger.ErrorContext(ctx, "Failed to get embeddings", "error",
-					errGetEmb.Error())
-				return
-			}
-
-			points = append(points, chunkMovie.ToQdrantPayload(chunkEmbedding))
-		}
+	points, errProcess := processMovies(ctx, env, vars, movies)
+	if errProcess != nil {
+		env.Logger.ErrorContext(ctx, "Failed to process movie chunks", "error", errProcess.Error())
+		return
 	}
 
 	errIngest := upsertPoints(ctx, qdrantClient, vars.QdrantCollectionName, points)
@@ -91,4 +68,67 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 		return
 	}
 	env.Logger.InfoContext(ctx, "Movies updated successfully in DB", "movies_count", len(movies))
+}
+
+func processMovies(ctx context.Context, env GlobalEnv, vars EnvVars, movies []Movie) ([]*qdrant.PointStruct, error) {
+	var points []*qdrant.PointStruct
+	var localChunks []Movie
+
+	for _, m := range movies {
+		env.Logger.DebugContext(ctx, "Processing movie", "id", m.ID, "title", m.Title)
+
+		chunks := divideMovieIntoChunks(m)
+		for _, chunkMovie := range chunks {
+			if chunkMovie.Overview == nil {
+				continue
+			}
+
+			if vars.UseQdrantInference {
+				cloudPayload := chunkMovie.ToQdrantCloudPayload(*chunkMovie.Overview,
+					vars.QdrantInferenceModel, vars.QdrantDenseVectorName)
+				points = append(points, cloudPayload)
+			} else {
+				localChunks = append(localChunks, chunkMovie)
+			}
+		}
+	}
+
+	if !vars.UseQdrantInference && len(localChunks) > 0 {
+		localPoints, err := processLocalChunks(ctx, vars, localChunks)
+		if err != nil {
+			return nil, err
+		}
+		points = append(points, localPoints...)
+	}
+
+	return points, nil
+}
+
+func processLocalChunks(ctx context.Context, vars EnvVars, localChunks []Movie) ([]*qdrant.PointStruct, error) {
+	var points []*qdrant.PointStruct
+	chunkSize := len(localChunks)
+	batchSize := 8
+
+	for i := 0; i < chunkSize; i += batchSize {
+		end := min(i+batchSize, chunkSize)
+
+		batch := localChunks[i:end]
+		texts := make([]string, len(batch))
+		for j, chunkMovie := range batch {
+			texts[j] = *chunkMovie.Overview
+		}
+
+		embeddings, errGetEmb := GetEmbeddings(ctx, texts, vars)
+		if errGetEmb != nil {
+			return nil, errGetEmb
+		}
+
+		for j, chunkMovie := range batch {
+			if j < len(embeddings) {
+				points = append(points, chunkMovie.ToQdrantPayload(embeddings[j]))
+			}
+		}
+	}
+
+	return points, nil
 }
