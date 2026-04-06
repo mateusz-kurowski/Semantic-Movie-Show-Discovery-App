@@ -1,0 +1,22 @@
+{
+  "name": "app",
+  "version": "1.0.50",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "bun run --watch src/index.ts"
+  },
+  "dependencies": {
+    "@elysiajs/openapi": "^1.4.14",
+    "@elysiajs/opentelemetry": "^1.4.11",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.214.0",
+    "@opentelemetry/sdk-trace-node": "^2.6.1",
+    "@qdrant/js-client-rest": "^1.17.0",
+    "elysia": "latest",
+    "redis": "^5.11.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.10",
+    "bun-types": "latest"
+  },
+  "module": "src/index.js"
+}

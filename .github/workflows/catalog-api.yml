@@ -1,0 +1,25 @@
+name: catalog-api
+
+on:
+  push:
+    paths:
+      - "catalog-api/**"
+      - ".github/workflows/catalog-api.yml"
+  pull_request:
+    paths:
+      - "catalog-api/**"
+      - ".github/workflows/catalog-api.yml"
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - uses: mongolyy/reviewdog-action-biome@v2
+        with:
+          github_token: ${{ secrets.REVIEWDOG_GITHUB_TOKEN }}
+          reporter: github-pr-review
