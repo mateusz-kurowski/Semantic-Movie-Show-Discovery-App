@@ -22,4 +22,5 @@ jobs:
       - uses: mongolyy/reviewdog-action-biome@v2
         with:
           github_token: ${{ secrets.REVIEWDOG_GITHUB_TOKEN }}
+          workdir: catalog-api
           reporter: github-pr-review
