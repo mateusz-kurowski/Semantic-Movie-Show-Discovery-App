@@ -5,9 +5,9 @@ export const EmbeddingModel = {
 		inputs: t.Array(
 			t.String({
 				description: "The text to embed",
+				error: "Text to embed is required",
 				examples: ["What are some good movies to watch?"],
 				title: "Text to Embed",
-				error: "Text to embed is required",
 			}),
 		),
 	}),

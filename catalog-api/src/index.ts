@@ -14,18 +14,18 @@ export const qdrantClient = qdrantService.getClient();
 export const cacheClient = await cacheService.getClient();
 
 const app = new Elysia()
-  .use(openapi())
-  .use(
-    opentelemetry({
-      serviceName: env.OTEL_SERVICE_NAME || "catalog-api",
-      spanProcessors: [batchSpanProcessor],
-    }),
-  )
-  .use(embeddingRoutes)
-  .listen(3000);
+	.use(openapi())
+	.use(
+		opentelemetry({
+			serviceName: env.OTEL_SERVICE_NAME || "catalog-api",
+			spanProcessors: [batchSpanProcessor],
+		}),
+	)
+	.use(embeddingRoutes)
+	.listen(3000);
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
+	`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );
 
 import cacheService from "./services/cacheService";
