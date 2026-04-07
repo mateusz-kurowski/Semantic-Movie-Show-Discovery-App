@@ -1,6 +1,7 @@
+import logging
+
 import kagglehub
 import polars as pl
-import logging
 
 # Download latest version
 
@@ -40,11 +41,20 @@ def get_tmdb_dataset() -> str:
 
 
 def scan_and_load_dataset(path: str) -> pl.DataFrame:
+    from .env import get_envs
+
+    env = get_envs()
+    percentage = env.dataset_load_percentage / 100.0
+
     query = (
         pl.scan_csv(path, try_parse_dates=True, infer_schema_length=10000)
         # .filter(pl.col("original_language") == "pl")
         .with_columns(pl.lit(False).alias("is_present_in_search"))
     )
+
+    if percentage < 1.0:
+        query = query.sample(fraction=percentage, seed=42)
+
     return query.collect(engine="streaming")
 
 

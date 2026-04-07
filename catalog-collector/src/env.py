@@ -18,14 +18,17 @@ class EnvConfig(BaseSettings):
     # otel_python_logging_auto_instrumentation_enabled: bool = Field(
     #     alias="OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED", default=True
     # )
-    dataset_output_dir: str = Field(alias="DATASET_OUTPUT_DIR")
+    dataset_output_dir: str = Field(alias="DATASET_OUTPUT_DIR", default="dataset")
     otel_logs_exporter: str = Field(alias="OTEL_LOGS_EXPORTER")
     otel_python_log_correlation: bool = Field(
         alias="OTEL_PYTHON_LOG_CORRELATION", default=True
     )
-    debug: bool = Field(alias="DEBUG")
-    production: bool = Field(alias="PRODUCTION")
-    catalog_collector_service_on: bool = Field(alias="CATALOG_COLLECTOR_SERVICE_ON")
+    debug: bool = Field(alias="DEBUG", default=False)
+    production: bool = Field(alias="PRODUCTION", default=True)
+    catalog_collector_service_on: bool = Field(
+        alias="CATALOG_COLLECTOR_SERVICE_ON", default=True
+    )
+    dataset_load_percentage: int = Field(alias="DATASET_LOAD_PERCENTAGE", default=100)
 
 
 @lru_cache

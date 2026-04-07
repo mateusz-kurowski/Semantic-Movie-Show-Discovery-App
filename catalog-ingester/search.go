@@ -42,28 +42,28 @@ func upsertPoints(
 }
 
 func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
-	qdrantClient *qdrant.Client, vars EnvVars) {
+	qdrantClient *qdrant.Client, vars EnvVars) int {
 	movies, err := getMovies(ctx, env, vars)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "Failed to fetch movies from DB", "error", err.Error())
-		return
+		return 0
 	}
 
 	if len(movies) == 0 {
-		return
+		return 0
 	}
 
 	points, errProcess := processMovies(ctx, env, vars, movies)
 	if errProcess != nil {
 		env.Logger.ErrorContext(ctx, "Failed to process movie chunks", "error", errProcess.Error())
-		return
+		return 0
 	}
 
 	errIngest := upsertPoints(ctx, qdrantClient, vars.QdrantCollectionName, points)
 	if errIngest != nil {
 		env.Logger.ErrorContext(ctx, "Failed to ingest movies into Qdrant", "error",
 			errIngest.Error())
-		return
+		return 0
 	}
 
 	env.Logger.InfoContext(ctx, "Movies ingested successfully into Qdrant", "points_count",
@@ -72,9 +72,11 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 	errUpdate := updateMoviesExistInSearch(ctx, movies, env)
 	if errUpdate != nil {
 		env.Logger.ErrorContext(ctx, "Failed to update movies in DB", "error", errUpdate.Error())
-		return
+		return 0
 	}
 	env.Logger.InfoContext(ctx, "Movies updated successfully in DB", "movies_count", len(movies))
+
+	return len(movies)
 }
 
 func processMovies(ctx context.Context, env GlobalEnv, vars EnvVars, movies []Movie) ([]*qdrant.PointStruct, error) {
