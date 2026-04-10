@@ -46,14 +46,19 @@ def scan_and_load_dataset(path: str) -> pl.DataFrame:
     env = get_envs()
     percentage = env.dataset_load_percentage / 100.0
 
+    n_rows = None
+    if percentage < 1.0:
+        with open(path, "rb") as f:
+            total_lines = sum(1 for _ in f)
+        n_rows = max(1, int((total_lines - 1) * percentage))
+
     query = (
-        pl.scan_csv(path, try_parse_dates=True, infer_schema_length=10000)
+        pl.scan_csv(
+            path, try_parse_dates=True, infer_schema_length=10000, n_rows=n_rows
+        )
         # .filter(pl.col("original_language") == "pl")
         .with_columns(pl.lit(False).alias("is_present_in_search"))
     )
-
-    if percentage < 1.0:
-        query = query.sample(fraction=percentage, seed=42)
 
     return query.collect(engine="streaming")
 
