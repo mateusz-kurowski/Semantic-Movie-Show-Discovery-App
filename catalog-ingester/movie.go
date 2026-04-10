@@ -96,32 +96,32 @@ func (m Movie) toMap() map[string]any {
 	}
 	if m.Genres != nil {
 		splittedGenres := strings.Split(*m.Genres, ",")
-		result["genres"] = stringSliceToAnySlice(splittedGenres)
+		result["genres"] = stringSliceToAnySlicePlusTrimElements(splittedGenres)
 	}
 	if m.ProductionCompanies != nil {
 		splittedCompanies := strings.Split(*m.ProductionCompanies, ",")
-		result["production_companies"] = stringSliceToAnySlice(splittedCompanies)
+		result["production_companies"] = stringSliceToAnySlicePlusTrimElements(splittedCompanies)
 	}
 	if m.ProductionCountries != nil {
 		splittedCountries := strings.Split(*m.ProductionCountries, ",")
-		result["production_countries"] = stringSliceToAnySlice(splittedCountries)
+		result["production_countries"] = stringSliceToAnySlicePlusTrimElements(splittedCountries)
 	}
 	if m.SpokenLanguages != nil {
 		splittedLanguages := strings.Split(*m.SpokenLanguages, ",")
-		result["spoken_languages"] = stringSliceToAnySlice(splittedLanguages)
+		result["spoken_languages"] = stringSliceToAnySlicePlusTrimElements(splittedLanguages)
 	}
 	if m.Keywords != nil {
 		splittedKeywords := strings.Split(*m.Keywords, ",")
-		result["keywords"] = stringSliceToAnySlice(splittedKeywords)
+		result["keywords"] = stringSliceToAnySlicePlusTrimElements(splittedKeywords)
 	}
 
 	return result
 }
 
-func stringSliceToAnySlice(strs []string) []any {
+func stringSliceToAnySlicePlusTrimElements(strs []string) []any {
 	res := make([]any, len(strs))
 	for i, s := range strs {
-		res[i] = s
+		res[i] = strings.TrimSpace(s)
 	}
 	return res
 }
