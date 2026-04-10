@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -94,19 +95,24 @@ func (m Movie) toMap() map[string]any {
 		result["tagline"] = *m.Tagline
 	}
 	if m.Genres != nil {
-		result["genres"] = *m.Genres
+		splittedGenres := strings.Split(*m.Genres, ",")
+		result["genres"] = splittedGenres
 	}
 	if m.ProductionCompanies != nil {
-		result["production_companies"] = *m.ProductionCompanies
+		splittedCompanies := strings.Split(*m.ProductionCompanies, ",")
+		result["production_companies"] = splittedCompanies
 	}
 	if m.ProductionCountries != nil {
-		result["production_countries"] = *m.ProductionCountries
+		splittedCountries := strings.Split(*m.ProductionCountries, ",")
+		result["production_countries"] = splittedCountries
 	}
 	if m.SpokenLanguages != nil {
-		result["spoken_languages"] = *m.SpokenLanguages
+		splittedLanguages := strings.Split(*m.SpokenLanguages, ",")
+		result["spoken_languages"] = splittedLanguages
 	}
 	if m.Keywords != nil {
-		result["keywords"] = *m.Keywords
+		splittedKeywords := strings.Split(*m.Keywords, ",")
+		result["keywords"] = splittedKeywords
 	}
 
 	return result
