@@ -1,13 +1,59 @@
 import logging
+from pathlib import Path
 
 import kagglehub
 import polars as pl
+
+try:
+    from .env import get_envs
+except ImportError:
+    from env import get_envs
 
 # Download latest version
 
 
 def get_tmdb_dataset() -> str:
     return kagglehub.dataset_download("asaniczka/tmdb-movies-dataset-2023-930k-movies")
+
+
+def _resolve_dataset_csv(path: str) -> Path:
+    dataset_path = Path(path)
+
+    if dataset_path.is_file():
+        return dataset_path
+
+    if dataset_path.is_dir():
+        csv_files = sorted(dataset_path.glob("*.csv"))
+        if not csv_files:
+            raise FileNotFoundError(
+                f"No CSV files found in dataset directory: {dataset_path}"
+            )
+
+        if len(csv_files) == 1:
+            return csv_files[0]
+
+        return max(csv_files, key=lambda file: file.stat().st_size)
+
+    raise FileNotFoundError(f"Dataset path does not exist: {dataset_path}")
+
+
+def _rows_to_load(csv_path: Path, percentage: int) -> int | None:
+    if percentage >= 100:
+        return None
+
+    if percentage <= 0:
+        return 0
+
+    with csv_path.open("rb") as csv_file:
+        total_lines = sum(1 for _ in csv_file)
+
+    data_rows = max(total_lines - 1, 0)
+    rows = int(data_rows * (percentage / 100.0))
+
+    if rows == 0 and data_rows > 0:
+        return 1
+
+    return rows
 
 
 # schema = pl.Schema(
@@ -41,20 +87,24 @@ def get_tmdb_dataset() -> str:
 
 
 def scan_and_load_dataset(path: str) -> pl.DataFrame:
-    from .env import get_envs
-
     env = get_envs()
-    percentage = env.dataset_load_percentage / 100.0
+    percentage = min(max(env.dataset_load_percentage, 0), 100)
+    if percentage != env.dataset_load_percentage:
+        logging.warning(
+            "DATASET_LOAD_PERCENTAGE=%s is outside 0..100; using %s",
+            env.dataset_load_percentage,
+            percentage,
+        )
 
-    n_rows = None
-    if percentage < 1.0:
-        with open(path, "rb") as f:
-            total_lines = sum(1 for _ in f)
-        n_rows = max(1, int((total_lines - 1) * percentage))
+    csv_path = _resolve_dataset_csv(path)
+    n_rows = _rows_to_load(csv_path, percentage)
 
     query = (
         pl.scan_csv(
-            path, try_parse_dates=True, infer_schema_length=10000, n_rows=n_rows
+            str(csv_path),
+            try_parse_dates=True,
+            infer_schema_length=10000,
+            n_rows=n_rows,
         )
         # .filter(pl.col("original_language") == "pl")
         .with_columns(pl.lit(False).alias("is_present_in_search"))
