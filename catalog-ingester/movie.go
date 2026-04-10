@@ -96,26 +96,34 @@ func (m Movie) toMap() map[string]any {
 	}
 	if m.Genres != nil {
 		splittedGenres := strings.Split(*m.Genres, ",")
-		result["genres"] = splittedGenres
+		result["genres"] = stringSliceToAnySlice(splittedGenres)
 	}
 	if m.ProductionCompanies != nil {
 		splittedCompanies := strings.Split(*m.ProductionCompanies, ",")
-		result["production_companies"] = splittedCompanies
+		result["production_companies"] = stringSliceToAnySlice(splittedCompanies)
 	}
 	if m.ProductionCountries != nil {
 		splittedCountries := strings.Split(*m.ProductionCountries, ",")
-		result["production_countries"] = splittedCountries
+		result["production_countries"] = stringSliceToAnySlice(splittedCountries)
 	}
 	if m.SpokenLanguages != nil {
 		splittedLanguages := strings.Split(*m.SpokenLanguages, ",")
-		result["spoken_languages"] = splittedLanguages
+		result["spoken_languages"] = stringSliceToAnySlice(splittedLanguages)
 	}
 	if m.Keywords != nil {
 		splittedKeywords := strings.Split(*m.Keywords, ",")
-		result["keywords"] = splittedKeywords
+		result["keywords"] = stringSliceToAnySlice(splittedKeywords)
 	}
 
 	return result
+}
+
+func stringSliceToAnySlice(strs []string) []any {
+	res := make([]any, len(strs))
+	for i, s := range strs {
+		res[i] = s
+	}
+	return res
 }
 
 func (m Movie) ToQdrantPayload(vectors []float32) *qdrant.PointStruct {
