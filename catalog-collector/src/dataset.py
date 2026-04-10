@@ -4,10 +4,7 @@ from pathlib import Path
 import kagglehub
 import polars as pl
 
-try:
-    from .env import get_envs
-except ImportError:
-    from env import get_envs
+from env import get_envs
 
 # Download latest version
 
