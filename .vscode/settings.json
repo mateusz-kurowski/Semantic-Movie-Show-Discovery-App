@@ -1,9 +1,18 @@
 {
   "go.lintTool": "golangci-lint",
-  "go.lintFlags": ["--path-mode=abs", "--fast-only"],
-  "go.formatTool": "custom",
-  "go.alternateTools": {
-    "customFormatter": "golangci-lint"
+  "go.lintFlags": ["--fast", "--path-mode=abs"],
+  "go.lintOnSave": "package",
+
+  // Format code on save
+  "editor.formatOnSave": true,
+  "go.formatTool": "default",
+
+  // Enable auto-fixing on save (if your VS Code Go setup supports fixAll)
+  "editor.codeActionsOnSave": {
+    "source.fixAll.go": "explicit",
+    "source.organizeImports": "explicit"
   },
-  "go.formatFlags": ["fmt", "--stdin"]
+
+  // Tell VS Code Go extension to treat subdirectories with go.mod correctly
+  "go.inferGopath": false
 }

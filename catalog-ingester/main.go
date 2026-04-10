@@ -74,12 +74,26 @@ func main() {
 
 	env.Logger.Info("Successfully started application and connected to database")
 
+	appStartTime := time.Now()
+	initialSyncLogged := false
+
+	runIngest := func() {
+		count := getMoviesAndIngest(ctx, env, qdrantClient, vars)
+		if count == 0 && !initialSyncLogged {
+			elapsed := time.Since(appStartTime)
+			env.Logger.Info(
+				"no records to ingest / insert at the moment. Initial sync complete.",
+				"duration_seconds",
+				elapsed.Seconds(),
+			)
+			initialSyncLogged = true
+		}
+	}
+
 	if vars.IngestPeriodSeconds == 0 {
 		env.Logger.Info("INGEST_PERIOD_SECONDS is 0, running ingestion in continuous loop mode")
 		for {
-			env.Logger.Info("Ingestion cycle started")
-			getMoviesAndIngest(ctx, env, qdrantClient, vars)
-			env.Logger.Info("Ingestion cycle completed")
+			runIngest()
 		}
 	}
 
@@ -87,11 +101,9 @@ func main() {
 	defer ticker.Stop()
 
 	// Initial ingestion before starting the ticker
-	getMoviesAndIngest(ctx, env, qdrantClient, vars)
+	runIngest()
 
 	for range ticker.C {
-		env.Logger.Info("Ingestion cycle started")
-		getMoviesAndIngest(ctx, env, qdrantClient, vars)
-		env.Logger.Info("Ingestion cycle completed")
+		runIngest()
 	}
 }

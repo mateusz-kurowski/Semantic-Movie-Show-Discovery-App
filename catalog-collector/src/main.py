@@ -31,9 +31,17 @@ def main():
 
     logging.info(f"Loaded dataset: {len(df)} records")
     create_db_and_tables()
-    logging.info("Processing batches...")
-    insert_movies_in_batches(df)
-    logging.info("Finished inserting items to database")
+
+    if len(df) == 0:
+        logging.info("no records to insert at the moment")
+    else:
+        import time
+
+        start_time = time.time()
+        logging.info("Processing batches...")
+        insert_movies_in_batches(df)
+        elapsed = time.time() - start_time
+        logging.info(f"Finished inserting items to database in {elapsed:.2f} seconds")
 
 
 if __name__ == "__main__":
