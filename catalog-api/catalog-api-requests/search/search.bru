@@ -1,0 +1,18 @@
+meta {
+  name: search
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{url}}/search
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "phrase":"bat man",
+    "topK":5
+  }
+}

@@ -1,0 +1,26 @@
+name: frontend
+
+on:
+  push:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend.yml"
+  pull_request:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend.yml"
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - uses: mongolyy/reviewdog-action-biome@v2
+        with:
+          github_token: ${{ secrets.REVIEWDOG_GITHUB_TOKEN }}
+          workdir: frontend
+          reporter: github-pr-review

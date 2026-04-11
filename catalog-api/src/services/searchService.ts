@@ -1,16 +1,21 @@
-import { QdrantClient } from "@qdrant/js-client-rest";
-import { env } from "bun";
+import { cacheClient, qdrantClient } from "../clients";
+import { getCollectionName } from "../models/envModel";
+import embeddingService from "./embeddingService";
+import qdrantService from "./qdrantService";
 
-const getClient = async () =>
-	new QdrantClient({
-		apiKey: env.QDRANT_API_KEY,
-		checkCompatibility: false,
-		https: true,
-		url: env.QDRANT_URL,
-	});
+const search = async (phrase: string, topK: number) => {
+  const embedding = await embeddingService.getEmbeddingWithCache(
+    phrase,
+    cacheClient,
+  );
 
-const qdrantService = {
-	getClient,
+  const searchResults = await qdrantService.searchPoints(
+    qdrantClient,
+    getCollectionName(),
+    embedding,
+    topK,
+  );
+
+  return searchResults;
 };
-
-export default qdrantService;
+export const searchService = { search };
