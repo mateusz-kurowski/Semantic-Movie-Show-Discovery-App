@@ -2,7 +2,7 @@ import logging
 
 import polars as pl
 from env import get_envs
-from movie import Movie
+from models.movie import Movie
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import declarative_base

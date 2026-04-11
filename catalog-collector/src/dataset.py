@@ -3,7 +3,6 @@ from pathlib import Path
 
 import kagglehub
 import polars as pl
-
 from env import get_envs
 
 # Download latest version
@@ -133,3 +132,22 @@ def explore_dataset(df: pl.DataFrame) -> None:
         logging.info(
             f"Column '{col_name: <25}' | Polars: {str(df.schema[col_name]): <12} | PyTypes: {types_str: <15} | Nulls/Empty: {str(has_nulls): <5} | Samples: {samples}"
         )
+
+
+def str_to_str_list(text: str) -> list[str]:
+    return [text.strip() for text in text.split(",")]
+
+
+def get_unique_values_from_df_col(df: pl.DataFrame, col_name: str) -> list[str]:
+    # 1. map_elements creates a Series of lists: e.g. [["a", "b"], ["b", "c"]]
+    # 2. explode() flattens it to: ["a", "b", "b", "c"]
+    # 3. unique() gets distinct values: ["a", "b", "c"]
+    # 4. to_list() converts the Polars Series to a Python list
+
+    return (
+        df.get_column(col_name)
+        .map_elements(str_to_str_list, return_dtype=pl.List(pl.String))
+        .explode()
+        .unique()
+        .to_list()
+    )
