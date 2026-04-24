@@ -135,7 +135,12 @@ def explore_dataset(df: pl.DataFrame) -> None:
 
 
 def str_to_str_list(text: str) -> list[str]:
-    return [text.strip() for text in text.split(",")]
+    stripped = [text.strip() for text in text.split(",")]
+    not_empty = []
+    for txt in stripped:
+        if txt != "":
+            not_empty.append(txt)
+    return not_empty
 
 
 def get_unique_values_from_df_col(df: pl.DataFrame, col_name: str) -> list[str]:

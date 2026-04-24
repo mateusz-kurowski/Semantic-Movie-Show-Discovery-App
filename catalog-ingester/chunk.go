@@ -1,6 +1,7 @@
 package main
 
 import (
+	"catalog-ingester/internal/movie"
 	"fmt"
 	"strings"
 
@@ -22,46 +23,98 @@ var recursiveCharacter = textsplitter.NewRecursiveCharacter(
 	textsplitter.WithChunkOverlap(chunkOverlap),
 )
 
-// buildSemanticDocument combines all relevant movie metadata into a single, highly-semantic
-// block of text for the embedding model to read, maximizing vector similarity for searches.
-func buildSemanticDocument(movie Movie) string {
+// buildBaseMetadataDocument combines all relevant movie metadata into a single string,
+// excluding the long text fields like Overview. This base context is prepended to
+// every chunk to ensure the semantic meaning of the chunk remains grounded.
+func buildBaseMetadataDocument(m movie.Movie) string {
 	var doc strings.Builder
 
-	if movie.Title != nil && *movie.Title != "" {
-		fmt.Fprintf(&doc, "Title: %s\n", *movie.Title)
+	if m.Title != nil && *m.Title != "" {
+		fmt.Fprintf(&doc, "Title: %s\n", *m.Title)
 	}
-	if movie.Tagline != nil && *movie.Tagline != "" {
-		fmt.Fprintf(&doc, "Tagline: %s\n", *movie.Tagline)
+	if m.OriginalTitle != nil && *m.OriginalTitle != "" && (m.Title == nil || *m.OriginalTitle != *m.Title) {
+		fmt.Fprintf(&doc, "Original Title: %s\n", *m.OriginalTitle)
 	}
-	if movie.Genres != nil && *movie.Genres != "" {
-		fmt.Fprintf(&doc, "Genres: %s\n", *movie.Genres)
+	if !m.ReleaseDate.IsZero() {
+		fmt.Fprintf(&doc, "Release Year: %d\n", m.ReleaseDate.Year())
 	}
-	if movie.Keywords != nil && *movie.Keywords != "" {
-		fmt.Fprintf(&doc, "Keywords: %s\n", *movie.Keywords)
+	if m.Tagline != nil && *m.Tagline != "" {
+		fmt.Fprintf(&doc, "Tagline: %s\n", *m.Tagline)
 	}
-	if movie.Overview != nil && *movie.Overview != "" {
-		fmt.Fprintf(&doc, "Overview: %s\n", *movie.Overview)
+	if len(m.Genres) > 0 {
+		fmt.Fprintf(&doc, "Genres: %s\n", strings.Join(movie.NamesFromGenres(m.Genres), ", "))
+	}
+	if len(m.Keywords) > 0 {
+		fmt.Fprintf(&doc, "Keywords: %s\n", strings.Join(movie.NamesFromKeywords(m.Keywords), ", "))
+	}
+	if len(m.ProductionCompanies) > 0 {
+		fmt.Fprintf(&doc, "Production Companies: %s\n", strings.Join(movie.NamesFromCompanies(m.ProductionCompanies), ", "))
+	}
+	if len(m.ProductionCountries) > 0 {
+		fmt.Fprintf(&doc, "Production Countries: %s\n", strings.Join(movie.NamesFromCountries(m.ProductionCountries), ", "))
+	}
+	if len(m.SpokenLanguages) > 0 {
+		fmt.Fprintf(&doc, "Spoken Languages: %s\n", strings.Join(movie.NamesFromLanguages(m.SpokenLanguages), ", "))
+	}
+	if m.VoteCount > 0 {
+		fmt.Fprintf(&doc, "User Rating: %.1f/10\n", m.VoteAverage)
+	}
+	if m.Runtime > 0 {
+		fmt.Fprintf(&doc, "Runtime: %d minutes\n", m.Runtime)
+	}
+	if m.Adult {
+		doc.WriteString("Content: Adult (18+)\n")
 	}
 
-	return doc.String()
+	return strings.TrimSpace(doc.String())
 }
 
-func divideMovieIntoChunks(movie Movie) []Movie {
-	semanticDoc := buildSemanticDocument(movie)
-	if semanticDoc == "" {
-		return nil
+func divideMovieIntoChunks(m movie.Movie) []movie.Movie {
+	baseMetadata := buildBaseMetadataDocument(m)
+	
+	// If there's no overview, just return the base metadata as a single chunk
+	if m.Overview == nil || *m.Overview == "" {
+		if baseMetadata == "" {
+			return nil
+		}
+		m.SemanticText = baseMetadata
+		m.ChunkID = createChunkID(m.ID, 0)
+		m.ChunkOrder = 0
+		return []movie.Movie{m}
 	}
 
-	chunks, err := recursiveCharacter.SplitText(semanticDoc)
+	// Calculate how much space we have left for the overview chunk
+	// "Overview: \n" is about 10 characters.
+	overviewPrefix := "\nOverview: "
+	availableSpace := chunkSize - len(baseMetadata) - len(overviewPrefix)
+	
+	// Ensure we always have at least a minimal chunk size for the text splitter
+	// so it doesn't crash if metadata is extremely long.
+	minOverviewChunkSize := 100
+	if availableSpace < minOverviewChunkSize {
+		availableSpace = minOverviewChunkSize
+	}
+	
+	// Create a text splitter tailored to the remaining space
+	splitter := textsplitter.NewRecursiveCharacter(
+		textsplitter.WithChunkSize(availableSpace),
+		textsplitter.WithChunkOverlap(chunkOverlap),
+	)
+
+	chunks, err := splitter.SplitText(*m.Overview)
 	if err != nil || len(chunks) == 0 {
-		return nil
+		// Fallback if splitter fails for some reason
+		m.SemanticText = baseMetadata + overviewPrefix + *m.Overview
+		m.ChunkID = createChunkID(m.ID, 0)
+		m.ChunkOrder = 0
+		return []movie.Movie{m}
 	}
 
-	movies := make([]Movie, len(chunks))
+	movies := make([]movie.Movie, len(chunks))
 	for i, chunk := range chunks {
-		movies[i] = movie
-		movies[i].SemanticText = chunk
-		movies[i].ChunkID = createChunkID(movie.ID, i)
+		movies[i] = m
+		movies[i].SemanticText = baseMetadata + overviewPrefix + chunk
+		movies[i].ChunkID = createChunkID(m.ID, i)
 		movies[i].ChunkOrder = i
 	}
 	return movies

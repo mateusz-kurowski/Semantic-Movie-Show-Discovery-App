@@ -3,8 +3,6 @@ package main
 import (
 	"os"
 	"strconv"
-
-	"github.com/joho/godotenv"
 )
 
 type EnvVars struct {
@@ -34,12 +32,11 @@ const loopModeEmbeddingMaxParallel = 1
 const trueStr = "true"
 
 func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
+	// Do NOT load .env files here - environment variables should come ONLY
+	// from the host environment (set by Coolify or docker-compose).
+	// .env files are for local dev only and should NOT be loaded in prod.
+
 	isProduction := os.Getenv("PRODUCTION") == trueStr
-	if !isProduction {
-		// Ignore the error if no local .env files are found,
-		// because docker-compose might be injecting env vars directly via env_file.
-		_ = godotenv.Load(".env.development.local", ".env.development", ".env")
-	}
 
 	serviceName := os.Getenv("OTEL_SERVICE_NAME")
 	if serviceName == "" {
@@ -118,5 +115,13 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		genv.Logger.Error("Environment variables validation failed.", "Error", errVal.Error())
 		os.Exit(1)
 	}
+
+	genv.Logger.Info("Environment variables loaded",
+		"PRODUCTION", isProduction,
+		"QDRANT_COLLECTION_NAME", qdrantCollectionName,
+		"QDRANT_DENSE_VECTOR_NAME", os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
+		"QDRANT_HOST", os.Getenv("QDRANT_HOST"),
+		"QDRANT_PORT", qdrantPort,
+	)
 	return env
 }

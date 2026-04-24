@@ -1,4 +1,4 @@
-package main
+package movie
 
 import (
 	"reflect"
@@ -37,7 +37,7 @@ func TestResolveQdrantPointID(t *testing.T) {
 
 func TestToQdrantPayloadUsesResolvedID(t *testing.T) {
 	movie := Movie{ID: 0, ChunkOrder: 0, SemanticText: "chunk text"}
-	point := movie.ToQdrantPayload([]float32{0.1, 0.2})
+	point := movie.ToQdrantPayload([]float32{0.1, 0.2}, "overview-dense-vector")
 	if _, err := uuid.Parse(point.GetId().GetUuid()); err != nil {
 		t.Fatalf("expected UUID point id, got error: %v", err)
 	}
@@ -78,7 +78,7 @@ func TestGetMovieIds(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actualIDs := getMovieIDs(tc.movies)
+			actualIDs := GetMovieIDs(tc.movies)
 			if !reflect.DeepEqual(tc.expectedIDs, actualIDs) {
 				t.Errorf("Expected %v, got %v", tc.expectedIDs, actualIDs)
 			}

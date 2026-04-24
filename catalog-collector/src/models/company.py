@@ -1,6 +1,5 @@
-from sqlmodel import Field, SQLModel
+from models.named_entity import NamedEntity
 
 
-class Company(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str
+class Company(NamedEntity, table=True):
+    pass

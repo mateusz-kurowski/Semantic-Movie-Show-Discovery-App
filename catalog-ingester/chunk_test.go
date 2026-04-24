@@ -1,6 +1,7 @@
 package main
 
 import (
+	"catalog-ingester/internal/movie"
 	"fmt"
 	"testing"
 )
@@ -54,5 +55,96 @@ func TestCreateChunkIDLargeUniquenessSet(t *testing.T) {
 			}
 			seen[id] = key
 		}
+	}
+}
+
+func ptr[T any](v T) *T {
+	return &v
+}
+
+func TestBuildBaseMetadataDocument(t *testing.T) {
+	tests := []struct {
+		name  string
+		movie movie.Movie
+		want  string
+	}{
+		{
+			name: "All fields present",
+			movie: movie.Movie{
+				Title:               ptr("The Matrix"),
+				OriginalTitle:       ptr("The Matrix"), // Should be ignored since it equals title
+				Tagline:             ptr("Free your mind."),
+				VoteAverage:         8.7,
+				VoteCount:           1000,
+				Runtime:             136,
+				Adult:               true,
+				Genres:              []movie.Genre{{Name: "Action"}, {Name: "Sci-Fi"}},
+				Keywords:            []movie.Keyword{{Name: "simulation"}, {Name: "hacker"}},
+				ProductionCompanies: []movie.Company{{Name: "Warner Bros."}},
+				ProductionCountries: []movie.Country{{Name: "USA"}},
+				SpokenLanguages:     []movie.Language{{Name: "English"}},
+			},
+			want: "Title: The Matrix\nTagline: Free your mind.\nGenres: Action, Sci-Fi\nKeywords: simulation, hacker\nProduction Companies: Warner Bros.\nProduction Countries: USA\nSpoken Languages: English\nUser Rating: 8.7/10\nRuntime: 136 minutes\nContent: Adult (18+)",
+		},
+		{
+			name: "Original title differs",
+			movie: movie.Movie{
+				Title:         ptr("Spirited Away"),
+				OriginalTitle: ptr("Sen to Chihiro no Kamikakushi"),
+			},
+			want: "Title: Spirited Away\nOriginal Title: Sen to Chihiro no Kamikakushi",
+		},
+		{
+			name: "Empty movie",
+			movie: movie.Movie{},
+			want: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := buildBaseMetadataDocument(tt.movie)
+			if got != tt.want {
+				t.Errorf("buildBaseMetadataDocument() got = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDivideMovieIntoChunks(t *testing.T) {
+	tests := []struct {
+		name      string
+		movie     movie.Movie
+		wantCount int
+	}{
+		{
+			name: "No overview, no metadata",
+			movie: movie.Movie{},
+			wantCount: 0,
+		},
+		{
+			name: "No overview, has metadata",
+			movie: movie.Movie{
+				Title: ptr("Short Movie"),
+			},
+			wantCount: 1,
+		},
+		{
+			name: "Short overview",
+			movie: movie.Movie{
+				Title:    ptr("Test Movie"),
+				Overview: ptr("This is a short overview."),
+			},
+			wantCount: 1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := divideMovieIntoChunks(tt.movie)
+			if len(got) != tt.wantCount {
+				t.Errorf("divideMovieIntoChunks() count got = %v, want %v", len(got), tt.wantCount)
+			}
+		})
 	}
 }

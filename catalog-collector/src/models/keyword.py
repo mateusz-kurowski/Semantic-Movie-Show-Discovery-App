@@ -1,6 +1,5 @@
-from sqlmodel import Field, SQLModel
+from models.named_entity import NamedEntity
 
 
-class Keyword(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str
+class Keyword(NamedEntity, table=True):
+    pass

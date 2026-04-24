@@ -1,6 +1,7 @@
 package main
 
 import (
+	"catalog-ingester/internal/movie"
 	"context"
 	"log/slog"
 	"os"
@@ -18,7 +19,7 @@ type GlobalEnv struct {
 }
 
 type MovieEmbedding struct {
-	Movie     Movie
+	Movie     movie.Movie
 	Embedding []float32
 }
 
@@ -66,7 +67,7 @@ func main() {
 		defer sqlDB.Close()
 	}
 
-	qdrantClient, err := initQdrant(vars)
+	qdrantClient, err := initQdrant(ctx, env, vars)
 	if err != nil {
 		env.Logger.Error("Failed to create Qdrant client", "error", err.Error())
 		return

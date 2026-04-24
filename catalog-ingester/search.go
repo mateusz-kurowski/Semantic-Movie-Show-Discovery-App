@@ -1,7 +1,9 @@
 package main
 
 import (
+	"catalog-ingester/internal/movie"
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/qdrant/go-client/qdrant"
@@ -13,14 +15,39 @@ func toE5PassageInput(text string) string {
 	return e5PassagePrefix + text
 }
 
-func initQdrant(vars EnvVars) (*qdrant.Client, error) {
+func initQdrant(ctx context.Context, env GlobalEnv, vars EnvVars) (*qdrant.Client, error) {
+	env.Logger.Info("Initializing Qdrant client",
+		"host", vars.QdrantHost,
+		"port", vars.QdrantPort,
+		"collection", vars.QdrantCollectionName,
+		"vector_name", vars.QdrantDenseVectorName)
+	
 	client, err := qdrant.NewClient(&qdrant.Config{
 		APIKey: vars.QdrantAPIKey,
 		Host:   vars.QdrantHost,
 		Port:   vars.QdrantPort,
 		UseTLS: vars.QdrantUseSSL,
 	})
-	return client, err
+	if err != nil {
+		return nil, err
+	}
+
+	// Try to create collection - don't fail if it already exists
+	env.Logger.Info("Creating collection if not exists", "collection", vars.QdrantCollectionName)
+	err = client.CreateCollection(ctx, &qdrant.CreateCollection{
+		CollectionName: vars.QdrantCollectionName,
+		VectorsConfig: qdrant.NewVectorsConfigMap(map[string]*qdrant.VectorParams{
+			vars.QdrantDenseVectorName: {
+				Size:     384, // intfloat/multilingual-e5-small dimension
+				Distance: qdrant.Distance_Cosine,
+			},
+		}),
+	})
+	if err != nil {
+		env.Logger.Warn("Collection creation returned error (may already exist)", "error", err.Error())
+	}
+
+	return client, nil
 }
 
 func upsertPoints(
@@ -38,12 +65,15 @@ func upsertPoints(
 		Points:         points,
 		Wait:           &wait,
 	})
+	if err != nil {
+		return fmt.Errorf("Upsert() failed: %s: %w", collectionName, err)
+	}
 	return err
 }
 
 func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 	qdrantClient *qdrant.Client, vars EnvVars) int {
-	movies, err := getMovies(ctx, env, vars)
+	movies, err := movie.GetMovies(ctx, env.DB, env.Logger, vars.IngestBatchSize)
 	if err != nil {
 		env.Logger.ErrorContext(ctx, "Failed to fetch movies from DB", "error", err.Error())
 		return 0
@@ -61,15 +91,18 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 
 	errIngest := upsertPoints(ctx, qdrantClient, vars.QdrantCollectionName, points)
 	if errIngest != nil {
-		env.Logger.ErrorContext(ctx, "Failed to ingest movies into Qdrant", "error",
-			errIngest.Error())
+		env.Logger.ErrorContext(ctx, "Failed to ingest movies into Qdrant",
+			"collection", vars.QdrantCollectionName,
+			"vector_name", vars.QdrantDenseVectorName,
+			"points_count", len(points),
+			"error", errIngest.Error())
 		return 0
 	}
 
 	env.Logger.InfoContext(ctx, "Movies ingested successfully into Qdrant", "points_count",
 		len(points))
 
-	errUpdate := updateMoviesExistInSearch(ctx, movies, env)
+	errUpdate := movie.UpdateMoviesExistInSearch(ctx, movies, env.DB, env.Logger)
 	if errUpdate != nil {
 		env.Logger.ErrorContext(ctx, "Failed to update movies in DB", "error", errUpdate.Error())
 		return 0
@@ -79,9 +112,9 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 	return len(movies)
 }
 
-func processMovies(ctx context.Context, env GlobalEnv, vars EnvVars, movies []Movie) ([]*qdrant.PointStruct, error) {
+func processMovies(ctx context.Context, env GlobalEnv, vars EnvVars, movies []movie.Movie) ([]*qdrant.PointStruct, error) {
 	var points []*qdrant.PointStruct
-	var localChunks []Movie
+	var localChunks []movie.Movie
 
 	for _, m := range movies {
 		env.Logger.DebugContext(ctx, "Processing movie", "id", m.ID, "title", m.Title)
@@ -113,9 +146,9 @@ func processMovies(ctx context.Context, env GlobalEnv, vars EnvVars, movies []Mo
 	return points, nil
 }
 
-func processBatch(ctx context.Context, vars EnvVars, b []Movie) ([]*qdrant.PointStruct, error) {
+func processBatch(ctx context.Context, vars EnvVars, b []movie.Movie) ([]*qdrant.PointStruct, error) {
 	var texts []string
-	var validB []Movie
+	var validB []movie.Movie
 	for _, chunkMovie := range b {
 		text := chunkMovie.SemanticText
 		if text != "" {
@@ -136,14 +169,14 @@ func processBatch(ctx context.Context, vars EnvVars, b []Movie) ([]*qdrant.Point
 	var localPoints []*qdrant.PointStruct
 	for j, chunkMovie := range validB {
 		if j < len(embeddings) {
-			localPoints = append(localPoints, chunkMovie.ToQdrantPayload(embeddings[j]))
+			localPoints = append(localPoints, chunkMovie.ToQdrantPayload(embeddings[j], vars.QdrantDenseVectorName))
 		}
 	}
 
 	return localPoints, nil
 }
 
-func processLocalChunks(ctx context.Context, vars EnvVars, localChunks []Movie) ([]*qdrant.PointStruct, error) {
+func processLocalChunks(ctx context.Context, vars EnvVars, localChunks []movie.Movie) ([]*qdrant.PointStruct, error) {
 	var points []*qdrant.PointStruct
 	chunkSize := len(localChunks)
 	batchSize := vars.IngestBatchSize
@@ -167,7 +200,7 @@ func processLocalChunks(ctx context.Context, vars EnvVars, localChunks []Movie) 
 		batch := localChunks[i:end]
 
 		wg.Add(1)
-		go func(b []Movie) {
+		go func(b []movie.Movie) {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()

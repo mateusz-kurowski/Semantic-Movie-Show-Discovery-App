@@ -1,0 +1,76 @@
+services:
+  catalog-collector:
+    build:
+      context: .
+      dockerfile: catalog-collector/Dockerfile
+    restart: on-failure
+    pull_policy: never
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DEBUG=${DEBUG}
+      - PRODUCTION=${PRODUCTION}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
+      - CATALOG_COLLECTOR_SERVICE_ON=${CATALOG_COLLECTOR_SERVICE_ON}
+      - DATASET_LOAD_PERCENTAGE=${DATASET_LOAD_PERCENTAGE}
+      # Defaults if not provided in .env
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-catalog-collector}
+      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES:-deployment.environment=development}
+      - OTEL_EXPORTER_OTLP_INSECURE=${OTEL_EXPORTER_OTLP_INSECURE:-false}
+      - OTEL_EXPORTER_OTLP_PROTOCOL=${OTEL_EXPORTER_OTLP_PROTOCOL:-http/protobuf}
+      - OTEL_LOGS_EXPORTER=${OTEL_LOGS_EXPORTER:-otlp}
+      - OTEL_PYTHON_LOG_CORRELATION=${OTEL_PYTHON_LOG_CORRELATION:-true}
+
+  catalog-ingester:
+    build:
+      context: .
+      dockerfile: catalog-ingester/Dockerfile
+    restart: unless-stopped
+    pull_policy: never
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DEBUG=${DEBUG}
+      - PRODUCTION=${PRODUCTION}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
+      - INGEST_BATCH_SIZE=${INGEST_BATCH_SIZE}
+      - INGEST_PERIOD_SECONDS=${INGEST_PERIOD_SECONDS}
+      - QDRANT_HOST=${QDRANT_HOST}
+      - QDRANT_PORT=${QDRANT_PORT}
+      - QDRANT_USE_SSL=${QDRANT_USE_SSL}
+      - QDRANT_COLLECTION_NAME=${QDRANT_COLLECTION_NAME}
+      - QDRANT_DENSE_VECTOR_NAME=${QDRANT_DENSE_VECTOR_NAME}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - USE_QDRANT_INFERENCE=${USE_QDRANT_INFERENCE}
+      - QDRANT_INFERENCE_MODEL=${QDRANT_INFERENCE_MODEL}
+      - EMBEDDING_TIMEOUT_SECONDS=${EMBEDDING_TIMEOUT_SECONDS}
+      - EMBEDDING_MAX_PARALLEL=${EMBEDDING_MAX_PARALLEL}
+      # Defaults if not provided in .env
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-catalog-ingester}
+      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES:-deployment.environment=development}
+      - OTEL_EXPORTER_OTLP_INSECURE=${OTEL_EXPORTER_OTLP_INSECURE:-false}
+      - OTEL_EXPORTER_OTLP_PROTOCOL=${OTEL_EXPORTER_OTLP_PROTOCOL:-http/protobuf}
+      - EMBEDDING_MODEL_ENDPOINT=${EMBEDDING_MODEL_ENDPOINT:-http://text-embeddings-inference:80/embed}
+    depends_on:
+      text-embeddings-inference:
+        condition: service_started
+        required: false # This allows running without local inference if using cloud Qdrant inference
+
+  text-embeddings-inference:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.3
+    ports:
+      - "${TEXT_EMBEDDINGS_PORT:-38080}:80"
+    volumes:
+      - hf_cache:/data
+    pull_policy: always
+    restart: unless-stopped
+    profiles: ["local-inference"]
+    command: >
+      --model-id intfloat/multilingual-e5-small
+      --pooling mean 
+      --max-batch-tokens 16384 
+      --max-client-batch-size 8
+      --auto-truncate
+
+volumes:
+  hf_cache:
+    external: true
+    name: hf_cache

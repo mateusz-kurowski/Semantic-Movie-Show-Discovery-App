@@ -12,3 +12,11 @@ Run:
 uv sync
 uv run --env-file .env.development.local watchfiles 'opentelemetry-instrument python src/main.py'
 ```
+
+### Testing
+
+Run the test suite to verify data pipelines and parsing logic:
+
+```bash
+uv run pytest
+```

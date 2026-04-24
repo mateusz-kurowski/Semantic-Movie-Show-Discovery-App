@@ -1,6 +1,5 @@
-from sqlmodel import Field, SQLModel
+from models.named_entity import NamedEntity
 
 
-class Movie(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str
+class Genre(NamedEntity, table=True):
+    pass

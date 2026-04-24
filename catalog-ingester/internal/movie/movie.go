@@ -1,13 +1,15 @@
-package main
+package movie
 
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/qdrant/go-client/qdrant"
+	"gorm.io/gorm"
 )
 
 type Movie struct {
@@ -17,23 +19,23 @@ type Movie struct {
 	ChunkID             uint64 `gorm:"-"`
 	ChunkOrder          int    `gorm:"-"`
 	SemanticText        string `gorm:"-"`
-	Genres              *string
+	Genres              []Genre `gorm:"many2many:moviegenrelink;joinForeignKey:movie_id;joinReferences:genre_id"`
 	Homepage            *string
 	ID                  int
 	ImdbID              *string
 	IsPresentInSearch   bool
-	Keywords            *string
+	Keywords            []Keyword `gorm:"many2many:moviekeywordlink;joinForeignKey:movie_id;joinReferences:keyword_id"`
 	OriginalLanguage    string
 	OriginalTitle       *string
 	Overview            *string
 	Popularity          float64
 	PosterPath          *string
-	ProductionCompanies *string
-	ProductionCountries *string
+	ProductionCompanies []Company `gorm:"many2many:moviecompanylink;joinForeignKey:movie_id;joinReferences:company_id"`
+	ProductionCountries []Country `gorm:"many2many:moviecountrylink;joinForeignKey:movie_id;joinReferences:country_id"`
 	ReleaseDate         time.Time
 	Revenue             int64
 	Runtime             int
-	SpokenLanguages     *string
+	SpokenLanguages     []Language `gorm:"many2many:movielanguagelink;joinForeignKey:movie_id;joinReferences:language_id"`
 	Status              string
 	Tagline             *string
 	Title               *string
@@ -94,31 +96,31 @@ func (m Movie) toMap() map[string]any {
 	if m.Tagline != nil {
 		result["tagline"] = *m.Tagline
 	}
-	if m.Genres != nil {
-		splittedGenres := strings.Split(*m.Genres, ",")
-		result["genres"] = stringSliceToAnySlicePlusTrimElements(splittedGenres)
+	if len(m.Genres) > 0 {
+		genres := NamesFromGenres(m.Genres)
+		result["genres"] = StringSliceToAnySlicePlusTrimElements(genres)
 	}
-	if m.ProductionCompanies != nil {
-		splittedCompanies := strings.Split(*m.ProductionCompanies, ",")
-		result["production_companies"] = stringSliceToAnySlicePlusTrimElements(splittedCompanies)
+	if len(m.ProductionCompanies) > 0 {
+		companies := NamesFromCompanies(m.ProductionCompanies)
+		result["production_companies"] = StringSliceToAnySlicePlusTrimElements(companies)
 	}
-	if m.ProductionCountries != nil {
-		splittedCountries := strings.Split(*m.ProductionCountries, ",")
-		result["production_countries"] = stringSliceToAnySlicePlusTrimElements(splittedCountries)
+	if len(m.ProductionCountries) > 0 {
+		countries := NamesFromCountries(m.ProductionCountries)
+		result["production_countries"] = StringSliceToAnySlicePlusTrimElements(countries)
 	}
-	if m.SpokenLanguages != nil {
-		splittedLanguages := strings.Split(*m.SpokenLanguages, ",")
-		result["spoken_languages"] = stringSliceToAnySlicePlusTrimElements(splittedLanguages)
+	if len(m.SpokenLanguages) > 0 {
+		languages := NamesFromLanguages(m.SpokenLanguages)
+		result["spoken_languages"] = StringSliceToAnySlicePlusTrimElements(languages)
 	}
-	if m.Keywords != nil {
-		splittedKeywords := strings.Split(*m.Keywords, ",")
-		result["keywords"] = stringSliceToAnySlicePlusTrimElements(splittedKeywords)
+	if len(m.Keywords) > 0 {
+		keywords := NamesFromKeywords(m.Keywords)
+		result["keywords"] = StringSliceToAnySlicePlusTrimElements(keywords)
 	}
 
 	return result
 }
 
-func stringSliceToAnySlicePlusTrimElements(strs []string) []any {
+func StringSliceToAnySlicePlusTrimElements(strs []string) []any {
 	res := make([]any, len(strs))
 	for i, s := range strs {
 		res[i] = strings.TrimSpace(s)
@@ -126,13 +128,13 @@ func stringSliceToAnySlicePlusTrimElements(strs []string) []any {
 	return res
 }
 
-func (m Movie) ToQdrantPayload(vectors []float32) *qdrant.PointStruct {
+func (m Movie) ToQdrantPayload(vectors []float32, denseVectorName string) *qdrant.PointStruct {
 	idToUse := m.resolveQdrantPointID()
 
 	return &qdrant.PointStruct{
 		Id: qdrant.NewID(idToUse),
 		Vectors: qdrant.NewVectorsMap(map[string]*qdrant.Vector{
-			"overview-dense-vector": qdrant.NewVectorDense(vectors),
+			denseVectorName: qdrant.NewVectorDense(vectors),
 		}),
 		Payload: qdrant.NewValueMap(m.toMap()),
 	}
@@ -158,7 +160,7 @@ func (m Movie) resolveQdrantPointID() string {
 	return uuid.NewSHA1(uuid.NameSpaceURL, []byte(identity)).String()
 }
 
-func getMovieIDs(movies []Movie) []int {
+func GetMovieIDs(movies []Movie) []int {
 	ids := make([]int, len(movies))
 	for i, m := range movies {
 		ids[i] = m.ID
@@ -166,30 +168,30 @@ func getMovieIDs(movies []Movie) []int {
 	return ids
 }
 
-func getMovies(ctx context.Context, env GlobalEnv, vars EnvVars) ([]Movie, error) {
+func GetMovies(ctx context.Context, db *gorm.DB, logger *slog.Logger, batchSize int) ([]Movie, error) {
 	movies := make([]Movie, 0)
 
-	tx := env.DB.Where("is_present_in_search = ?", false).Limit(vars.IngestBatchSize).Find(&movies)
+	tx := db.Preload("Genres").Preload("ProductionCompanies").Preload("ProductionCountries").Preload("SpokenLanguages").Preload("Keywords").Where("is_present_in_search = ?", false).Limit(batchSize).Find(&movies)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
 
-	env.Logger.InfoContext(ctx, "Fetched movies from DB", "count", len(movies))
-	env.Logger.DebugContext(ctx, "Movie IDs fetched", "ids", getMovieIDs(movies))
+	logger.InfoContext(ctx, "Fetched movies from DB", "count", len(movies))
+	logger.DebugContext(ctx, "Movie IDs fetched", "ids", GetMovieIDs(movies))
 	return movies, nil
 }
 
-func updateMoviesExistInSearch(ctx context.Context, movies []Movie, env GlobalEnv) error {
+func UpdateMoviesExistInSearch(ctx context.Context, movies []Movie, db *gorm.DB, logger *slog.Logger) error {
 	ids := make([]int, len(movies))
 	for i, m := range movies {
 		ids[i] = m.ID
 	}
 
-	result := env.DB.Model(&Movie{}).Where("id IN ?", ids).Update("is_present_in_search", true)
+	result := db.Model(&Movie{}).Where("id IN ?", ids).Update("is_present_in_search", true)
 	if result.Error != nil {
 		return result.Error
 	}
-	env.Logger.InfoContext(ctx, "Updated movies to be present in search", "count", result.RowsAffected)
-	env.Logger.DebugContext(ctx, "Movie IDs updated to present in search", "ids", ids)
+	logger.InfoContext(ctx, "Updated movies to be present in search", "count", result.RowsAffected)
+	logger.DebugContext(ctx, "Movie IDs updated to present in search", "ids", ids)
 	return nil
 }

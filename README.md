@@ -228,7 +228,7 @@ git clone https://github.com/yourname/movie-discovery
 cd movie-discovery
 
 cp infra/.env.example infra/.env
-# Fill in: TMDB_API_KEY, DATABASE_URL, OLLAMA_HOST, QDRANT_URL, REDIS_URL
+# Fill in: DATABASE_URL, OLLAMA_HOST, QDRANT_URL, REDIS_URL
 
 docker compose -f infra/docker-compose.yml up
 ```
