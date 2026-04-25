@@ -23,6 +23,9 @@ type EnvVars struct {
 	QdrantUseSSL           bool
 	ServiceName            string
 	UseQdrantInference     bool
+	ChunkSize              int `validate:"gte=1"`
+	ChunkOverlap           int `validate:"gte=0"`
+	VectorDimension        int `validate:"gte=1"`
 }
 
 const defaultIngestBatchSize = 8
@@ -30,7 +33,16 @@ const defaultEmbeddingTimeoutSec = 30
 const defaultEmbeddingMaxParallel = 2
 const loopModeEmbeddingMaxParallel = 1
 const trueStr = "true"
+const defaultChunkSize = 1200
+const defaultChunkOverlap = 120
+const defaultVectorDimension = 384
 
+// DefaultChunkSize is the default chunk size in characters.
+const DefaultChunkSize = defaultChunkSize
+const DefaultChunkOverlap = defaultChunkOverlap
+const DefaultVectorDimension = defaultVectorDimension
+
+//nolint:funlen
 func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 	// Do NOT load .env files here - environment variables should come ONLY
 	// from the host environment (set by Coolify or docker-compose).
@@ -86,6 +98,24 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 
 	qdrantUseSSL := os.Getenv("QDRANT_USE_SSL") == trueStr
 
+	chunkSize := os.Getenv("CHUNK_SIZE")
+	chunkSizeInt, err := strconv.Atoi(chunkSize)
+	if err != nil || chunkSizeInt <= 0 {
+		chunkSizeInt = defaultChunkSize
+	}
+
+	chunkOverlap := os.Getenv("CHUNK_OVERLAP")
+	chunkOverlapInt, err := strconv.Atoi(chunkOverlap)
+	if err != nil || chunkOverlapInt < 0 {
+		chunkOverlapInt = defaultChunkOverlap
+	}
+
+	vectorDimension := os.Getenv("VECTOR_DIMENSION")
+	vectorDimensionInt, err := strconv.Atoi(vectorDimension)
+	if err != nil || vectorDimensionInt <= 0 {
+		vectorDimensionInt = defaultVectorDimension
+	}
+
 	env := EnvVars{
 		DatabaseURL:            os.Getenv("DATABASE_URL"),
 		EmbeddingModelEndpoint: os.Getenv("EMBEDDING_MODEL_ENDPOINT"),
@@ -104,6 +134,9 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		QdrantUseSSL:           qdrantUseSSL,
 		ServiceName:            serviceName,
 		UseQdrantInference:     useQdrantInference,
+		ChunkSize:              chunkSizeInt,
+		ChunkOverlap:           chunkOverlapInt,
+		VectorDimension:        vectorDimensionInt,
 	}
 	if !env.UseQdrantInference && env.EmbeddingModelEndpoint == "" {
 		genv.Logger.Error("EMBEDDING_MODEL_ENDPOINT is required when USE_QDRANT_INFERENCE is false.")
@@ -122,6 +155,9 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		"QDRANT_DENSE_VECTOR_NAME", os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
 		"QDRANT_HOST", os.Getenv("QDRANT_HOST"),
 		"QDRANT_PORT", qdrantPort,
+		"CHUNK_SIZE", chunkSizeInt,
+		"CHUNK_OVERLAP", chunkOverlapInt,
+		"VECTOR_DIMENSION", vectorDimensionInt,
 	)
 	return env
 }

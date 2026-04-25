@@ -8,5 +8,6 @@ pre-commit:
       stage_fixed: true
     go-fmt:
       glob: "*.go"
-      run: go fmt {staged_files}
+      root: catalog-ingester
+      run: go fmt ./...
       stage_fixed: true

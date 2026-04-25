@@ -481,3 +481,5 @@ linters:
           - gosec
           - noctx
           - wrapcheck
+          - testpackage
+          - godoclint

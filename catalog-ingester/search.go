@@ -16,12 +16,13 @@ func toE5PassageInput(text string) string {
 }
 
 func initQdrant(ctx context.Context, env GlobalEnv, vars EnvVars) (*qdrant.Client, error) {
-	env.Logger.Info("Initializing Qdrant client",
+	env.Logger.InfoContext(ctx, "Initializing Qdrant client",
 		"host", vars.QdrantHost,
 		"port", vars.QdrantPort,
 		"collection", vars.QdrantCollectionName,
-		"vector_name", vars.QdrantDenseVectorName)
-	
+		"vector_name", vars.QdrantDenseVectorName,
+		"vector_dimension", vars.VectorDimension)
+
 	client, err := qdrant.NewClient(&qdrant.Config{
 		APIKey: vars.QdrantAPIKey,
 		Host:   vars.QdrantHost,
@@ -33,18 +34,19 @@ func initQdrant(ctx context.Context, env GlobalEnv, vars EnvVars) (*qdrant.Clien
 	}
 
 	// Try to create collection - don't fail if it already exists
-	env.Logger.Info("Creating collection if not exists", "collection", vars.QdrantCollectionName)
+	env.Logger.InfoContext(ctx, "Creating collection if not exists", "collection", vars.QdrantCollectionName)
 	err = client.CreateCollection(ctx, &qdrant.CreateCollection{
 		CollectionName: vars.QdrantCollectionName,
 		VectorsConfig: qdrant.NewVectorsConfigMap(map[string]*qdrant.VectorParams{
 			vars.QdrantDenseVectorName: {
-				Size:     384, // intfloat/multilingual-e5-small dimension
+				//nolint:gosec // dimension comes from config, not user input
+				Size:     uint64(vars.VectorDimension),
 				Distance: qdrant.Distance_Cosine,
 			},
 		}),
 	})
 	if err != nil {
-		env.Logger.Warn("Collection creation returned error (may already exist)", "error", err.Error())
+		env.Logger.WarnContext(ctx, "Collection creation returned error (may already exist)", "error", err.Error())
 	}
 
 	return client, nil
@@ -112,14 +114,22 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 	return len(movies)
 }
 
-func processMovies(ctx context.Context, env GlobalEnv, vars EnvVars, movies []movie.Movie) ([]*qdrant.PointStruct, error) {
+func processMovies(
+	ctx context.Context,
+	env GlobalEnv,
+	vars EnvVars,
+	movies []movie.Movie,
+) ([]*qdrant.PointStruct, error) {
 	var points []*qdrant.PointStruct
 	var localChunks []movie.Movie
 
 	for _, m := range movies {
 		env.Logger.DebugContext(ctx, "Processing movie", "id", m.ID, "title", m.Title)
 
-		chunks := divideMovieIntoChunks(m)
+		chunks := divideMovieIntoChunks(m, ChunkConfig{
+			Size:    vars.ChunkSize,
+			Overlap: vars.ChunkOverlap,
+		})
 		for _, chunkMovie := range chunks {
 			if chunkMovie.SemanticText == "" {
 				continue
