@@ -62,7 +62,6 @@ services:
       - hf_cache:/data
     pull_policy: always
     restart: unless-stopped
-    profiles: ["local-inference"]
     command: >
       --model-id intfloat/multilingual-e5-small
       --pooling mean 
