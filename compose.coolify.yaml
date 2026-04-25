@@ -1,8 +1,8 @@
 services:
   catalog-collector:
     build:
-      context: .
-      dockerfile: catalog-collector/Dockerfile
+      context: ./catalog-collector
+      dockerfile: Dockerfile
     restart: on-failure
     pull_policy: never
     environment:
@@ -22,8 +22,8 @@ services:
 
   catalog-ingester:
     build:
-      context: .
-      dockerfile: catalog-ingester/Dockerfile
+      context: ./catalog-ingester
+      dockerfile: Dockerfile
     restart: unless-stopped
     pull_policy: never
     environment:
