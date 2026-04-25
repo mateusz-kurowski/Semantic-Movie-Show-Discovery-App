@@ -58,10 +58,6 @@ func TestCreateChunkIDLargeUniquenessSet(t *testing.T) {
 	}
 }
 
-func ptr[T any](v T) *T {
-	return &v
-}
-
 func TestBuildBaseMetadataDocument(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -71,9 +67,9 @@ func TestBuildBaseMetadataDocument(t *testing.T) {
 		{
 			name: "All fields present",
 			movie: movie.Movie{
-				Title:               ptr("The Matrix"),
-				OriginalTitle:       ptr("The Matrix"), // Should be ignored since it equals title
-				Tagline:             ptr("Free your mind."),
+				Title:               new("The Matrix"),
+				OriginalTitle:       new("The Matrix"), // Should be ignored since it equals title
+				Tagline:             new("Free your mind."),
 				VoteAverage:         8.7,
 				VoteCount:           1000,
 				Runtime:             136,
@@ -89,15 +85,15 @@ func TestBuildBaseMetadataDocument(t *testing.T) {
 		{
 			name: "Original title differs",
 			movie: movie.Movie{
-				Title:         ptr("Spirited Away"),
-				OriginalTitle: ptr("Sen to Chihiro no Kamikakushi"),
+				Title:         new("Spirited Away"),
+				OriginalTitle: new("Sen to Chihiro no Kamikakushi"),
 			},
 			want: "Title: Spirited Away\nOriginal Title: Sen to Chihiro no Kamikakushi",
 		},
 		{
-			name: "Empty movie",
+			name:  "Empty movie",
 			movie: movie.Movie{},
-			want: "",
+			want:  "",
 		},
 	}
 
@@ -118,22 +114,22 @@ func TestDivideMovieIntoChunks(t *testing.T) {
 		wantCount int
 	}{
 		{
-			name: "No overview, no metadata",
-			movie: movie.Movie{},
+			name:      "No overview, no metadata",
+			movie:     movie.Movie{},
 			wantCount: 0,
 		},
 		{
 			name: "No overview, has metadata",
 			movie: movie.Movie{
-				Title: ptr("Short Movie"),
+				Title: new("Short Movie"),
 			},
 			wantCount: 1,
 		},
 		{
 			name: "Short overview",
 			movie: movie.Movie{
-				Title:    ptr("Test Movie"),
-				Overview: ptr("This is a short overview."),
+				Title:    new("Test Movie"),
+				Overview: new("This is a short overview."),
 			},
 			wantCount: 1,
 		},
@@ -141,7 +137,8 @@ func TestDivideMovieIntoChunks(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := divideMovieIntoChunks(tt.movie)
+			cfg := ChunkConfig{Size: 1200, Overlap: 120}
+			got := divideMovieIntoChunks(tt.movie, cfg)
 			if len(got) != tt.wantCount {
 				t.Errorf("divideMovieIntoChunks() count got = %v, want %v", len(got), tt.wantCount)
 			}

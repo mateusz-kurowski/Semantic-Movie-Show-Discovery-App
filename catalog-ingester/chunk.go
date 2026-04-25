@@ -8,20 +8,21 @@ import (
 	"github.com/tmc/langchaingo/textsplitter"
 )
 
-const (
-	chunkSize         = 1200
-	chunkOverlap      = 120
-	chunkIDMultiplier = 1_000_000
-)
+// ChunkConfig holds chunking configuration.
+type ChunkConfig struct {
+	Size    int
+	Overlap int
+}
 
-// We configure the text splitter to safely fit within E5's 512-token context window
-// (approx ~1200 characters), while leaving overlap for semantic continuity.
-//
-//nolint:gochecknoglobals // recursiveCharacter is a global variable
-var recursiveCharacter = textsplitter.NewRecursiveCharacter(
-	textsplitter.WithChunkSize(chunkSize),
-	textsplitter.WithChunkOverlap(chunkOverlap),
-)
+// DefaultChunkConfig returns the default chunking configuration.
+func DefaultChunkConfig() ChunkConfig {
+	return ChunkConfig{
+		Size:    DefaultChunkSize,
+		Overlap: DefaultChunkOverlap,
+	}
+}
+
+const chunkIDMultiplier = 1_000_000
 
 // buildBaseMetadataDocument combines all relevant movie metadata into a single string,
 // excluding the long text fields like Overview. This base context is prepended to
@@ -48,10 +49,18 @@ func buildBaseMetadataDocument(m movie.Movie) string {
 		fmt.Fprintf(&doc, "Keywords: %s\n", strings.Join(movie.NamesFromKeywords(m.Keywords), ", "))
 	}
 	if len(m.ProductionCompanies) > 0 {
-		fmt.Fprintf(&doc, "Production Companies: %s\n", strings.Join(movie.NamesFromCompanies(m.ProductionCompanies), ", "))
+		fmt.Fprintf(
+			&doc,
+			"Production Companies: %s\n",
+			strings.Join(movie.NamesFromCompanies(m.ProductionCompanies), ", "),
+		)
 	}
 	if len(m.ProductionCountries) > 0 {
-		fmt.Fprintf(&doc, "Production Countries: %s\n", strings.Join(movie.NamesFromCountries(m.ProductionCountries), ", "))
+		fmt.Fprintf(
+			&doc,
+			"Production Countries: %s\n",
+			strings.Join(movie.NamesFromCountries(m.ProductionCountries), ", "),
+		)
 	}
 	if len(m.SpokenLanguages) > 0 {
 		fmt.Fprintf(&doc, "Spoken Languages: %s\n", strings.Join(movie.NamesFromLanguages(m.SpokenLanguages), ", "))
@@ -69,9 +78,9 @@ func buildBaseMetadataDocument(m movie.Movie) string {
 	return strings.TrimSpace(doc.String())
 }
 
-func divideMovieIntoChunks(m movie.Movie) []movie.Movie {
+func divideMovieIntoChunks(m movie.Movie, cfg ChunkConfig) []movie.Movie {
 	baseMetadata := buildBaseMetadataDocument(m)
-	
+
 	// If there's no overview, just return the base metadata as a single chunk
 	if m.Overview == nil || *m.Overview == "" {
 		if baseMetadata == "" {
@@ -86,19 +95,19 @@ func divideMovieIntoChunks(m movie.Movie) []movie.Movie {
 	// Calculate how much space we have left for the overview chunk
 	// "Overview: \n" is about 10 characters.
 	overviewPrefix := "\nOverview: "
-	availableSpace := chunkSize - len(baseMetadata) - len(overviewPrefix)
-	
+	availableSpace := cfg.Size - len(baseMetadata) - len(overviewPrefix)
+
 	// Ensure we always have at least a minimal chunk size for the text splitter
 	// so it doesn't crash if metadata is extremely long.
 	minOverviewChunkSize := 100
 	if availableSpace < minOverviewChunkSize {
 		availableSpace = minOverviewChunkSize
 	}
-	
+
 	// Create a text splitter tailored to the remaining space
 	splitter := textsplitter.NewRecursiveCharacter(
 		textsplitter.WithChunkSize(availableSpace),
-		textsplitter.WithChunkOverlap(chunkOverlap),
+		textsplitter.WithChunkOverlap(cfg.Overlap),
 	)
 
 	chunks, err := splitter.SplitText(*m.Overview)

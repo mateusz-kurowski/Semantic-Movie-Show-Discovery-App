@@ -16,9 +16,9 @@ type Movie struct {
 	Adult               bool
 	BackdropPath        *string
 	Budget              int64
-	ChunkID             uint64 `gorm:"-"`
-	ChunkOrder          int    `gorm:"-"`
-	SemanticText        string `gorm:"-"`
+	ChunkID             uint64  `gorm:"-"`
+	ChunkOrder          int     `gorm:"-"`
+	SemanticText        string  `gorm:"-"`
 	Genres              []Genre `gorm:"many2many:moviegenrelink;joinForeignKey:movie_id;joinReferences:genre_id"`
 	Homepage            *string
 	ID                  int
@@ -171,7 +171,14 @@ func GetMovieIDs(movies []Movie) []int {
 func GetMovies(ctx context.Context, db *gorm.DB, logger *slog.Logger, batchSize int) ([]Movie, error) {
 	movies := make([]Movie, 0)
 
-	tx := db.Preload("Genres").Preload("ProductionCompanies").Preload("ProductionCountries").Preload("SpokenLanguages").Preload("Keywords").Where("is_present_in_search = ?", false).Limit(batchSize).Find(&movies)
+	tx := db.Preload("Genres").
+		Preload("ProductionCompanies").
+		Preload("ProductionCountries").
+		Preload("SpokenLanguages").
+		Preload("Keywords").
+		Where("is_present_in_search = ?", false).
+		Limit(batchSize).
+		Find(&movies)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
