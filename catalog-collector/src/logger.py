@@ -1,7 +1,7 @@
 """Structured logging for catalog-collector.
 
-Outputs to stdout, captured by Docker -> Fluent Bit -> OpenObserve.
-Set STRUCTLOG_FORMAT=json for JSON output (recommended for OpenObserve ingestion).
+Outputs to stdout (captured by Docker).
+Set STRUCTLOG_FORMAT=json for JSON output (machine parsing) or omit for human-readable console.
 """
 
 import logging

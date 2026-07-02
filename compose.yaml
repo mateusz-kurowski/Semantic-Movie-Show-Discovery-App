@@ -14,6 +14,16 @@ services:
       timeout: 5s
       retries: 12
       start_period: 20s
+
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    restart: unless-stopped
+    ports:
+      - 8081:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
   adminer:
     image: adminer
     restart: always
@@ -32,7 +42,6 @@ services:
     env_file:
       - .env
     environment:
-      # Defaults if not provided in .env
       - OTEL_SERVICE_NAME=catalog-collector
       - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=local
       - OTEL_EXPORTER_OTLP_INSECURE=false
@@ -49,7 +58,6 @@ services:
   #   env_file:
   #     - .env
   #   environment:
-  #     # Defaults if not provided in .env
   #     - OTEL_SERVICE_NAME=catalog-ingester
   #     - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=local
   #     - OTEL_EXPORTER_OTLP_INSECURE=false
@@ -58,7 +66,7 @@ services:
   #   depends_on:
   #     text-embeddings-inference:
   #       condition: service_started
-  #       required: false # This allows running without local inference if using cloud Qdrant inference
+  #       required: false
 
   # text-embeddings-inference:
   #   image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.3
@@ -76,7 +84,7 @@ services:
   #     --max-client-batch-size 8
   #     --auto-truncate
 
-volumes:
+# volumes:
 #   hf_cache:
 #     external: true
 #     name: hf_cache
