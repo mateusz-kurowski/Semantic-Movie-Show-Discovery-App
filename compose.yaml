@@ -3,6 +3,7 @@ services:
     image: postgres
     restart: always
     shm_size: 512mb
+    container_name: postgres
     ports:
       - 5432:5432
     environment:
@@ -27,6 +28,7 @@ services:
   adminer:
     image: adminer
     restart: always
+    container_name: adminer
     ports:
       - 8080:8080
 
@@ -34,6 +36,7 @@ services:
     build:
       context: catalog-collector
       dockerfile: Dockerfile
+    container_name: catalog-collector
     restart: on-failure
     pull_policy: never
     depends_on:
