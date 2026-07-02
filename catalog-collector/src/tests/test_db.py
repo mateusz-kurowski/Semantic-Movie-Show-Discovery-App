@@ -112,7 +112,7 @@ def test_insert_movies_in_batches(engine, test_dataset, monkeypatch):
         comedy_id = next(g.id for g in genres if g.name == "Comedy")
         drama_id = next(g.id for g in genres if g.name == "Drama")
 
-        link_pairs = {(l.movie_id, l.genre_id) for l in links}
+        link_pairs = {(link.movie_id, link.genre_id) for link in links}
         assert (1, action_id) in link_pairs
         assert (1, comedy_id) in link_pairs
         assert (2, drama_id) in link_pairs
