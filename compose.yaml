@@ -41,13 +41,6 @@ services:
         condition: service_healthy
     env_file:
       - .env
-    environment:
-      - OTEL_SERVICE_NAME=catalog-collector
-      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=local
-      - OTEL_EXPORTER_OTLP_INSECURE=false
-      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-      - OTEL_LOGS_EXPORTER=otlp
-      - OTEL_PYTHON_LOG_CORRELATION=true
 
   # catalog-ingester:
   #   build:
@@ -58,10 +51,6 @@ services:
   #   env_file:
   #     - .env
   #   environment:
-  #     - OTEL_SERVICE_NAME=catalog-ingester
-  #     - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=local
-  #     - OTEL_EXPORTER_OTLP_INSECURE=false
-  #     - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
   #     - EMBEDDING_MODEL_ENDPOINT=http://text-embeddings-inference:80/embed
   #   depends_on:
   #     text-embeddings-inference:
