@@ -52,36 +52,6 @@ def _rows_to_load(csv_path: Path, percentage: int) -> int | None:
     return rows
 
 
-# schema = pl.Schema(
-#     {
-#         "id": pl.Int64(),
-#         "title": pl.String(),
-#         "vote_average": pl.Float16(),
-#         "vote_count": pl.Int32,
-#         "status": pl.String(),
-#         "release_date": pl.Datetime(),
-#         "revenue": pl.Int64,
-#         "runtime": pl.Int32,
-#         "adult": pl.Boolean,
-#         "backdrop_path": pl.String(),
-#         "budget": pl.Int64,
-#         "homepage": pl.String(),
-#         "imdb_id": pl.String(),
-#         "original_language": pl.String(),
-#         "original_title": pl.String(),
-#         "overview": pl.String(),
-#         "popularity": pl.Float16(),
-#         "poster_path": pl.String(),
-#         "tagline": pl.String(),
-#         "genres": pl.String(),
-#         "production_companies": pl.String(),
-#         "production_countries": pl.String(),
-#         "spoken_languages": pl.String(),
-#         "keywords": pl.String(),
-#     }
-# )
-
-
 def scan_and_load_dataset(path: str) -> pl.DataFrame:
     env = get_envs()
     percentage = min(max(env.dataset_load_percentage, 0), 100)

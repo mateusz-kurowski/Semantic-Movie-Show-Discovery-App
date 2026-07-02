@@ -16,9 +16,9 @@ else:
 
 
 def main():
-    path = get_tmdb_dataset()
+    dataset_file_path = get_tmdb_dataset()
     log.info("Downloading dataset...")
-    df = scan_and_load_dataset(path)
+    df = scan_and_load_dataset(dataset_file_path)
     log.info(f"Loaded dataset. {len(df)} Rows.")
     envs = get_envs()
 
