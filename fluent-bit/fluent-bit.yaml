@@ -1,0 +1,28 @@
+service:
+  flush: 1
+  log_level: info
+
+pipeline:
+  inputs:
+    - name: tail
+      path: /var/lib/docker/containers/*/*.log
+      tag: docker.*
+      parser: docker
+      read_from_head: true
+      refresh_interval: 5
+      db: /tmp/flb_tail.db
+      multiline.parser: docker, cri
+
+  outputs:
+    - name: http
+      match: "*"
+      uri: /api/default/default/_json
+      host: openobserve
+      port: 5080
+      tls: off
+      format: json
+      json_date_key: timestamp
+      json_date_format: iso8601
+      http_user: ${OPENOBSERVE_ROOT_EMAIL}
+      http_passwd: ${OPENOBSERVE_ROOT_PASSWORD}
+      compress: gzip

@@ -1,22 +1,20 @@
-import logging
-
 import polars as pl
 from env import get_envs
-from models.movie import Movie
-from models.genre import Genre
-from models.keyword import Keyword
+from logger import log
 from models.company import Company
 from models.country import Country
+from models.genre import Genre
+from models.keyword import Keyword
 from models.language import Language
 from models.links import (
-    MovieGenreLink,
     MovieCompanyLink,
     MovieCountryLink,
-    MovieLanguageLink,
+    MovieGenreLink,
     MovieKeywordLink,
+    MovieLanguageLink,
 )
+from models.movie import Movie
 from models.named_entity import create_entries, get_all_records
-
 from sqlalchemy.dialects.postgresql import insert
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -25,15 +23,15 @@ connect_args = {}
 # Turning echo=False drastically speeds up execution
 engine = create_engine(str(envs.database_url), echo=False, connect_args=connect_args)
 
-logging.info("Connected to db")
+log.info("Connected to db")
 
 
 def create_db_and_tables():
     try:
         SQLModel.metadata.create_all(engine)
-        logging.info("Ensured database tables exist")
+        log.info("Ensured database tables exist")
     except Exception as e:
-        logging.error(f"Creating db and tables failed: {e}")
+        log.error(f"Creating db and tables failed: {e}")
 
 
 def _upsert_entities(model_cls, names: list[str]) -> dict[str, int]:
@@ -43,14 +41,6 @@ def _upsert_entities(model_cls, names: list[str]) -> dict[str, int]:
     """
     if not names:
         return {}
-
-    with Session(engine) as session:
-        stmt = insert(model_cls).values([{"name": name} for name in names])
-        # NamedEntities might not have unique constraint on name yet, but let's assume we handle duplicates in app logic for now
-        # Actually, let's just use regular insert and ignore conflicts if name is unique.
-        # But wait, our named entities don't have a UNIQUE constraint on name!
-        # Since this is a one-time dataset load, let's fetch existing, and only insert new ones.
-        pass
 
     # Safe generic approach:
     # 1. Fetch existing names
@@ -80,7 +70,7 @@ def insert_movies_in_batches(
 ):
     from dataset import get_unique_values_from_df_col
 
-    logging.info("Extracting unique entities from dataset...")
+    log.info("Extracting unique entities from dataset...")
 
     def extract_col(col_name):
         # We need to handle nulls and empty strings
@@ -95,14 +85,14 @@ def insert_movies_in_batches(
     unique_countries = extract_col("production_countries")
     unique_languages = extract_col("spoken_languages")
 
-    logging.info("Upserting named entities to database...")
+    log.info("Upserting named entities to database...")
     genre_map = _upsert_entities(Genre, unique_genres)
     keyword_map = _upsert_entities(Keyword, unique_keywords)
     company_map = _upsert_entities(Company, unique_companies)
     country_map = _upsert_entities(Country, unique_countries)
     language_map = _upsert_entities(Language, unique_languages)
 
-    logging.info("Entities upserted. Beginning movie batched inserts...")
+    log.info("Entities upserted. Beginning movie batched inserts...")
 
     with Session(engine) as session:
         movie_stmt = insert(Movie)
@@ -160,10 +150,10 @@ def insert_movies_in_batches(
                             {"movie_id": m_id, "country_id": country_map[c]}
                         )
 
-                for l in _parse_list_col(r.get("spoken_languages")):
-                    if l in language_map:
+                for language in _parse_list_col(r.get("spoken_languages")):
+                    if language in language_map:
                         link_languages.append(
-                            {"movie_id": m_id, "language_id": language_map[l]}
+                            {"movie_id": m_id, "language_id": language_map[language]}
                         )
 
                 # clean movie record
@@ -199,11 +189,11 @@ def insert_movies_in_batches(
                     params=link_languages,
                 )
 
-            logging.info(f"Inserted batch {chunk_idx + 1}")
+            log.info(f"Inserted batch {chunk_idx + 1}")
 
             if (chunk_idx + 1) % commit_every_n_batches == 0:
                 session.commit()
-                logging.info(f"Committed up to batch {chunk_idx + 1}")
+                log.info(f"Committed up to batch {chunk_idx + 1}")
 
         session.commit()
-        logging.info("Final missing batches committed.")
+        log.info("Final missing batches committed.")

@@ -1,10 +1,57 @@
 services:
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:v0.91.0
+    environment:
+      - ZO_DATA_DIR=/data
+      - ZO_ROOT_USER_PASSWORD=${OPENOBSERVE_ROOT_PASSWORD}
+      - ZO_ROOT_USER_EMAIL=${OPENOBSERVE_ROOT_EMAIL}
+    ports:
+      - 5080:5080
+    volumes:
+      - openobserve_data:/data
+
+  fluent_bit:
+    image: cr.fluentbit.io/fluent/fluent-bit
+    command: ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.yaml"]
+    depends_on:
+      - openobserve
+    environment:
+      - OPENOBSERVE_ROOT_EMAIL=${OPENOBSERVE_ROOT_EMAIL}
+      - OPENOBSERVE_ROOT_PASSWORD=${OPENOBSERVE_ROOT_PASSWORD}
+    volumes:
+      - ./fluent-bit/fluent-bit.yaml:/fluent-bit/etc/fluent-bit.yaml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+
+  db:
+    image: postgres
+    restart: always
+    shm_size: 512mb
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
   catalog-collector:
     build:
       context: catalog-collector
       dockerfile: Dockerfile
     restart: on-failure
     pull_policy: never
+    depends_on:
+      db:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -16,43 +63,45 @@ services:
       - OTEL_LOGS_EXPORTER=otlp
       - OTEL_PYTHON_LOG_CORRELATION=true
 
-  catalog-ingester:
-    build:
-      context: catalog-ingester
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    pull_policy: never
-    env_file:
-      - .env
-    environment:
-      # Defaults if not provided in .env
-      - OTEL_SERVICE_NAME=catalog-ingester
-      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=local
-      - OTEL_EXPORTER_OTLP_INSECURE=false
-      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-      - EMBEDDING_MODEL_ENDPOINT=http://text-embeddings-inference:80/embed
-    depends_on:
-      text-embeddings-inference:
-        condition: service_started
-        required: false # This allows running without local inference if using cloud Qdrant inference
+  # catalog-ingester:
+  #   build:
+  #     context: catalog-ingester
+  #     dockerfile: Dockerfile
+  #   restart: unless-stopped
+  #   pull_policy: never
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     # Defaults if not provided in .env
+  #     - OTEL_SERVICE_NAME=catalog-ingester
+  #     - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=local
+  #     - OTEL_EXPORTER_OTLP_INSECURE=false
+  #     - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+  #     - EMBEDDING_MODEL_ENDPOINT=http://text-embeddings-inference:80/embed
+  #   depends_on:
+  #     text-embeddings-inference:
+  #       condition: service_started
+  #       required: false # This allows running without local inference if using cloud Qdrant inference
 
-  text-embeddings-inference:
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.3
-    ports:
-      - "${TEXT_EMBEDDINGS_PORT:-38080}:80"
-    volumes:
-      - hf_cache:/data
-    pull_policy: always
-    restart: unless-stopped
-    profiles: ["local-inference"]
-    command: >
-      --model-id intfloat/multilingual-e5-small
-      --pooling mean 
-      --max-batch-tokens 16384 
-      --max-client-batch-size 8
-      --auto-truncate
+  # text-embeddings-inference:
+  #   image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.3
+  #   ports:
+  #     - "${TEXT_EMBEDDINGS_PORT:-38080}:80"
+  #   volumes:
+  #     - hf_cache:/data
+  #   pull_policy: always
+  #   restart: unless-stopped
+  #   profiles: ["local-inference"]
+  #   command: >
+  #     --model-id intfloat/multilingual-e5-small
+  #     --pooling mean
+  #     --max-batch-tokens 16384
+  #     --max-client-batch-size 8
+  #     --auto-truncate
 
 volumes:
-  hf_cache:
-    external: true
-    name: hf_cache
+  openobserve_data:
+    name: openobserve_data
+#   hf_cache:
+#     external: true
+#     name: hf_cache

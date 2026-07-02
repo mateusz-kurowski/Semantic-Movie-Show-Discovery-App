@@ -17,4 +17,4 @@ RUN uv sync --frozen
 COPY src/ src/
 
 
-CMD ["uv", "run", "opentelemetry-instrument", "python", "src/main.py"]
+CMD ["uv", "run", "python", "src/main.py"]
