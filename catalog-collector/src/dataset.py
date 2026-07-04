@@ -1,9 +1,9 @@
-import logging
 from pathlib import Path
 
 import kagglehub
 import polars as pl
 from env import get_envs
+from logger import log
 
 # Download latest version
 
@@ -52,41 +52,11 @@ def _rows_to_load(csv_path: Path, percentage: int) -> int | None:
     return rows
 
 
-# schema = pl.Schema(
-#     {
-#         "id": pl.Int64(),
-#         "title": pl.String(),
-#         "vote_average": pl.Float16(),
-#         "vote_count": pl.Int32,
-#         "status": pl.String(),
-#         "release_date": pl.Datetime(),
-#         "revenue": pl.Int64,
-#         "runtime": pl.Int32,
-#         "adult": pl.Boolean,
-#         "backdrop_path": pl.String(),
-#         "budget": pl.Int64,
-#         "homepage": pl.String(),
-#         "imdb_id": pl.String(),
-#         "original_language": pl.String(),
-#         "original_title": pl.String(),
-#         "overview": pl.String(),
-#         "popularity": pl.Float16(),
-#         "poster_path": pl.String(),
-#         "tagline": pl.String(),
-#         "genres": pl.String(),
-#         "production_companies": pl.String(),
-#         "production_countries": pl.String(),
-#         "spoken_languages": pl.String(),
-#         "keywords": pl.String(),
-#     }
-# )
-
-
 def scan_and_load_dataset(path: str) -> pl.DataFrame:
     env = get_envs()
     percentage = min(max(env.dataset_load_percentage, 0), 100)
     if percentage != env.dataset_load_percentage:
-        logging.warning(
+        log.warning(
             "DATASET_LOAD_PERCENTAGE=%s is outside 0..100; using %s",
             env.dataset_load_percentage,
             percentage,
@@ -111,7 +81,7 @@ def scan_and_load_dataset(path: str) -> pl.DataFrame:
 
 def explore_dataset(df: pl.DataFrame) -> None:
     """Logs the Polars dtype, python data types, and sample actual values for each column."""
-    logging.info("Exploring dataset column types and sample values:")
+    log.info("Exploring dataset column types and sample values:")
     for col_name in df.columns:
         # Extract unique Python types from the column's evaluated values
         col_series = df[col_name].drop_nulls()
@@ -129,7 +99,7 @@ def explore_dataset(df: pl.DataFrame) -> None:
 
         has_nulls = null_count > 0 or has_empty_strings
 
-        logging.info(
+        log.info(
             f"Column '{col_name: <25}' | Polars: {str(df.schema[col_name]): <12} | PyTypes: {types_str: <15} | Nulls/Empty: {str(has_nulls): <5} | Samples: {samples}"
         )
 
