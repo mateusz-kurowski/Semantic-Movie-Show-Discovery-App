@@ -15,7 +15,7 @@ on:
 env:
   DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
   SERVICE_NAME: catalog-ingester
-  TRIVY_VULN_TYPE: 'os,library'
+  TRIVY_VULN_TYPE: "os,library"
 
 jobs:
   build:
@@ -33,7 +33,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.11
+          version: v2.12
           working-directory: ${{ env.SERVICE_NAME }}
 
       - name: Test Go code
@@ -68,20 +68,20 @@ jobs:
       - name: Run Trivy (CRITICAL)
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: 'docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest'
-          format: 'table'
-          exit-code: '1'
+          image-ref: "docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest"
+          format: "table"
+          exit-code: "1"
           ignore-unfixed: true
           vuln-type: ${{ env.TRIVY_VULN_TYPE }}
-          severity: 'CRITICAL'
+          severity: "CRITICAL"
 
       - name: Run Trivy (HIGH)
         uses: aquasecurity/trivy-action@0.35.0
         if: always()
         with:
-          image-ref: 'docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest'
-          format: 'table'
-          exit-code: '0'
+          image-ref: "docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest"
+          format: "table"
+          exit-code: "0"
           ignore-unfixed: true
           vuln-type: ${{ env.TRIVY_VULN_TYPE }}
-          severity: 'HIGH'
+          severity: "HIGH"
