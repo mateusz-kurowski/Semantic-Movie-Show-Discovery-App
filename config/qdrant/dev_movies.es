@@ -2,7 +2,7 @@ PUT /collections/dev_movies
 {
   "vectors": {
     "overview-dense-vector": {
-      "size": 384,
+      "size": 256,
       "distance": "Cosine",
       "on_disk": true,
       "hnsw_config": {

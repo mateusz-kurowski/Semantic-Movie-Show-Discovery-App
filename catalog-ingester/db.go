@@ -17,7 +17,6 @@ const (
 func initDB(logger *slog.Logger, dsn string) (*gorm.DB, error) {
 	gormLogger := slogGorm.New(
 		slogGorm.WithHandler(logger.Handler()),
-		slogGorm.WithTraceAll(), // to log all queries
 	)
 
 	db, openErr := gorm.Open(postgres.Open(dsn), &gorm.Config{

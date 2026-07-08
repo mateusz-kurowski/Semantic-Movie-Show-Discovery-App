@@ -35,4 +35,4 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 
-log = structlog.get_logger(service="catalog-collector")
+log: structlog.BoundLogger = structlog.get_logger(service="catalog-collector")

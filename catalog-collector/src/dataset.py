@@ -126,3 +126,7 @@ def get_unique_values_from_df_col(df: pl.DataFrame, col_name: str) -> list[str]:
         .unique()
         .to_list()
     )
+
+
+def filter_df(df: pl.DataFrame) -> pl.DataFrame:
+    return df.drop_nulls(["title", "overview"])
