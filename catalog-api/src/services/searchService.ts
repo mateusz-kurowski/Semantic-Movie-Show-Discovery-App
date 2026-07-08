@@ -1,6 +1,6 @@
 import { cacheClient, qdrantClient } from "../clients";
 import { getCollectionName } from "../models/envModel";
-import embeddingService from "./embeddingService";
+import embeddingService from "./openAIService";
 import qdrantService from "./qdrantService";
 
 const search = async (phrase: string, topK: number) => {

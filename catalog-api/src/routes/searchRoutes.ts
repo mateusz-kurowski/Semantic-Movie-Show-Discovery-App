@@ -10,6 +10,9 @@ const searchRoutes = new Elysia({ name: "search", prefix: "/search" }).post(
 			return await searchService.search(phrase, topK);
 		} catch (error) {
 			console.error("Error during search:", error);
+			if (error && typeof error === "object" && "data" in error) {
+				console.error("Qdrant response data:", JSON.stringify((error as any).data, null, 2));
+			}
 			throw new Error("An error occurred while processing the search request.");
 		}
 	},

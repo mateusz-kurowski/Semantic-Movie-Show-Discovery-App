@@ -1,32 +1,28 @@
+import { embed } from "ai";
 import type { RedisClient } from "bun";
+import { createVoyage } from "voyage-ai-provider";
+import { env } from "../models/envModel";
 import cacheService from "./cacheService";
 
-const getEmbedding = async (inputs: string): Promise<number[]> => {
-  if (inputs.length === 0) return [];
+const voyageClient = createVoyage({
+  baseURL: env.openAIBaseUrl,
+  apiKey: env.openAIKey,
+});
 
-  const response = await fetch(
-    process.env.EMBEDDING_SERVICE_URL || "http://localhost:8000/embed",
-    {
-      body: JSON.stringify({ inputs }),
-      headers: {
-        "Content-Type": "application/json",
+const getEmbedding = async (value: string) => {
+  if (value.length === 0) return [];
+
+  const response = await embed({
+    model: voyageClient.embeddingModel(env.openAIEmbeddingModel),
+    value,
+    providerOptions: {
+      voyage: {
+        inputType: "query",
+        outputDimension: env.openAIEmbeddingModelDimension,
       },
-      method: "POST",
     },
-  );
-
-  if (!response.ok) return [];
-
-  const embeddingsArray = (await response.json()) as number[][];
-  if (
-    !embeddingsArray ||
-    !Array.isArray(embeddingsArray) ||
-    !embeddingsArray.length
-  )
-    return [];
-
-  const [result] = embeddingsArray;
-  return result;
+  });
+  return response.embedding;
 };
 
 const getEmbeddingWithCache = async (

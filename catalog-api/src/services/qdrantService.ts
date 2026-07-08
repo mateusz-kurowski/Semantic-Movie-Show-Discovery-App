@@ -5,7 +5,9 @@ const getClient = async () =>
   new QdrantClient({
     apiKey: env.qdrantApiKey,
     checkCompatibility: false,
-    url: env.qdrantUrl,
+    host: env.qdrantHost,
+    port: env.qdrantPort,
+    https: false,
   });
 
 const searchPoints = async (
