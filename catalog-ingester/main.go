@@ -1,7 +1,6 @@
 package main
 
 import (
-	"catalog-ingester/internal/movie"
 	"context"
 	"log/slog"
 	"os"
@@ -19,7 +18,7 @@ type GlobalEnv struct {
 }
 
 type MovieEmbedding struct {
-	Movie     movie.Movie
+	Movie     Movie
 	Embedding []float32
 }
 
@@ -33,78 +32,90 @@ func main() {
 
 	vars := ReadAndValidateEnvs(env)
 
-	// enable OTLP logging
-	logger, shutdownLog, err := createLogger(ctx, vars.OtlpEndpoint, vars.ServiceName)
-	if err != nil {
-		env.Logger.Error("failed to create OTLP logger", "error", err)
-	} else {
-		env.Logger = logger
-		defer shutdownLog()
-	}
-
-	// Make it the default so standard logs are picked up
-	slog.SetDefault(env.Logger)
-
-	// enable tracing
-	shutdownTrace, err := initTracer(ctx, vars.OtlpEndpoint)
-	if err != nil {
-		env.Logger.Error(err.Error())
-	} else {
-		defer func() { _ = shutdownTrace(ctx) }()
-	}
-
 	// connect to DB
 	db, err := initDB(env.Logger, vars.DatabaseURL)
 	if err != nil {
 		env.Logger.Error("Connection to DB failed", "error", err.Error())
-		shutdownLog() // Ensure logs are flushed before exiting
 		return
 	}
 	env.DB = db
 
+	// Create db connection
 	sqlDB, errDB := db.DB()
 	if errDB == nil {
 		defer sqlDB.Close()
 	}
 
+	// Create Qdrant client
 	qdrantClient, err := initQdrant(ctx, env, vars)
 	if err != nil {
 		env.Logger.Error("Failed to create Qdrant client", "error", err.Error())
+		defer qdrantClient.Close()
+		return
+	}
+
+	// Create openai client
+	openaiClient := newOpenaiClient(vars)
+
+	// test openai client connection
+	_, errModelsList := openaiClient.Models.List(ctx)
+	if errModelsList != nil {
+		env.Logger.ErrorContext(ctx, "OpenAI client not working",
+			"error", errModelsList.Error())
 		return
 	}
 
 	env.Logger.Info("Successfully started application and connected to database")
 
-	appStartTime := time.Now()
-	initialSyncLogged := false
+	totalCount := 0
 
-	runIngest := func() {
-		count := getMoviesAndIngest(ctx, env, qdrantClient, vars)
-		if count == 0 && !initialSyncLogged {
-			elapsed := time.Since(appStartTime)
-			env.Logger.Info(
-				"no records to ingest / insert at the moment. Initial sync complete.",
-				"duration_seconds",
-				elapsed.Seconds(),
-			)
-			initialSyncLogged = true
-		}
+	ingest := func() (int, error) {
+		return runIngest(ctx, env, qdrantClient, openaiClient, vars)
 	}
 
+	// If INGEST_PERIOD_SECONDS is set to 0, run ingestion in a continuous loop until no more movies are available
 	if vars.IngestPeriodSeconds == 0 {
 		env.Logger.Info("INGEST_PERIOD_SECONDS is 0, running ingestion in continuous loop mode")
 		for {
-			runIngest()
+			count, ingestErr := ingest()
+			if ingestErr != nil {
+				env.Logger.Error("Failed to ingest movies", "error", ingestErr.Error())
+			}
+
+			if count == 0 {
+				env.Logger.Info("No more movies to ingest. Entering CRON mode. Exiting ingestion loop.")
+				break
+			}
 		}
 	}
 
-	ticker := time.NewTicker(time.Duration(vars.IngestPeriodSeconds) * time.Second)
+	var ingestPeriodSeconds int
+
+	// If INGEST_PERIOD_SECONDS is set to a positive value, run ingestion in a CRON-like mode with the specified period
+	if vars.IngestPeriodSeconds > 0 {
+		ingestPeriodSeconds = vars.IngestPeriodSeconds
+	} else {
+		ingestPeriodSeconds = 15
+	}
+
+	ticker := time.NewTicker(time.Duration(ingestPeriodSeconds) * time.Second)
 	defer ticker.Stop()
 
 	// Initial ingestion before starting the ticker
-	runIngest()
+	count, err := ingest()
+	if err != nil {
+		env.Logger.Error("Failed to run initial ingestion", "error", err.Error())
+		return
+	}
+	env.Logger.InfoContext(ctx, "Initial ingestion completed", "count", count, "total_count", totalCount)
 
 	for range ticker.C {
-		runIngest()
+		ingestCount, ingestErr := ingest()
+		if ingestErr != nil {
+			env.Logger.Error("Failed to ingest movies", "error", ingestErr.Error())
+		}
+		env.Logger.InfoContext(ctx, "Ingestion completed", "count", ingestCount, "total_count", totalCount)
 	}
+
+	env.Logger.Info("Ingestion process completed. Exiting application.", "total_count", totalCount)
 }

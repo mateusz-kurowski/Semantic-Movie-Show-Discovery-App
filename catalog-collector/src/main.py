@@ -1,6 +1,6 @@
 import os
 
-from dataset import explore_dataset, get_tmdb_dataset, scan_and_load_dataset
+from dataset import explore_dataset, filter_df, get_tmdb_dataset, scan_and_load_dataset
 from db import create_db_and_tables, insert_movies_in_batches
 from dotenv import load_dotenv
 from env import get_envs
@@ -19,23 +19,26 @@ def main():
     dataset_file_path = get_tmdb_dataset()
     log.info("Downloading dataset...")
     df = scan_and_load_dataset(dataset_file_path)
-    log.info(f"Loaded dataset. {len(df)} Rows.")
+
+    filtered_df = filter_df(df)
+
+    log.info(f"Loaded dataset. {len(filtered_df)} Rows.")
     envs = get_envs()
 
     if envs.debug:
-        explore_dataset(df)
+        explore_dataset(filtered_df)
 
-    log.info(f"Loaded dataset: {len(df)} records")
+    log.info(f"Loaded dataset: {len(filtered_df)} records")
     create_db_and_tables()
 
-    if len(df) == 0:
+    if len(filtered_df) == 0:
         log.info("no records to insert at the moment")
     else:
         import time
 
         start_time = time.time()
         log.info("Processing batches...")
-        insert_movies_in_batches(df)
+        insert_movies_in_batches(filtered_df)
         elapsed = time.time() - start_time
         log.info(f"Finished inserting items to database in {elapsed:.2f} seconds")
 

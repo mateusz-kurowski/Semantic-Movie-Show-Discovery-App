@@ -1,13 +1,12 @@
-package movie
+package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/qdrant/go-client/qdrant"
 	"gorm.io/gorm"
 )
@@ -21,13 +20,13 @@ type Movie struct {
 	SemanticText        string  `gorm:"-"`
 	Genres              []Genre `gorm:"many2many:moviegenrelink;joinForeignKey:movie_id;joinReferences:genre_id"`
 	Homepage            *string
-	ID                  int
+	ID                  uint64
 	ImdbID              *string
 	IsPresentInSearch   bool
 	Keywords            []Keyword `gorm:"many2many:moviekeywordlink;joinForeignKey:movie_id;joinReferences:keyword_id"`
 	OriginalLanguage    string
 	OriginalTitle       *string
-	Overview            *string
+	Overview            string
 	Popularity          float64
 	PosterPath          *string
 	ProductionCompanies []Company `gorm:"many2many:moviecompanylink;joinForeignKey:movie_id;joinReferences:company_id"`
@@ -38,7 +37,7 @@ type Movie struct {
 	SpokenLanguages     []Language `gorm:"many2many:movielanguagelink;joinForeignKey:movie_id;joinReferences:language_id"`
 	Status              string
 	Tagline             *string
-	Title               *string
+	Title               string
 	VoteAverage         float64
 	VoteCount           int
 }
@@ -50,7 +49,7 @@ func (Movie) TableName() string {
 
 func (m Movie) toMap() map[string]any {
 	result := map[string]any{
-		"point_id":          m.resolveQdrantPointID(),
+		"point_id":          strconv.FormatUint(m.ID, 10),
 		"vote_average":      m.VoteAverage,
 		"vote_count":        m.VoteCount,
 		"status":            m.Status,
@@ -63,6 +62,8 @@ func (m Movie) toMap() map[string]any {
 		"popularity":        m.Popularity,
 		"original_id":       m.ID,
 		"chunk_order":       m.ChunkOrder,
+		"title":             m.Title,
+		"overview":          m.Overview,
 	}
 
 	if m.ChunkID != 0 {
@@ -72,9 +73,6 @@ func (m Movie) toMap() map[string]any {
 		result["semantic_text"] = m.SemanticText
 	}
 
-	if m.Title != nil {
-		result["title"] = *m.Title
-	}
 	if m.BackdropPath != nil {
 		result["backdrop_path"] = *m.BackdropPath
 	}
@@ -87,9 +85,6 @@ func (m Movie) toMap() map[string]any {
 	if m.OriginalTitle != nil {
 		result["original_title"] = *m.OriginalTitle
 	}
-	if m.Overview != nil {
-		result["overview"] = *m.Overview
-	}
 	if m.PosterPath != nil {
 		result["poster_path"] = *m.PosterPath
 	}
@@ -97,42 +92,32 @@ func (m Movie) toMap() map[string]any {
 		result["tagline"] = *m.Tagline
 	}
 	if len(m.Genres) > 0 {
-		genres := NamesFromGenres(m.Genres)
+		genres := namesFrom(m.Genres)
 		result["genres"] = StringSliceToAnySlicePlusTrimElements(genres)
 	}
 	if len(m.ProductionCompanies) > 0 {
-		companies := NamesFromCompanies(m.ProductionCompanies)
+		companies := namesFrom(m.ProductionCompanies)
 		result["production_companies"] = StringSliceToAnySlicePlusTrimElements(companies)
 	}
 	if len(m.ProductionCountries) > 0 {
-		countries := NamesFromCountries(m.ProductionCountries)
+		countries := namesFrom(m.ProductionCountries)
 		result["production_countries"] = StringSliceToAnySlicePlusTrimElements(countries)
 	}
 	if len(m.SpokenLanguages) > 0 {
-		languages := NamesFromLanguages(m.SpokenLanguages)
+		languages := namesFrom(m.SpokenLanguages)
 		result["spoken_languages"] = StringSliceToAnySlicePlusTrimElements(languages)
 	}
 	if len(m.Keywords) > 0 {
-		keywords := NamesFromKeywords(m.Keywords)
+		keywords := namesFrom(m.Keywords)
 		result["keywords"] = StringSliceToAnySlicePlusTrimElements(keywords)
 	}
 
 	return result
 }
 
-func StringSliceToAnySlicePlusTrimElements(strs []string) []any {
-	res := make([]any, len(strs))
-	for i, s := range strs {
-		res[i] = strings.TrimSpace(s)
-	}
-	return res
-}
-
 func (m Movie) ToQdrantPayload(vectors []float32, denseVectorName string) *qdrant.PointStruct {
-	idToUse := m.resolveQdrantPointID()
-
 	return &qdrant.PointStruct{
-		Id: qdrant.NewID(idToUse),
+		Id: qdrant.NewIDNum(m.ID),
 		Vectors: qdrant.NewVectorsMap(map[string]*qdrant.Vector{
 			denseVectorName: qdrant.NewVectorDense(vectors),
 		}),
@@ -140,35 +125,36 @@ func (m Movie) ToQdrantPayload(vectors []float32, denseVectorName string) *qdran
 	}
 }
 
-func (m Movie) ToQdrantCloudPayload(text, model, denseVectorName string) *qdrant.PointStruct {
-	idToUse := m.resolveQdrantPointID()
-
-	return &qdrant.PointStruct{
-		Id: qdrant.NewID(idToUse),
-		Vectors: qdrant.NewVectorsMap(map[string]*qdrant.Vector{
-			denseVectorName: qdrant.NewVectorDocument(&qdrant.Document{
-				Text:  text,
-				Model: model,
-			}),
-		}),
-		Payload: qdrant.NewValueMap(m.toMap()),
+func (m Movie) buildSemanticText() string {
+	tagline := ""
+	if m.Tagline != nil {
+		tagline = *m.Tagline
 	}
+
+	genres := strings.Join(namesFrom(m.Genres), ", ")
+	keywords := strings.Join(namesFrom(m.Keywords), ", ")
+
+	parts := []string{m.Title, tagline, genres, keywords, m.Overview}
+	nonEmpty := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimRight(p, ". ,")
+		if p != "" {
+			nonEmpty = append(nonEmpty, p)
+		}
+	}
+
+	return strings.Join(nonEmpty, ". ")
 }
 
-func (m Movie) resolveQdrantPointID() string {
-	identity := fmt.Sprintf("movie:%d:chunk:%d", m.ID, m.ChunkOrder)
-	return uuid.NewSHA1(uuid.NameSpaceURL, []byte(identity)).String()
-}
-
-func GetMovieIDs(movies []Movie) []int {
-	ids := make([]int, len(movies))
+func GetMovieIDs(movies []Movie) []uint64 {
+	ids := make([]uint64, len(movies))
 	for i, m := range movies {
 		ids[i] = m.ID
 	}
 	return ids
 }
 
-func GetMovies(ctx context.Context, db *gorm.DB, logger *slog.Logger, batchSize int) ([]Movie, error) {
+func getMovies(ctx context.Context, db *gorm.DB, logger *slog.Logger, batchSize int) ([]Movie, error) {
 	movies := make([]Movie, 0)
 
 	tx := db.Preload("Genres").
@@ -188,8 +174,8 @@ func GetMovies(ctx context.Context, db *gorm.DB, logger *slog.Logger, batchSize 
 	return movies, nil
 }
 
-func UpdateMoviesExistInSearch(ctx context.Context, movies []Movie, db *gorm.DB, logger *slog.Logger) error {
-	ids := make([]int, len(movies))
+func updateMoviesExistInSearch(ctx context.Context, movies []Movie, db *gorm.DB, logger *slog.Logger) error {
+	ids := make([]uint64, len(movies))
 	for i, m := range movies {
 		ids[i] = m.ID
 	}
@@ -201,4 +187,12 @@ func UpdateMoviesExistInSearch(ctx context.Context, movies []Movie, db *gorm.DB,
 	logger.InfoContext(ctx, "Updated movies to be present in search", "count", result.RowsAffected)
 	logger.DebugContext(ctx, "Movie IDs updated to present in search", "ids", ids)
 	return nil
+}
+
+func namesFrom[T NamedEntity](items []T) []string {
+	names := make([]string, len(items))
+	for i, item := range items {
+		names[i] = item.EntityName()
+	}
+	return names
 }

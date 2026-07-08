@@ -3,29 +3,28 @@ package main
 import (
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
 type EnvVars struct {
-	DatabaseURL            string `validate:"required,uri,startswith=postgresql"`
-	EmbeddingModelEndpoint string
-	EmbeddingMaxParallel   int `validate:"gte=1"`
-	EmbeddingTimeoutSec    int `validate:"gte=1"`
-	IngestBatchSize        int
-	IngestPeriodSeconds    int `validate:"gte=0"`
-	OtlpEndpoint           string
-	Production             bool
-	QdrantAPIKey           string
-	QdrantCollectionName   string `validate:"required"`
-	QdrantDenseVectorName  string `validate:"required"`
-	QdrantHost             string `validate:"required"`
-	QdrantInferenceModel   string
-	QdrantPort             int `validate:"required,gt=0"`
-	QdrantUseSSL           bool
-	ServiceName            string
-	UseQdrantInference     bool
-	ChunkSize              int `validate:"gte=1"`
-	ChunkOverlap           int `validate:"gte=0"`
-	VectorDimension        int `validate:"gte=1"`
+	DatabaseURL           string `validate:"required,uri,startswith=postgresql"`
+	EmbeddingMaxParallel  int    `validate:"gte=1"`
+	EmbeddingTimeoutSec   int    `validate:"gte=1"`
+	IngestBatchSize       int
+	IngestPeriodSeconds   int `validate:"gte=0"`
+	Production            bool
+	QdrantAPIKey          string
+	QdrantCollectionName  string `validate:"required"`
+	QdrantDenseVectorName string `validate:"required"`
+	QdrantHost            string `validate:"required"`
+	QdrantPort            int    `validate:"required,gt=0"`
+	QdrantUseSSL          bool
+	ChunkSize             int    `validate:"gte=1"`
+	ChunkOverlap          int    `validate:"gte=0"`
+	VectorDimension       int    `validate:"gte=1"`
+	OpenAiAPIKey          string `validate:"required"`
+	OpenAiBaseURL         string `validate:"required,url"`
 }
 
 const defaultIngestBatchSize = 8
@@ -35,7 +34,7 @@ const loopModeEmbeddingMaxParallel = 1
 const trueStr = "true"
 const defaultChunkSize = 1200
 const defaultChunkOverlap = 120
-const defaultVectorDimension = 384
+const defaultVectorDimension = 256
 
 // DefaultChunkSize is the default chunk size in characters.
 const DefaultChunkSize = defaultChunkSize
@@ -44,15 +43,11 @@ const DefaultVectorDimension = defaultVectorDimension
 
 //nolint:funlen
 func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
-	// Do NOT load .env files here - environment variables should come ONLY
-	// from the host environment (set by Coolify or docker-compose).
-	// .env files are for local dev only and should NOT be loaded in prod.
-
 	isProduction := os.Getenv("PRODUCTION") == trueStr
-
-	serviceName := os.Getenv("OTEL_SERVICE_NAME")
-	if serviceName == "" {
-		serviceName = "catalog-ingester"
+	if !isProduction {
+		if err := godotenv.Load(".env.development.local"); err != nil {
+			genv.Logger.Debug("No .env.development.local file found, using host environment")
+		}
 	}
 
 	qdrantPort := os.Getenv("QDRANT_PORT")
@@ -70,8 +65,6 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 	}
 
 	qdrantCollectionName := os.Getenv("QDRANT_COLLECTION_NAME")
-	useQdrantInference := os.Getenv("USE_QDRANT_INFERENCE") == trueStr
-	qdrantInferenceModel := os.Getenv("QDRANT_INFERENCE_MODEL")
 
 	ingestBatchSize := os.Getenv("INGEST_BATCH_SIZE")
 	ingestBatchSizeInt, err := strconv.Atoi(ingestBatchSize)
@@ -117,30 +110,23 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 	}
 
 	env := EnvVars{
-		DatabaseURL:            os.Getenv("DATABASE_URL"),
-		EmbeddingModelEndpoint: os.Getenv("EMBEDDING_MODEL_ENDPOINT"),
-		EmbeddingMaxParallel:   embeddingMaxParallelInt,
-		EmbeddingTimeoutSec:    embeddingTimeoutSecInt,
-		IngestBatchSize:        ingestBatchSizeInt,
-		IngestPeriodSeconds:    ingestPeriodSecondsInt,
-		OtlpEndpoint:           os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
-		Production:             isProduction,
-		QdrantAPIKey:           os.Getenv("QDRANT_API_KEY"),
-		QdrantCollectionName:   qdrantCollectionName,
-		QdrantDenseVectorName:  os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
-		QdrantHost:             os.Getenv("QDRANT_HOST"),
-		QdrantInferenceModel:   qdrantInferenceModel,
-		QdrantPort:             qdrantPortInt,
-		QdrantUseSSL:           qdrantUseSSL,
-		ServiceName:            serviceName,
-		UseQdrantInference:     useQdrantInference,
-		ChunkSize:              chunkSizeInt,
-		ChunkOverlap:           chunkOverlapInt,
-		VectorDimension:        vectorDimensionInt,
-	}
-	if !env.UseQdrantInference && env.EmbeddingModelEndpoint == "" {
-		genv.Logger.Error("EMBEDDING_MODEL_ENDPOINT is required when USE_QDRANT_INFERENCE is false.")
-		os.Exit(1)
+		DatabaseURL:           os.Getenv("DATABASE_URL"),
+		EmbeddingMaxParallel:  embeddingMaxParallelInt,
+		EmbeddingTimeoutSec:   embeddingTimeoutSecInt,
+		IngestBatchSize:       ingestBatchSizeInt,
+		IngestPeriodSeconds:   ingestPeriodSecondsInt,
+		Production:            isProduction,
+		QdrantAPIKey:          os.Getenv("QDRANT_API_KEY"),
+		QdrantCollectionName:  qdrantCollectionName,
+		QdrantDenseVectorName: os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
+		QdrantHost:            os.Getenv("QDRANT_HOST"),
+		QdrantPort:            qdrantPortInt,
+		QdrantUseSSL:          qdrantUseSSL,
+		ChunkSize:             chunkSizeInt,
+		ChunkOverlap:          chunkOverlapInt,
+		VectorDimension:       vectorDimensionInt,
+		OpenAiAPIKey:          os.Getenv("OPENAI_API_KEY"),
+		OpenAiBaseURL:         os.Getenv("OPENAI_BASE_URL"),
 	}
 
 	errVal := genv.Validate.Struct(&env)
