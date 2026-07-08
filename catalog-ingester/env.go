@@ -9,7 +9,6 @@ import (
 
 type EnvVars struct {
 	DatabaseURL           string `validate:"required,uri,startswith=postgresql"`
-	EmbeddingTimeoutSec   int    `validate:"gte=1"`
 	IngestBatchSize       int
 	IngestPeriodSeconds   int `validate:"gte=0"`
 	Production            bool
@@ -25,7 +24,6 @@ type EnvVars struct {
 }
 
 const defaultIngestBatchSize = 8
-const defaultEmbeddingTimeoutSec = 30
 const trueStr = "true"
 const defaultVectorDimension = 256
 
@@ -62,12 +60,6 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		ingestBatchSizeInt = defaultIngestBatchSize
 	}
 
-	embeddingTimeoutSec := os.Getenv("EMBEDDING_TIMEOUT_SECONDS")
-	embeddingTimeoutSecInt, err := strconv.Atoi(embeddingTimeoutSec)
-	if err != nil || embeddingTimeoutSecInt <= 0 {
-		embeddingTimeoutSecInt = defaultEmbeddingTimeoutSec
-	}
-
 	qdrantUseSSL := os.Getenv("QDRANT_USE_SSL") == trueStr
 
 	vectorDimension := os.Getenv("VECTOR_DIMENSION")
@@ -78,7 +70,6 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 
 	env := EnvVars{
 		DatabaseURL:           os.Getenv("DATABASE_URL"),
-		EmbeddingTimeoutSec:   embeddingTimeoutSecInt,
 		IngestBatchSize:       ingestBatchSizeInt,
 		IngestPeriodSeconds:   ingestPeriodSecondsInt,
 		Production:            isProduction,
