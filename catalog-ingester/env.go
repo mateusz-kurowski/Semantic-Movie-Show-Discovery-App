@@ -21,7 +21,6 @@ type EnvVars struct {
 	QdrantPort            int    `validate:"required,gt=0"`
 	QdrantUseSSL          bool
 	ChunkSize             int    `validate:"gte=1"`
-	ChunkOverlap          int    `validate:"gte=0"`
 	VectorDimension       int    `validate:"gte=1"`
 	OpenAiAPIKey          string `validate:"required"`
 	OpenAiBaseURL         string `validate:"required,url"`
@@ -33,15 +32,12 @@ const defaultEmbeddingMaxParallel = 2
 const loopModeEmbeddingMaxParallel = 1
 const trueStr = "true"
 const defaultChunkSize = 1200
-const defaultChunkOverlap = 120
 const defaultVectorDimension = 256
 
 // DefaultChunkSize is the default chunk size in characters.
 const DefaultChunkSize = defaultChunkSize
-const DefaultChunkOverlap = defaultChunkOverlap
 const DefaultVectorDimension = defaultVectorDimension
 
-//nolint:funlen
 func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 	isProduction := os.Getenv("PRODUCTION") == trueStr
 	if !isProduction {
@@ -97,12 +93,6 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		chunkSizeInt = defaultChunkSize
 	}
 
-	chunkOverlap := os.Getenv("CHUNK_OVERLAP")
-	chunkOverlapInt, err := strconv.Atoi(chunkOverlap)
-	if err != nil || chunkOverlapInt < 0 {
-		chunkOverlapInt = defaultChunkOverlap
-	}
-
 	vectorDimension := os.Getenv("VECTOR_DIMENSION")
 	vectorDimensionInt, err := strconv.Atoi(vectorDimension)
 	if err != nil || vectorDimensionInt <= 0 {
@@ -123,7 +113,6 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		QdrantPort:            qdrantPortInt,
 		QdrantUseSSL:          qdrantUseSSL,
 		ChunkSize:             chunkSizeInt,
-		ChunkOverlap:          chunkOverlapInt,
 		VectorDimension:       vectorDimensionInt,
 		OpenAiAPIKey:          os.Getenv("OPENAI_API_KEY"),
 		OpenAiBaseURL:         os.Getenv("OPENAI_BASE_URL"),
@@ -142,7 +131,6 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		"QDRANT_HOST", os.Getenv("QDRANT_HOST"),
 		"QDRANT_PORT", qdrantPort,
 		"CHUNK_SIZE", chunkSizeInt,
-		"CHUNK_OVERLAP", chunkOverlapInt,
 		"VECTOR_DIMENSION", vectorDimensionInt,
 	)
 	return env

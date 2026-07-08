@@ -116,20 +116,20 @@ Qdrant was chosen because it requires manual configuration of HNSW, quantization
 
 ## Stack
 
-| Layer               | Technology                              |
-| ------------------- | --------------------------------------- |
-| Vector Search       | Qdrant (dense vectors)                  |
-| Database            | PostgreSQL                              |
-| Cache               | Redis                                   |
-| Embeddings          | OpenAI-compatible API (Ollama, etc.)    |
-| Data Source         | TMDB via Kaggle dataset                 |
-| API Server          | TypeScript / Elysia / Bun               |
-| Ingestion Worker    | Go                                      |
-| Data Loader         | Python                                  |
-| Frontend            | React + TanStack Router + Tailwind v4   |
-| Observability       | OpenTelemetry / SigNoz                  |
-| Infra               | Docker Compose / Coolify                |
-| Hosting             | Self-hosted homelab                     |
+| Layer            | Technology                            |
+| ---------------- | ------------------------------------- |
+| Vector Search    | Qdrant (dense vectors)                |
+| Database         | PostgreSQL                            |
+| Cache            | Redis                                 |
+| Embeddings       | OpenAI-compatible API (Ollama, etc.)  |
+| Data Source      | TMDB via Kaggle dataset               |
+| API Server       | TypeScript / Elysia / Bun             |
+| Ingestion Worker | Go                                    |
+| Data Loader      | Python                                |
+| Frontend         | React + TanStack Router + Tailwind v4 |
+| Observability    | OpenTelemetry / SigNoz                |
+| Infra            | Docker Compose / Coolify              |
+| Hosting          | Self-hosted homelab                   |
 
 ---
 
@@ -227,6 +227,7 @@ cd frontend && bun run dev
 ### Coolify Deployment
 
 See `compose.coolify.yaml` for the production service definitions. Deploy:
+
 - PostgreSQL, Redis, Qdrant as standalone Coolify services
 - `catalog-collector`, `catalog-ingester`, `catalog-api` via the compose file
 - `frontend` as a static site (build with `bun run build`, serve with nginx)
@@ -235,28 +236,27 @@ See `compose.coolify.yaml` for the production service definitions. Deploy:
 
 ## Environment Variables
 
-| Variable                       | Service            | Required | Description                              |
-| ------------------------------ | ------------------ | -------- | ---------------------------------------- |
-| `DATABASE_URL`                 | collector/ingester | ✓        | PostgreSQL connection string             |
-| `QDRANT_HOST`                  | ingester           | ✓        | Qdrant gRPC host                         |
-| `QDRANT_PORT`                  | ingester           | ✓        | Qdrant gRPC port                         |
-| `QDRANT_USE_SSL`               | ingester           |          | Enable SSL for Qdrant (default: false)   |
-| `QDRANT_API_KEY`               | ingester/api       | ✓        | Qdrant API key                           |
-| `QDRANT_COLLECTION_NAME`       | ingester/api       | ✓        | Qdrant collection name                   |
-| `QDRANT_DENSE_VECTOR_NAME`     | ingester/api       |          | Vector name (default: overview-dense-vector) |
-| `QDRANT_URL`                   | api                | ✓        | Qdrant HTTP URL                          |
-| `REDIS_URL`                    | api                | ✓        | Redis connection URL                     |
-| `EMBEDDING_SERVICE_URL`        | api                | ✓        | Embedding API endpoint                   |
-| `OPENAI_BASE_URL`              | ingester           | ✓        | Embedding API base URL (OpenAI-compatible) |
-| `OPENAI_API_KEY`               | ingester           | ✓        | Embedding API key                        |
-| `INGEST_BATCH_SIZE`            | ingester           |          | Batch size (default: 8)                  |
-| `INGEST_PERIOD_SECONDS`        | ingester           | ✓        | Polling interval / 0 = continuous        |
-| `EMBEDDING_MAX_PARALLEL`       | ingester           |          | Parallel embedding requests (default: 2) |
-| `CHUNK_SIZE`                   | ingester           |          | Chunk size in chars (default: 1200)      |
-| `CHUNK_OVERLAP`                | ingester           |          | Chunk overlap in chars (default: 120)    |
-| `VECTOR_DIMENSION`             | ingester           |          | Embedding dimension (default: 256)       |
-| `DEBUG`                        | collector/ingester |          | Enable debug logging                     |
-| `PRODUCTION`                   | ingester           |          | Production mode flag                     |
+| Variable                   | Service            | Required | Description                                  |
+| -------------------------- | ------------------ | -------- | -------------------------------------------- |
+| `DATABASE_URL`             | collector/ingester | ✓        | PostgreSQL connection string                 |
+| `QDRANT_HOST`              | ingester           | ✓        | Qdrant gRPC host                             |
+| `QDRANT_PORT`              | ingester           | ✓        | Qdrant gRPC port                             |
+| `QDRANT_USE_SSL`           | ingester           |          | Enable SSL for Qdrant (default: false)       |
+| `QDRANT_API_KEY`           | ingester/api       | ✓        | Qdrant API key                               |
+| `QDRANT_COLLECTION_NAME`   | ingester/api       | ✓        | Qdrant collection name                       |
+| `QDRANT_DENSE_VECTOR_NAME` | ingester/api       |          | Vector name (default: overview-dense-vector) |
+| `QDRANT_URL`               | api                | ✓        | Qdrant HTTP URL                              |
+| `REDIS_URL`                | api                | ✓        | Redis connection URL                         |
+| `EMBEDDING_SERVICE_URL`    | api                | ✓        | Embedding API endpoint                       |
+| `OPENAI_BASE_URL`          | ingester           | ✓        | Embedding API base URL (OpenAI-compatible)   |
+| `OPENAI_API_KEY`           | ingester           | ✓        | Embedding API key                            |
+| `INGEST_BATCH_SIZE`        | ingester           |          | Batch size (default: 8)                      |
+| `INGEST_PERIOD_SECONDS`    | ingester           | ✓        | Polling interval / 0 = continuous            |
+| `EMBEDDING_MAX_PARALLEL`   | ingester           |          | Parallel embedding requests (default: 2)     |
+| `CHUNK_SIZE`               | ingester           |          | Chunk size in chars (default: 1200)          |
+| `VECTOR_DIMENSION`         | ingester           |          | Embedding dimension (default: 256)           |
+| `DEBUG`                    | collector/ingester |          | Enable debug logging                         |
+| `PRODUCTION`               | ingester           |          | Production mode flag                         |
 
 ---
 
