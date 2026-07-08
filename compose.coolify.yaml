@@ -1,5 +1,6 @@
 services:
   catalog-collector:
+    container_name: catalog-collector
     build:
       context: ./catalog-collector
       dockerfile: Dockerfile
@@ -13,6 +14,7 @@ services:
       - DATASET_LOAD_PERCENTAGE=${DATASET_LOAD_PERCENTAGE:-100}
 
   catalog-ingester:
+    container_name: catalog-ingester
     build:
       context: ./catalog-ingester
       dockerfile: Dockerfile
