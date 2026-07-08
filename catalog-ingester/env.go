@@ -87,12 +87,6 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 
 	qdrantUseSSL := os.Getenv("QDRANT_USE_SSL") == trueStr
 
-	chunkSize := os.Getenv("CHUNK_SIZE")
-	chunkSizeInt, err := strconv.Atoi(chunkSize)
-	if err != nil || chunkSizeInt <= 0 {
-		chunkSizeInt = defaultChunkSize
-	}
-
 	vectorDimension := os.Getenv("VECTOR_DIMENSION")
 	vectorDimensionInt, err := strconv.Atoi(vectorDimension)
 	if err != nil || vectorDimensionInt <= 0 {
@@ -112,7 +106,6 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		QdrantHost:            os.Getenv("QDRANT_HOST"),
 		QdrantPort:            qdrantPortInt,
 		QdrantUseSSL:          qdrantUseSSL,
-		ChunkSize:             chunkSizeInt,
 		VectorDimension:       vectorDimensionInt,
 		OpenAiAPIKey:          os.Getenv("OPENAI_API_KEY"),
 		OpenAiBaseURL:         os.Getenv("OPENAI_BASE_URL"),
@@ -130,7 +123,6 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		"QDRANT_DENSE_VECTOR_NAME", os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
 		"QDRANT_HOST", os.Getenv("QDRANT_HOST"),
 		"QDRANT_PORT", qdrantPort,
-		"CHUNK_SIZE", chunkSizeInt,
 		"VECTOR_DIMENSION", vectorDimensionInt,
 	)
 	return env

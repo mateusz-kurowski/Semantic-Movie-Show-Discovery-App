@@ -253,7 +253,6 @@ See `compose.coolify.yaml` for the production service definitions. Deploy:
 | `INGEST_BATCH_SIZE`        | ingester           |          | Batch size (default: 8)                      |
 | `INGEST_PERIOD_SECONDS`    | ingester           | ✓        | Polling interval / 0 = continuous            |
 | `EMBEDDING_MAX_PARALLEL`   | ingester           |          | Parallel embedding requests (default: 2)     |
-| `CHUNK_SIZE`               | ingester           |          | Chunk size in chars (default: 1200)          |
 | `VECTOR_DIMENSION`         | ingester           |          | Embedding dimension (default: 256)           |
 | `DEBUG`                    | collector/ingester |          | Enable debug logging                         |
 | `PRODUCTION`               | ingester           |          | Production mode flag                         |
