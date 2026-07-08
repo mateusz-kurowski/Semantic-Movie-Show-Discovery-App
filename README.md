@@ -1,13 +1,13 @@
-# Semantic-Movie-Show-Discovery-App
+# Semantic Movie & Show Discovery App
 
 A self-hosted semantic movie & show discovery app — find films by vibe, mood, or
-natural language. Powered by hybrid vector search (Qdrant) and an AI agent (Spring AI).
+natural language. Powered by hybrid vector search (Qdrant) and LLM-generated embeddings.
 
 Built as a personal learning project to develop skills in:
 
-- Hybrid search engineering (dense + sparse vectors, RRF fusion)
-- AI agents and MCP tool design (Spring AI)
+- Vector search engineering (dense embeddings, Qdrant)
 - Polyglot microservices architecture
+- Embedding pipelines and chunking strategies
 - Transactional Outbox pattern for reliable data pipelines
 
 ---
@@ -15,240 +15,255 @@ Built as a personal learning project to develop skills in:
 ## Architecture
 
 ```
-TMDB API
-   ↓
-[catalog-collector] (Go)
-   → fetches movies periodically via time.Ticker
-   → writes to PostgreSQL: movies + outbox(PENDING)
-          ↓
-[vector-indexer] (TypeScript)
-   → polls outbox WHERE status=PENDING
-   → generates embeddings via Ollama
-   → indexes dense + sparse vectors into Qdrant
-   → marks outbox rows as PROCESSED
-          ↓
-[discovery-api] (Java / Spring Boot)
-   → REST API for the frontend
-   → hybrid search: dense + sparse + RRF via Qdrant Query API
-   → Redis for caching popular queries
-   → Spring AI agent with MCP tools for natural language discovery
-          ↓
-[frontend] (React + Tailwind)
-   → search bar with instant results
-   → movie cards with AI "why this matches" explanation
-   → agent chat panel
+[TMDB Dataset / Kaggle]
+    ↓
+[catalog-collector] (Python)
+    → loads TMDB movie dataset into PostgreSQL
+    → idempotent batch inserts
+           ↓
+[catalog-ingester] (Go)
+    → reads unprocessed movies from DB
+    → generates embeddings via OpenAI-compatible API
+    → indexes dense vectors into Qdrant
+    → supports chunking for long texts
+    → runs in continuous or periodic mode
+           ↓
+[catalog-api] (TypeScript / Elysia / Bun)
+    → REST API for search & embedding
+    → Qdrant vector search
+    → Redis caching for query embeddings
+    → OpenTelemetry observability (SigNoz)
+           ↓
+[frontend] (React + TanStack Router + Tailwind v4)
+    → search UI with instant results
+    → movie cards with poster, rating, genres
+    → built with Vite
 ```
 
 ---
 
 ## Services
 
-### `discovery-api` — Java / Spring Boot
+### `catalog-collector` — Python
 
-Main REST API. The most complex service — most of the learning happens here.
+Loads TMDB movie data from a Kaggle-hosted CSV dataset into PostgreSQL.
 
-- **Search**: Qdrant hybrid search (dense + sparse vectors fused with RRF)
-- **Cache**: Redis for caching frequent queries
-- **Database**: PostgreSQL via Spring Data JPA
-- **AI**: Spring AI agent with MCP tools:
-  - `search_by_vibe` — semantic natural language query
-  - `find_similar` — find movies similar to a given title
-  - `explain_recommendation` — LLM explains why a result matches
-- **Embeddings**: Ollama (local, no API cost)
+- Downloads the dataset via `kagglehub` on first run
+- Filters and cleans records
+- Batch-inserts movies and related entities (genres, keywords, companies, etc.) into PostgreSQL via SQLModel
+- Idempotent — safe to re-run
 
-Key Spring AI dependency: `spring-ai-qdrant-store` for VectorStore integration.
+### `catalog-ingester` — Go
 
-### `catalog-collector` — Go
+Reads unprocessed movies from PostgreSQL, generates embeddings, and indexes them into Qdrant.
 
-Simple background worker. Write it once, forget it.
+- **Embedding**: OpenAI-compatible API (Ollama, OpenAI, or any provider)
+- **Chunking**: Configurable chunk size/overlap for long texts (default 1200 chars, 120 overlap)
+- **Vector dimension**: Configurable (default 256)
+- **Modes**:
+  - `INGEST_PERIOD_SECONDS=0` — continuous loop until all movies are processed, then exits
+  - `INGEST_PERIOD_SECONDS>0` — periodic polling (CRON-like)
+- **Concurrency**: Configurable parallel embedding requests
+- **Qdrant**: Creates collection if needed, indexes dense named vectors
+- **Dependencies**: Uses `gorm` for DB access, `qdrant/go-client` for vector store, `openai` Go client for embeddings
 
-- Runs on a `time.Ticker` (every 6 hours)
-- Calls TMDB API via `golang-tmdb` wrapper
-- Writes movies + outbox events to PostgreSQL via `pgx/v5`
-- No HTTP server, no framework — pure stdlib + 2 dependencies
+### `catalog-api` — TypeScript (Elysia / Bun)
 
-### `vector-indexer` — TypeScript (Node)
+HTTP API that powers the frontend.
 
-Background worker that closes the loop from DB to Qdrant.
+- **Framework**: [Elysia](https://elysiajs.com/) — fast Bun-native web framework
+- **Search**: Qdrant vector search with dense embeddings
+- **Cache**: Redis for caching query embeddings (avoids re-embedding popular searches)
+- **Embedding**: Calls an embedding service (OpenAI-compatible) for query vectorization
+- **Observability**: OpenTelemetry with OTLP export (SigNoz-compatible)
+- **Validation**: TypeBox schemas for env vars and request validation
 
-- Polls `outbox` table for `status=PENDING` rows
-- Calls Ollama to generate embeddings for each movie
-- Indexes to Qdrant with both dense and sparse named vectors
-- Marks outbox rows as `PROCESSED`
-- Uses `@qdrant/js-client-rest` and `ollama` npm packages
+### `frontend` — React + TanStack Router + Tailwind v4
 
-### `frontend` — React + Tailwind
+User interface for searching and discovering movies.
 
-- Search bar with hybrid results
-- Movie cards with poster, rating, genres, AI explanation
-- Chat panel for the Spring AI agent
+- **Routing**: TanStack Router with auto code-splitting
+- **Styling**: Tailwind CSS v4
+- **Build**: Vite with React Compiler for optimization
+- Currently in early development — basic page structure established
 
 ---
 
 ## Key Patterns & Decisions
 
+### Why Go for the Ingester
+
+The embedding + indexing pipeline benefits from Go's concurrency model (goroutines for parallel embedding requests), strong typing for the complex data flow, and fast startup time. Go's `gorm` provides solid PostgreSQL support, and the `qdrant/go-client` offers a first-class gRPC client.
+
+### Why TypeScript for the API
+
+The API layer benefits from TypeScript's rich ecosystem for web frameworks (Elysia), familiar syntax, and the `@qdrant/js-client-rest` SDK. Bun provides fast startup and built-in Redis, TypeScript, and test support.
+
+### Chunking Strategy
+
+Long movie overviews are split into configurable chunks before embedding. Each chunk becomes a separate Qdrant point linked by `chunk_id`. This preserves semantic granularity — a search for a specific detail can match the relevant chunk rather than being diluted in a full-length overview.
+
 ### Transactional Outbox Pattern
 
-Avoids dual-write inconsistency between PostgreSQL and Qdrant.
-`catalog-collector` writes movies + outbox rows in a single transaction.
-`vector-indexer` processes pending rows independently — if it crashes, it retries on
-the next poll. No message queue needed at this scale.
+`catalog-collector` writes movies + related entities in a single transaction.
+`catalog-ingester` reads unprocessed movies independently and marks them as processed after indexing.
 
-### Hybrid Search in Qdrant
+### Why Qdrant
 
-Each movie is stored as a Qdrant point with two named vectors:
-
-- `dense` → sentence-transformer embedding of title + overview + genres + keywords
-- `sparse` → BM25 sparse vector of the same text
-
-A query runs both simultaneously and fuses results with RRF (Reciprocal Rank Fusion)
-via Qdrant's Universal Query API. Structured filters (year, genre, rating) apply as
-payload filters — no full scan.
-
-### Why Qdrant over Meilisearch
-
-Meilisearch abstracts hybrid search behind config. Qdrant requires you to manually
-configure HNSW, quantization, dense/sparse vectors, and fusion strategy — which is
-the actual skill being built here.
-
-### Why No Message Queue
-
-A full message queue (Kafka, RabbitMQ) is overkill for a single-app personal project.
-The Outbox pattern gives the same delivery guarantee using only PostgreSQL — simpler
-infrastructure, same correctness.
-
-### Polyglot Services
-
-Each service uses the best language for its complexity:
-
-- `discovery-api` in Java — complex Spring AI + Qdrant logic, maximum Java learning
-- `catalog-collector` in Go — simple scheduler, zero boilerplate
-- `vector-indexer` in TypeScript — first-class Qdrant + Ollama SDKs available
-
----
-
-## Data
-
-Movies are sourced from the **TMDB API** (free API key, no credit card required).
-Register at: https://www.themoviedb.org
-
-Each movie document indexed into Qdrant:
-
-```json
-{
-  "id": 550,
-  "title": "Fight Club",
-  "overview": "An insomniac office worker...",
-  "genres": ["Drama", "Thriller"],
-  "keywords": ["twist ending", "psychological", "underground"],
-  "year": 1999,
-  "rating": 8.4,
-  "poster_url": "https://image.tmdb.org/..."
-}
-```
-
-The embedding input text fed to Ollama:
-
-```
-title + overview + genres + keywords (concatenated)
-```
-
-Structured fields (`genres`, `year`, `rating`) are stored as Qdrant payload filters.
+Qdrant was chosen because it requires manual configuration of HNSW, quantization, dense vectors, and search parameters — providing hands-on experience with vector search internals.
 
 ---
 
 ## Stack
 
-| Layer          | Technology                    |
-| -------------- | ----------------------------- |
-| Search         | Qdrant (hybrid: dense+sparse) |
-| Database       | PostgreSQL                    |
-| Cache          | Redis                         |
-| Embeddings     | Ollama (local)                |
-| Data source    | TMDB API (free key)           |
-| Backend API    | Java 21 + Spring Boot         |
-| Collector      | Go                            |
-| Indexer worker | TypeScript (Node)             |
-| Frontend       | React + Tailwind              |
-| Infra          | Docker Compose                |
-| Hosting        | Self-hosted homelab (Coolify) |
+| Layer               | Technology                              |
+| ------------------- | --------------------------------------- |
+| Vector Search       | Qdrant (dense vectors)                  |
+| Database            | PostgreSQL                              |
+| Cache               | Redis                                   |
+| Embeddings          | OpenAI-compatible API (Ollama, etc.)    |
+| Data Source         | TMDB via Kaggle dataset                 |
+| API Server          | TypeScript / Elysia / Bun               |
+| Ingestion Worker    | Go                                      |
+| Data Loader         | Python                                  |
+| Frontend            | React + TanStack Router + Tailwind v4   |
+| Observability       | OpenTelemetry / SigNoz                  |
+| Infra               | Docker Compose / Coolify                |
+| Hosting             | Self-hosted homelab                     |
 
 ---
 
 ## Project Structure
 
 ```
-movie-discovery/
-│
-├── discovery-api/                  # Spring Boot — main service
-│   ├── src/main/java/
-│   │   └── com/yourname/discovery/
-│   │       ├── search/             # QdrantSearchService, SearchController
-│   │       ├── movie/              # MovieRepository, MovieService
-│   │       ├── cache/              # Redis config + CacheService
-│   │       └── ai/                 # Spring AI agent + MCP tools
-│   └── pom.xml
-│
-├── catalog-collector/              # Go — TMDB ingestion worker
-│   ├── main.go
-│   ├── tmdb/                       # TmdbClient wrapper
-│   ├── db/                         # pgx pool + outbox writes
-│   └── go.mod
-│
-├── vector-indexer/                 # TypeScript — embedding + Qdrant worker
+├── catalog-api/                  # TypeScript REST API (Elysia + Bun)
 │   ├── src/
-│   │   ├── db.ts                   # PostgreSQL outbox reader
-│   │   ├── embeddings.ts           # Ollama client
-│   │   └── indexer.ts              # Qdrant writer + scheduler
+│   │   ├── index.ts              # Server entrypoint
+│   │   ├── models/               # TypeBox schemas
+│   │   ├── routes/               # Route handlers (search, embedding, movies)
+│   │   └── services/             # Business logic (Qdrant, Redis, embedding)
+│   ├── package.json
+│   └── tsconfig.json
+│
+├── catalog-collector/            # Python data loader
+│   ├── src/
+│   │   ├── main.py               # Entrypoint
+│   │   ├── dataset.py            # Kaggle dataset download + parsing
+│   │   ├── db.py                 # PostgreSQL batch inserts
+│   │   ├── env.py                # Pydantic env config
+│   │   ├── models/               # SQLModel entities
+│   │   └── tests/                # Pytest tests
+│   ├── pyproject.toml
+│   └── Dockerfile
+│
+├── catalog-ingester/             # Go embedding + indexing worker
+│   ├── main.go                   # Entrypoint
+│   ├── env.go                    # Env validation
+│   ├── movie.go                  # Movie model + Qdrant payload mapping
+│   ├── embeddings.go             # OpenAI client for embeddings
+│   ├── search.go                 # Qdrant search operations
+│   ├── db.go                     # DB connection + migrations
+│   ├── utils.go                  # Shared utilities
+│   ├── entities.go               # Sub-entity models
+│   ├── *test.go                  # Go tests
+│   ├── go.mod
+│   └── Dockerfile
+│
+├── frontend/                     # React UI
+│   ├── src/
+│   │   ├── main.tsx              # App entrypoint
+│   │   ├── routes/               # TanStack Router routes
+│   │   └── index.css             # Tailwind styles
+│   ├── index.html
+│   ├── vite.config.ts
 │   └── package.json
 │
-├── frontend/                       # React + Tailwind
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── SearchBar/
-│   │   │   ├── MovieCard/
-│   │   │   └── AgentChat/
-│   │   └── api/
-│   └── package.json
+├── config/
+│   └── qdrant/                   # Qdrant configuration
 │
-├── infra/
-│   ├── docker-compose.yml          # All services + PostgreSQL + Qdrant + Redis
-│   ├── init.sql                    # DB schema on startup
-│   └── .env.example
-│
-└── README.md
+├── compose.yaml                  # Local development compose
+├── compose.coolify.yaml          # Coolify deployment compose
+├── .env.example                  # Shared env template
+└── sonar-project.properties      # SonarQube config
 ```
 
 ---
 
 ## Getting Started
 
+### Prerequisites
+
+- Docker & Docker Compose
+- An OpenAI-compatible embedding API (Ollama, OpenAI, etc.)
+- Qdrant instance (local or cloud)
+
+### Local Development
+
 ```bash
-git clone https://github.com/yourname/movie-discovery
-cd movie-discovery
+# 1. Clone and enter the project
+git clone <repo-url>
+cd Semantic-Movie-Show-Discovery-App
 
-cp infra/.env.example infra/.env
-# Fill in: DATABASE_URL, OLLAMA_HOST, QDRANT_URL, REDIS_URL
+# 2. Copy and configure environment
+cp .env.example .env
+# Edit .env with your database, Qdrant, and API credentials
 
-docker compose -f infra/docker-compose.yml up
+# 3. Start infrastructure (PostgreSQL + Qdrant etc.)
+docker compose up -d db
+
+# 4. Load data
+cd catalog-collector && uv run python src/main.py
+
+# 5. Index embeddings
+cd catalog-ingester && go run .
+
+# 6. Start API
+cd catalog-api && bun run src/index.ts
+
+# 7. Start frontend
+cd frontend && bun run dev
 ```
 
-Services start in order:
+### Coolify Deployment
 
-1. PostgreSQL + Qdrant + Redis + Ollama
-2. `catalog-collector` — begins fetching from TMDB immediately on startup
-3. `vector-indexer` — begins processing outbox PENDING rows
-4. `discovery-api` — REST API available at `localhost:8080`
-5. `frontend` — available at `localhost:3000`
+See `compose.coolify.yaml` for the production service definitions. Deploy:
+- PostgreSQL, Redis, Qdrant as standalone Coolify services
+- `catalog-collector`, `catalog-ingester`, `catalog-api` via the compose file
+- `frontend` as a static site (build with `bun run build`, serve with nginx)
+
+---
+
+## Environment Variables
+
+| Variable                       | Service            | Required | Description                              |
+| ------------------------------ | ------------------ | -------- | ---------------------------------------- |
+| `DATABASE_URL`                 | collector/ingester | ✓        | PostgreSQL connection string             |
+| `QDRANT_HOST`                  | ingester           | ✓        | Qdrant gRPC host                         |
+| `QDRANT_PORT`                  | ingester           | ✓        | Qdrant gRPC port                         |
+| `QDRANT_USE_SSL`               | ingester           |          | Enable SSL for Qdrant (default: false)   |
+| `QDRANT_API_KEY`               | ingester/api       | ✓        | Qdrant API key                           |
+| `QDRANT_COLLECTION_NAME`       | ingester/api       | ✓        | Qdrant collection name                   |
+| `QDRANT_DENSE_VECTOR_NAME`     | ingester/api       |          | Vector name (default: overview-dense-vector) |
+| `QDRANT_URL`                   | api                | ✓        | Qdrant HTTP URL                          |
+| `REDIS_URL`                    | api                | ✓        | Redis connection URL                     |
+| `EMBEDDING_SERVICE_URL`        | api                | ✓        | Embedding API endpoint                   |
+| `OPENAI_BASE_URL`              | ingester           | ✓        | Embedding API base URL (OpenAI-compatible) |
+| `OPENAI_API_KEY`               | ingester           | ✓        | Embedding API key                        |
+| `INGEST_BATCH_SIZE`            | ingester           |          | Batch size (default: 8)                  |
+| `INGEST_PERIOD_SECONDS`        | ingester           | ✓        | Polling interval / 0 = continuous        |
+| `EMBEDDING_MAX_PARALLEL`       | ingester           |          | Parallel embedding requests (default: 2) |
+| `CHUNK_SIZE`                   | ingester           |          | Chunk size in chars (default: 1200)      |
+| `CHUNK_OVERLAP`                | ingester           |          | Chunk overlap in chars (default: 120)    |
+| `VECTOR_DIMENSION`             | ingester           |          | Embedding dimension (default: 256)       |
+| `DEBUG`                        | collector/ingester |          | Enable debug logging                     |
+| `PRODUCTION`                   | ingester           |          | Production mode flag                     |
 
 ---
 
 ## Learning Resources
 
-- [Qdrant Essentials Course](https://qdrant.tech/course/essentials/) — Day 3 covers hybrid search pipeline
-- [Spring AI Reference — Qdrant VectorStore](https://docs.spring.io/spring-ai/reference/api/vectordbs/qdrant.html)
-- [Spring AI Agentic Patterns](https://spring.io/blog/2025/01/21/spring-ai-agentic-patterns)
-- [Spring AI MCP Boot Starters](https://spring.io/blog/2025/09/16/spring-ai-mcp-intro-blog)
+- [Qdrant Essentials Course](https://qdrant.tech/course/essentials/)
+- [Elysia.js Documentation](https://elysiajs.com/)
+- [TanStack Router](https://tanstack.com/router)
 - [Qdrant Hybrid Search with RRF](https://qdrant.tech/articles/hybrid-search/)
-- [Transactional Outbox Pattern with Spring Boot](https://www.wimdeblauwe.com/blog/2024/06/25/transactional-outbox-pattern-with-spring-boot/)
-- [golang-tmdb wrapper](https://github.com/cyruzin/golang-tmdb)
+- [Transactional Outbox Pattern](https://www.wimdeblauwe.com/blog/2024/06/25/transactional-outbox-pattern-with-spring-boot/)

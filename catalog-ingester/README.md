@@ -24,40 +24,40 @@
 
 The service is configured entirely via environment variables. You can provide these in a `.env`, `.env.development`, or `.env.development.local` file.
 
-| Variable | Description | Default / Example |
-|---|---|---|
-| `DATABASE_URL` | Postgres connection string | `postgresql://user:pass@localhost:5432/db` |
-| `PRODUCTION` | Enables production mode | `false` |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | OpenTelemetry collector endpoint | `localhost:4318` |
-| `OTEL_SERVICE_NAME` | Service name for tracing/logging | `catalog-ingester` |
-| `INGEST_PERIOD_SECONDS` | Ingestion loop interval. `0` = continuous loop. | `15` |
-| `INGEST_BATCH_SIZE` | Number of movies to fetch and process at once | `8` |
-| `QDRANT_HOST` | Qdrant host URL | `localhost` |
-| `QDRANT_PORT` | Qdrant GRPC Port | `6334` |
-| `QDRANT_COLLECTION_NAME` | The Qdrant collection to insert points into | `movies` |
-| `QDRANT_DENSE_VECTOR_NAME` | The named vector field for the embeddings | `overview-dense-vector` |
-| `QDRANT_API_KEY` | API Key for Qdrant (if using Cloud or secured instance) | |
-| `QDRANT_USE_SSL` | Enable TLS/SSL for Qdrant connection | `false` |
-| `USE_QDRANT_INFERENCE` | Use Qdrant's built-in inference instead of a local model | `false` |
-| `QDRANT_INFERENCE_MODEL` | Qdrant Cloud Inference Model ID (if enabled) | |
-| `EMBEDDING_MODEL_ENDPOINT` | Local TEI endpoint (if `USE_QDRANT_INFERENCE=false`) | `http://localhost:8080/embed` |
-| `EMBEDDING_MAX_PARALLEL` | Max concurrent batch embedding requests | `2` |
-| `EMBEDDING_TIMEOUT_SECONDS` | Timeout for embedding generation requests | `30` |
+| Variable                      | Description                                             | Default / Example                          |
+| ----------------------------- | ------------------------------------------------------- | ------------------------------------------ |
+| `DATABASE_URL`                | Postgres connection string                              | `postgresql://user:pass@localhost:5432/db` |
+| `PRODUCTION`                  | Enables production mode                                 | `false`                                    |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OpenTelemetry collector endpoint                        | `localhost:4318`                           |
+| `OTEL_SERVICE_NAME`           | Service name for tracing/logging                        | `catalog-ingester`                         |
+| `INGEST_PERIOD_SECONDS`       | Ingestion loop interval. `0` = continuous loop.         | `15`                                       |
+| `INGEST_BATCH_SIZE`           | Number of movies to fetch and process at once           | `8`                                        |
+| `QDRANT_HOST`                 | Qdrant host URL                                         | `localhost`                                |
+| `QDRANT_PORT`                 | Qdrant GRPC Port                                        | `6334`                                     |
+| `QDRANT_COLLECTION_NAME`      | The Qdrant collection to insert points into             | `movies`                                   |
+| `QDRANT_DENSE_VECTOR_NAME`    | The named vector field for the embeddings               | `overview-dense-vector`                    |
+| `QDRANT_API_KEY`              | API Key for Qdrant (if using Cloud or secured instance) |                                            |
+| `QDRANT_USE_SSL`              | Enable TLS/SSL for Qdrant connection                    | `false`                                    |
+| `QDRANT_INFERENCE_MODEL`      | Qdrant Cloud Inference Model ID (if enabled)            |                                            |
 
 ## Running Locally
 
 1. **Clone the repository and enter the directory**:
+
    ```bash
    cd catalog-ingester
    ```
 
 2. **Copy the example environment file**:
+
    ```bash
    cp .env.example .env.development.local
    ```
-   *(Edit `.env.development.local` to match your local setup.)*
+
+   _(Edit `.env.development.local` to match your local setup.)_
 
 3. **Download dependencies**:
+
    ```bash
    go mod download
    ```
