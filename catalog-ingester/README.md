@@ -9,7 +9,6 @@
 - **Flexible Embedding Options**:
   - **Local TEI Support**: Connects to any `/embed` endpoint (e.g., HuggingFace TEI) using E5-style formatting (`passage: ` prefix).
   - **Qdrant Cloud Inference**: Alternatively, delegate embedding generation entirely to Qdrant Cloud Inference.
-- **Parallel Processing**: Supports concurrent batch processing of embeddings (`EMBEDDING_MAX_PARALLEL`) to maximize throughput.
 - **Observability Built-in**: Full OpenTelemetry (OTel) support for distributed tracing and structured logging (via `slog`).
 
 ## Prerequisites

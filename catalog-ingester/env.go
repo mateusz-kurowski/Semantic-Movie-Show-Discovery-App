@@ -9,7 +9,6 @@ import (
 
 type EnvVars struct {
 	DatabaseURL           string `validate:"required,uri,startswith=postgresql"`
-	EmbeddingMaxParallel  int    `validate:"gte=1"`
 	EmbeddingTimeoutSec   int    `validate:"gte=1"`
 	IngestBatchSize       int
 	IngestPeriodSeconds   int `validate:"gte=0"`
@@ -20,7 +19,6 @@ type EnvVars struct {
 	QdrantHost            string `validate:"required"`
 	QdrantPort            int    `validate:"required,gt=0"`
 	QdrantUseSSL          bool
-	ChunkSize             int    `validate:"gte=1"`
 	VectorDimension       int    `validate:"gte=1"`
 	OpenAiAPIKey          string `validate:"required"`
 	OpenAiBaseURL         string `validate:"required,url"`
@@ -28,14 +26,9 @@ type EnvVars struct {
 
 const defaultIngestBatchSize = 8
 const defaultEmbeddingTimeoutSec = 30
-const defaultEmbeddingMaxParallel = 2
-const loopModeEmbeddingMaxParallel = 1
 const trueStr = "true"
-const defaultChunkSize = 1200
 const defaultVectorDimension = 256
 
-// DefaultChunkSize is the default chunk size in characters.
-const DefaultChunkSize = defaultChunkSize
 const DefaultVectorDimension = defaultVectorDimension
 
 func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
@@ -75,16 +68,6 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		embeddingTimeoutSecInt = defaultEmbeddingTimeoutSec
 	}
 
-	embeddingMaxParallel := os.Getenv("EMBEDDING_MAX_PARALLEL")
-	embeddingMaxParallelInt, err := strconv.Atoi(embeddingMaxParallel)
-	if err != nil || embeddingMaxParallelInt <= 0 {
-		embeddingMaxParallelInt = defaultEmbeddingMaxParallel
-	}
-
-	if ingestPeriodSecondsInt == 0 && os.Getenv("EMBEDDING_MAX_PARALLEL") == "" {
-		embeddingMaxParallelInt = loopModeEmbeddingMaxParallel
-	}
-
 	qdrantUseSSL := os.Getenv("QDRANT_USE_SSL") == trueStr
 
 	vectorDimension := os.Getenv("VECTOR_DIMENSION")
@@ -95,7 +78,6 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 
 	env := EnvVars{
 		DatabaseURL:           os.Getenv("DATABASE_URL"),
-		EmbeddingMaxParallel:  embeddingMaxParallelInt,
 		EmbeddingTimeoutSec:   embeddingTimeoutSecInt,
 		IngestBatchSize:       ingestBatchSizeInt,
 		IngestPeriodSeconds:   ingestPeriodSecondsInt,

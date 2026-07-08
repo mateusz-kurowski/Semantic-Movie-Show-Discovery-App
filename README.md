@@ -252,7 +252,6 @@ See `compose.coolify.yaml` for the production service definitions. Deploy:
 | `OPENAI_API_KEY`           | ingester           | ✓        | Embedding API key                            |
 | `INGEST_BATCH_SIZE`        | ingester           |          | Batch size (default: 8)                      |
 | `INGEST_PERIOD_SECONDS`    | ingester           | ✓        | Polling interval / 0 = continuous            |
-| `EMBEDDING_MAX_PARALLEL`   | ingester           |          | Parallel embedding requests (default: 2)     |
 | `VECTOR_DIMENSION`         | ingester           |          | Embedding dimension (default: 256)           |
 | `DEBUG`                    | collector/ingester |          | Enable debug logging                         |
 | `PRODUCTION`               | ingester           |          | Production mode flag                         |
