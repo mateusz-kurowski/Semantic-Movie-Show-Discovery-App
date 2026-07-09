@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { cacheClient } from "../clients";
 import { EmbeddingModel } from "../models/embeddingModels";
 import cacheService from "../services/cacheService";
-import embeddingService from "../services/embeddingService";
+import embeddingService from "../services/openAIService";
 
 const embeddingRoutes = new Elysia({
 	name: "embedding",

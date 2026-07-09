@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
 	"assist": {
 		"actions": {
 			"source": {
@@ -11,10 +11,12 @@
 		"enabled": true
 	},
 	"files": {
-		"ignoreUnknown": false
+		"ignoreUnknown": false,
+		"includes": ["**", "!!tmp", "!!catalog-api-requests"]
 	},
 	"formatter": {
 		"enabled": true,
+		"includes": ["**", "!!tmp", "!!catalog-api-requests"],
 		"indentStyle": "tab"
 	},
 	"javascript": {
@@ -24,13 +26,16 @@
 	},
 	"linter": {
 		"enabled": true,
+		"includes": ["**", "!!tmp", "!!catalog-api-requests"],
 		"rules": {
-			"recommended": true
+			"preset": "recommended"
 		}
 	},
+	"root": false,
 	"vcs": {
 		"clientKind": "git",
 		"enabled": true,
+		"root": "..",
 		"useIgnoreFile": true
 	}
 }
