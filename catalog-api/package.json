@@ -9,7 +9,7 @@
 		"voyage-ai-provider": "^4.0.0"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.4.10",
+		"@biomejs/biome": "^2.5.3",
 		"bun-types": "latest"
 	},
 	"module": "src/index.js",

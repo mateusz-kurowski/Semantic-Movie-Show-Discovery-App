@@ -4,18 +4,18 @@ import embeddingService from "./openAIService";
 import qdrantService from "./qdrantService";
 
 const search = async (phrase: string, topK: number) => {
-  const embedding = await embeddingService.getEmbeddingWithCache(
-    phrase,
-    cacheClient,
-  );
+	const embedding = await embeddingService.getEmbeddingWithCache(
+		phrase,
+		cacheClient,
+	);
 
-  const searchResults = await qdrantService.searchPoints(
-    qdrantClient,
-    getCollectionName(),
-    embedding,
-    topK,
-  );
+	const searchResults = await qdrantService.searchPoints(
+		qdrantClient,
+		getCollectionName(),
+		embedding,
+		topK,
+	);
 
-  return searchResults;
+	return searchResults;
 };
 export const searchService = { search };
