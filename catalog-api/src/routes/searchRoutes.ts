@@ -2,44 +2,44 @@ import Elysia, { t } from "elysia";
 import { searchService } from "../services/searchService";
 
 const searchRoutes = new Elysia({ name: "search", prefix: "/search" }).post(
-  "",
-  async ({ body: { phrase, topK } }) => {
-    console.log(`Search phrase: ${phrase}`);
+	"",
+	async ({ body: { phrase, topK } }) => {
+		console.log(`Search phrase: ${phrase}`);
 
-    try {
-      return await searchService.search(phrase, topK);
-    } catch (error) {
-      console.error("Error during search:", error);
-      if (error && typeof error === "object" && "data" in error) {
-        const qdrantError = error as { data?: unknown };
-        console.error(
-          "Qdrant response data:",
-          JSON.stringify(qdrantError.data, null, 2),
-        );
-      }
-      throw new Error("An error occurred while processing the search request.");
-    }
-  },
-  {
-    body: t.Object({
-      phrase: t.String({
-        description: "The search query",
-        error: "Search query is required",
-        examples: ["What are some good movies to watch?"],
-        maxLength: 500,
-        minLength: 1,
-        title: "Search Query",
-      }),
-      topK: t.Number({
-        default: 5,
-        description: "The number of top results to return",
-        error: "TopK must be a positive integer",
-        examples: [5],
-        minimum: 1,
-        title: "Top K Results",
-      }),
-    }),
-  },
+		try {
+			return await searchService.search(phrase, topK);
+		} catch (error) {
+			console.error("Error during search:", error);
+			if (error && typeof error === "object" && "data" in error) {
+				const qdrantError = error as { data?: unknown };
+				console.error(
+					"Qdrant response data:",
+					JSON.stringify(qdrantError.data, null, 2),
+				);
+			}
+			throw new Error("An error occurred while processing the search request.");
+		}
+	},
+	{
+		body: t.Object({
+			phrase: t.String({
+				description: "The search query",
+				error: "Search query is required",
+				examples: ["What are some good movies to watch?"],
+				maxLength: 500,
+				minLength: 1,
+				title: "Search Query",
+			}),
+			topK: t.Number({
+				default: 5,
+				description: "The number of top results to return",
+				error: "TopK must be a positive integer",
+				examples: [5],
+				minimum: 1,
+				title: "Top K Results",
+			}),
+		}),
+	},
 );
 
 export default searchRoutes;
