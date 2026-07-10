@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
-import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer/footer";
+import Header from "@/components/layout/header/header";
+import Providers from "@/lib/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,8 +39,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header />
-          {children}
+          <Providers>
+            <Header />
+            {children}
+            <Footer />
+          </Providers>
         </ThemeProvider>
       </body>
     </html>

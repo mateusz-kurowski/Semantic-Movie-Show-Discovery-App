@@ -1,0 +1,20 @@
+meta {
+  name: Untitled
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{url}}/movies?limit=40
+  body: none
+  auth: inherit
+}
+
+params:query {
+  limit: 40
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

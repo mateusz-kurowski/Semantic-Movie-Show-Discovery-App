@@ -4,13 +4,19 @@
 		"@elysiajs/openapi": "^1.4.15",
 		"@qdrant/js-client-rest": "^1.18.0",
 		"ai": "^7.0.18",
+		"dotenv": "^17.4.2",
+		"drizzle-orm": "^0.45.2",
+		"drizzle-typebox": "^0.3.3",
 		"elysia": "latest",
+		"pg": "^8.22.0",
 		"redis": "^5.12.1",
 		"voyage-ai-provider": "^4.0.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.3",
-		"bun-types": "latest"
+		"bun-types": "latest",
+		"drizzle-kit": "^1.0.0-rc.4",
+		"tsx": "^4.23.0"
 	},
 	"module": "src/index.js",
 	"name": "app",
@@ -18,5 +24,8 @@
 		"dev": "bun run --watch src/index.ts",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
-	"version": "1.0.50"
+	"version": "1.0.50",
+	"overrides": {
+		"@sinclair/typebox": "0.34.0"
+	}
 }

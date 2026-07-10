@@ -20,7 +20,8 @@
 		"enabled": true,
 		"rules": {
 			"preset": "recommended"
-		}
+		},
+		"includes": ["!design/"]
 	},
 	"javascript": {
 		"formatter": {
