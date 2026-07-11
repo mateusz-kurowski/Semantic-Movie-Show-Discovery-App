@@ -1,17 +1,19 @@
 meta {
-  name: Untitled
+  name: get movies
   type: http
   seq: 1
 }
 
 get {
-  url: {{url}}/movies?limit=40
+  url: {{url}}/movies?limit=40&sortBy=popularity&order=desc
   body: none
   auth: inherit
 }
 
 params:query {
   limit: 40
+  sortBy: popularity
+  order: desc
 }
 
 settings {

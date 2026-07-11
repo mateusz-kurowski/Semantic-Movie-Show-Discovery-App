@@ -1,13 +1,14 @@
 {
 	"dependencies": {
 		"@ai-sdk/openai": "^4.0.9",
+		"@elysia/cors": "^1.4.2",
 		"@elysiajs/openapi": "^1.4.15",
 		"@qdrant/js-client-rest": "^1.18.0",
 		"ai": "^7.0.18",
 		"dotenv": "^17.4.2",
 		"drizzle-orm": "^0.45.2",
 		"drizzle-typebox": "^0.3.3",
-		"elysia": "latest",
+		"elysia": "^1.4.29",
 		"pg": "^8.22.0",
 		"redis": "^5.12.1",
 		"voyage-ai-provider": "^4.0.0"

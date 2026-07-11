@@ -1,3 +1,4 @@
+import { cors } from "@elysia/cors";
 import openapi from "@elysiajs/openapi";
 import { Elysia } from "elysia";
 import { validateEnvs } from "./models/envModel";
@@ -12,7 +13,10 @@ const app = new Elysia()
   .use(embeddingRoutes)
   .use(searchRoutes)
   .use(movieRoutes)
+  .use(cors())
   .listen(3000);
+
+export type App = typeof app;
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,

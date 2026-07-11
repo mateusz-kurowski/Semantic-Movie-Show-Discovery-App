@@ -6,7 +6,8 @@ type Movie = InferSelectModel<typeof movie>;
 
 interface GetMoviesParams {
   limit: number;
-  sort?: SortMapping;
+  sortBy?: SortMapping;
+  order?: "asc" | "desc";
 }
 
 interface SortMapping {
@@ -16,11 +17,12 @@ interface SortMapping {
 
 const getMovies = async ({
   limit,
-  sort,
+  sortBy,
+  order,
 }: GetMoviesParams): Promise<Movie[]> => {
   const columnRef =
-    (movie[sort?.key as keyof typeof movie] as AnyColumn) ?? "popularity";
-  const sortFn = sort?.order === "asc" ? asc : desc;
+    (movie[sortBy?.key as keyof typeof movie] as AnyColumn) ?? "popularity";
+  const sortFn = order === "asc" ? asc : desc;
   const movies = await db
     .select()
     .from(movie)
