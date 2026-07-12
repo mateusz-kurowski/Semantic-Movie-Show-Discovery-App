@@ -3,19 +3,31 @@ import { getCollectionName } from "../models/envModel";
 import embeddingService from "./openAIService";
 import qdrantService from "./qdrantService";
 
-const search = async (phrase: string, topK: number) => {
+const semanticSearch = async (phrase: string, topK: number) => {
 	const embedding = await embeddingService.getEmbeddingWithCache(
 		phrase,
 		cacheClient,
 	);
 
-	const searchResults = await qdrantService.searchPoints(
+	return await qdrantService.semanticSearch(
 		qdrantClient,
 		getCollectionName(),
 		embedding,
 		topK,
 	);
-
-	return searchResults;
 };
-export const searchService = { search };
+
+const hybridSearch = async (phrase: string, topK: number) => {
+	const embedding = await embeddingService.getEmbeddingWithCache(
+		phrase,
+		cacheClient,
+	);
+	return await qdrantService.hybridSearch(
+		qdrantClient,
+		getCollectionName(),
+		embedding,
+		phrase,
+		topK,
+	);
+};
+export const searchService = { hybridSearch, semanticSearch };

@@ -6,11 +6,11 @@ const getClient = async () =>
 		apiKey: env.qdrantApiKey,
 		checkCompatibility: false,
 		host: env.qdrantHost,
-		port: env.qdrantPort,
 		https: false,
+		port: env.qdrantPort,
 	});
 
-const searchPoints = async (
+const semanticSearch = async (
 	client: QdrantClient,
 	collectionName: string,
 	vector: number[],
@@ -25,9 +25,32 @@ const searchPoints = async (
 		with_payload: true,
 	});
 
+const hybridSearch = async (
+	client: QdrantClient,
+	collectionName: string,
+	vector: number[],
+	text: string,
+	topK: number,
+) => {
+	return await client.query(collectionName, {
+		limit: topK,
+		prefetch: [
+			{ limit: topK * 2, query: vector, using: env.qdrantDenseVectorName },
+			{
+				limit: topK * 2,
+				query: { model: "bm25", text },
+				using: env.qdrantSparseVectorName,
+			},
+		],
+		query: { fusion: "rrf" },
+		with_payload: true,
+	});
+};
+
 const qdrantService = {
 	getClient,
-	searchPoints,
+	hybridSearch,
+	semanticSearch,
 };
 
 export default qdrantService;
