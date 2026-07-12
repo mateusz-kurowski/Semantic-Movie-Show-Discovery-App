@@ -43,11 +43,11 @@ type Movie struct {
 }
 
 // TableName overrides the default GORM table name (which pluralizes "Movie" to "movies").
-func (Movie) TableName() string {
+func (*Movie) TableName() string {
 	return "movie"
 }
 
-func (m Movie) toMap() map[string]any {
+func (m *Movie) toMap() map[string]any {
 	result := map[string]any{
 		"point_id":          strconv.FormatUint(m.ID, 10),
 		"vote_average":      m.VoteAverage,
@@ -115,7 +115,7 @@ func (m Movie) toMap() map[string]any {
 	return result
 }
 
-func (m Movie) ToQdrantPayload(
+func (m *Movie) ToQdrantPayload(
 	vectors []float32,
 	denseVectorName string,
 	sparseVectorName string,
@@ -130,7 +130,7 @@ func (m Movie) ToQdrantPayload(
 	}
 }
 
-func (m Movie) buildSemanticText() string {
+func (m *Movie) buildSemanticText() string {
 	tagline := ""
 	if m.Tagline != nil {
 		tagline = *m.Tagline
@@ -147,8 +147,9 @@ func (m Movie) buildSemanticText() string {
 			nonEmpty = append(nonEmpty, p)
 		}
 	}
-
-	return strings.Join(nonEmpty, ". ")
+	semanticText := strings.Join(nonEmpty, ". ")
+	m.SemanticText = semanticText
+	return semanticText
 }
 
 func GetMovieIDs(movies []Movie) []uint64 {

@@ -3,3 +3,4 @@ colors: true
 extends:
   - catalog-collector/.lefthook.yml
   - catalog-ingester/.lefthook.yml
+  - catalog-api/.lefthook.yml
