@@ -115,11 +115,18 @@ func (m Movie) toMap() map[string]any {
 	return result
 }
 
-func (m Movie) ToQdrantPayload(vectors []float32, denseVectorName string) *qdrant.PointStruct {
+func (m Movie) ToQdrantPayload(
+	vectors []float32,
+	denseVectorName string,
+	sparseIndices []uint32,
+	sparseValues []float32,
+	sparseVectorName string,
+) *qdrant.PointStruct {
 	return &qdrant.PointStruct{
 		Id: qdrant.NewIDNum(m.ID),
 		Vectors: qdrant.NewVectorsMap(map[string]*qdrant.Vector{
-			denseVectorName: qdrant.NewVectorDense(vectors),
+			denseVectorName:  qdrant.NewVectorDense(vectors),
+			sparseVectorName: qdrant.NewVectorSparse(sparseIndices, sparseValues),
 		}),
 		Payload: qdrant.NewValueMap(m.toMap()),
 	}

@@ -1,0 +1,882 @@
+{
+  "dialect": "postgres",
+  "id": "0a89d318-56e2-406a-adec-cb66a231a966",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "version": "8",
+  "ddl": [
+    {
+      "isRlsEnabled": false,
+      "name": "company",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "country",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "genre",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "keyword",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "language",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "movie",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "moviecompanylink",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "moviecountrylink",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "moviegenrelink",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "moviekeywordlink",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "movielanguagelink",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "country"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "movie_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "moviekeywordlink"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "movie_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movielanguagelink"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "movie_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "moviecountrylink"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "movie_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "moviecompanylink"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "movie_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "moviegenrelink"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "keyword"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "company"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "language"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "genre"
+    },
+    {
+      "type": "bigserial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "company"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "country"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "genre"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "keyword"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "language"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "title",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "genre_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "moviegenrelink"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "company_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "moviecompanylink"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "country_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "moviecountrylink"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "language_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movielanguagelink"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "keyword_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "moviekeywordlink"
+    },
+    {
+      "type": "double precision",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "vote_average",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "vote_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "date",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "release_date",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "revenue",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "runtime",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "adult",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "backdrop_path",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "budget",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "homepage",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "imdb_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "original_language",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "original_title",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "overview",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "double precision",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "popularity",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "poster_path",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "varchar",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "tagline",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "is_present_in_search",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "genre_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "genre",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "moviegenrelink_genre_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "moviegenrelink"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "movie_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "movie",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "moviegenrelink_movie_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "moviegenrelink"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "company_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "company",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "moviecompanylink_company_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "moviecompanylink"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "movie_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "movie",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "moviecompanylink_movie_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "moviecompanylink"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "country_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "country",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "moviecountrylink_country_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "moviecountrylink"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "movie_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "movie",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "moviecountrylink_movie_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "moviecountrylink"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "language_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "language",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "movielanguagelink_language_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "movielanguagelink"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "movie_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "movie",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "movielanguagelink_movie_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "movielanguagelink"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "keyword_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "keyword",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "moviekeywordlink_keyword_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "moviekeywordlink"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "movie_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "movie",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "moviekeywordlink_movie_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "moviekeywordlink"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": true,
+      "name": "company_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "company"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": true,
+      "name": "country_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "country"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": true,
+      "name": "genre_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "genre"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": true,
+      "name": "keyword_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "keyword"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": true,
+      "name": "language_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "language"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": true,
+      "name": "movie_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "movie"
+    },
+    {
+      "columns": [
+        "movie_id",
+        "genre_id"
+      ],
+      "nameExplicit": true,
+      "name": "moviegenrelink_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "moviegenrelink"
+    },
+    {
+      "columns": [
+        "movie_id",
+        "company_id"
+      ],
+      "nameExplicit": true,
+      "name": "moviecompanylink_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "moviecompanylink"
+    },
+    {
+      "columns": [
+        "movie_id",
+        "country_id"
+      ],
+      "nameExplicit": true,
+      "name": "moviecountrylink_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "moviecountrylink"
+    },
+    {
+      "columns": [
+        "movie_id",
+        "language_id"
+      ],
+      "nameExplicit": true,
+      "name": "movielanguagelink_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "movielanguagelink"
+    },
+    {
+      "columns": [
+        "movie_id",
+        "keyword_id"
+      ],
+      "nameExplicit": true,
+      "name": "moviekeywordlink_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "moviekeywordlink"
+    }
+  ],
+  "renames": []
+}
