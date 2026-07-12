@@ -96,12 +96,9 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 	points := make([]*qdrant.PointStruct, len(movies))
 	for i, m := range movies {
 		embedding := float64ArrayToFloat32(vectors.Data[i].Embedding)
-		sparseIndices, sparseValues := textToSparseVector(semanticTexts[i])
 		points[i] = m.ToQdrantPayload(
 			embedding,
 			vars.QdrantDenseVectorName,
-			sparseIndices,
-			sparseValues,
 			vars.QdrantSparseVectorName,
 		)
 	}

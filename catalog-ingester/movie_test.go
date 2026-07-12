@@ -9,7 +9,7 @@ import (
 func TestToQdrantPayloadUsesResolvedID(t *testing.T) {
 	t.Parallel()
 	movie := Movie{ID: 0, ChunkOrder: 0, SemanticText: "chunk text"}
-	point := movie.ToQdrantPayload([]float32{0.1, 0.2}, "overview-dense-vector", nil, nil, "overview-sparse-vector")
+	point := movie.ToQdrantPayload([]float32{0.1, 0.2}, "overview-dense-vector", "overview-sparse-vector")
 
 	if point.GetId().String() == "" {
 		t.Fatalf("expected point ID to be set")
