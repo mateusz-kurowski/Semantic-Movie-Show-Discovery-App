@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { movieService } from "@/lib/api/movies";
 import MoviesGrid from "../shared/movies-grid";
+import { Button } from "../ui/button";
 
 const PopularMovies = () => {
   const { data, isPending, isError, error } = useQuery({
@@ -15,19 +16,19 @@ const PopularMovies = () => {
     <div>
       <div className="flex justify-between items-center w-full">
         <div className="font-bold text-xl">Popular discoveries</div>
-        <div>
+        <Button variant="link">
           <Link
             href="/discover/popular-movies"
             className="text-primary flex items-center gap-1 hover:underline"
           >
-            <span>View all</span>
+            View all
             <ArrowRight />
           </Link>
-        </div>
+        </Button>
       </div>
       {isPending && <div>Loading...</div>}
       {isError && <div>Error: {error.message}</div>}
-      {data && <MoviesGrid />}
+      {data && <MoviesGrid movies={data} />}
     </div>
   );
 };

@@ -1,3 +1,26 @@
+export interface Movie {
+  id: string;
+  title: string;
+  voteAverage: number;
+  voteCount: number;
+  status: string;
+  releaseDate: string;
+  revenue: number;
+  runtime: number;
+  adult: boolean;
+  backdropPath: string;
+  budget: number;
+  homepage: string;
+  imdbId: string;
+  originalLanguage: string;
+  originalTitle: string;
+  overview: string;
+  popularity: number;
+  posterPath: string;
+  tagline: string;
+  isPresentInSearch: boolean;
+}
+
 const getMovies = async ({
   sortBy = "popularity",
   order = "desc",
@@ -6,7 +29,7 @@ const getMovies = async ({
   sortBy?: string;
   order?: "asc" | "desc";
   limit: number;
-}) => {
+}): Promise<Movie[]> => {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_SEARCH_API_URL}/movies?sortBy=${sortBy}&order=${order}&limit=${limit}`,
   );
