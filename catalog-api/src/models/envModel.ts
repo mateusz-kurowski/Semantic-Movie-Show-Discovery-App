@@ -19,6 +19,10 @@ const envSchema = t.Object({
 	}),
 	qdrantHost: t.String({ format: "hostname" }),
 	qdrantPort: t.Number({ default: 6334, minimum: 1 }),
+	qdrantSparseVectorName: t.String({
+		default: "overview-sparse-vector",
+		minLength: 1,
+	}),
 	qdrantSSL: t.Boolean({ default: false }),
 	redisUrl: t.String({ format: "uri" }),
 });
