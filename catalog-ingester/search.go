@@ -84,8 +84,8 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 	}
 
 	semanticTexts := make([]string, len(movies))
-	for i, m := range movies {
-		semanticTexts[i] = m.buildSemanticText()
+	for i := range movies {
+		semanticTexts[i] = movies[i].buildSemanticText()
 	}
 
 	vectors, err := embedBatch(ctx, openaiClient, vars, semanticTexts)
