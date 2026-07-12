@@ -1,0 +1,15 @@
+node_modules/
+.vscode/
+catalog-api-requests/
+tmp/
+.env
+.env.local
+.env.example
+.git/
+.gitignore
+.lefthook.yml
+biome.json
+Dockerfile
+README.md
+*.md
+server.log
