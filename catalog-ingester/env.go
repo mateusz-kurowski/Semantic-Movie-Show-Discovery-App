@@ -8,19 +8,20 @@ import (
 )
 
 type EnvVars struct {
-	DatabaseURL           string `validate:"required,uri,startswith=postgresql"`
-	IngestBatchSize       int
-	IngestPeriodSeconds   int `validate:"gte=0"`
-	Production            bool
-	QdrantAPIKey          string
-	QdrantCollectionName  string `validate:"required"`
-	QdrantDenseVectorName string `validate:"required"`
-	QdrantHost            string `validate:"required"`
-	QdrantPort            int    `validate:"required,gt=0"`
-	QdrantUseSSL          bool
-	VectorDimension       int    `validate:"gte=1"`
-	OpenAiAPIKey          string `validate:"required"`
-	OpenAiBaseURL         string `validate:"required,url"`
+	DatabaseURL            string `validate:"required,uri,startswith=postgresql"`
+	IngestBatchSize        int
+	IngestPeriodSeconds    int `validate:"gte=0"`
+	Production             bool
+	QdrantAPIKey           string
+	QdrantCollectionName   string `validate:"required"`
+	QdrantDenseVectorName  string `validate:"required"`
+	QdrantSparseVectorName string `validate:"required"`
+	QdrantHost             string `validate:"required"`
+	QdrantPort             int    `validate:"required,gt=0"`
+	QdrantUseSSL           bool
+	VectorDimension        int    `validate:"gte=1"`
+	OpenAiAPIKey           string `validate:"required"`
+	OpenAiBaseURL          string `validate:"required,url"`
 }
 
 const defaultIngestBatchSize = 8
@@ -69,19 +70,20 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 	}
 
 	env := EnvVars{
-		DatabaseURL:           os.Getenv("DATABASE_URL"),
-		IngestBatchSize:       ingestBatchSizeInt,
-		IngestPeriodSeconds:   ingestPeriodSecondsInt,
-		Production:            isProduction,
-		QdrantAPIKey:          os.Getenv("QDRANT_API_KEY"),
-		QdrantCollectionName:  qdrantCollectionName,
-		QdrantDenseVectorName: os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
-		QdrantHost:            os.Getenv("QDRANT_HOST"),
-		QdrantPort:            qdrantPortInt,
-		QdrantUseSSL:          qdrantUseSSL,
-		VectorDimension:       vectorDimensionInt,
-		OpenAiAPIKey:          os.Getenv("OPENAI_API_KEY"),
-		OpenAiBaseURL:         os.Getenv("OPENAI_BASE_URL"),
+		DatabaseURL:            os.Getenv("DATABASE_URL"),
+		IngestBatchSize:        ingestBatchSizeInt,
+		IngestPeriodSeconds:    ingestPeriodSecondsInt,
+		Production:             isProduction,
+		QdrantAPIKey:           os.Getenv("QDRANT_API_KEY"),
+		QdrantCollectionName:   qdrantCollectionName,
+		QdrantDenseVectorName:  os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
+		QdrantSparseVectorName: os.Getenv("QDRANT_SPARSE_VECTOR_NAME"),
+		QdrantHost:             os.Getenv("QDRANT_HOST"),
+		QdrantPort:             qdrantPortInt,
+		QdrantUseSSL:           qdrantUseSSL,
+		VectorDimension:        vectorDimensionInt,
+		OpenAiAPIKey:           os.Getenv("OPENAI_API_KEY"),
+		OpenAiBaseURL:          os.Getenv("OPENAI_BASE_URL"),
 	}
 
 	errVal := genv.Validate.Struct(&env)
@@ -94,6 +96,7 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		"PRODUCTION", isProduction,
 		"QDRANT_COLLECTION_NAME", qdrantCollectionName,
 		"QDRANT_DENSE_VECTOR_NAME", os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
+		"QDRANT_SPARSE_VECTOR_NAME", os.Getenv("QDRANT_SPARSE_VECTOR_NAME"),
 		"QDRANT_HOST", os.Getenv("QDRANT_HOST"),
 		"QDRANT_PORT", qdrantPort,
 		"VECTOR_DIMENSION", vectorDimensionInt,

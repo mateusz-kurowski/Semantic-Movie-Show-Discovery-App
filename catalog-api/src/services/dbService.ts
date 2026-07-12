@@ -1,5 +1,5 @@
 import { type AnyColumn, asc, desc, type InferSelectModel } from "drizzle-orm";
-import { movie } from "../../drizzle/schema";
+import { movie } from "../db/catalog-schema";
 import { db } from "../clients";
 
 type Movie = InferSelectModel<typeof movie>;

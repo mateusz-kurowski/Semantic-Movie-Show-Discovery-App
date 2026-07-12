@@ -13,6 +13,14 @@ PUT /collections/dev_movies
       "datatype": "float32"
     }
   },
+    "sparse_vectors":{
+    "overview-sparse-vector": {
+      "index":{
+        "on_disk": true
+      },
+      "modifier":"idf"
+    }
+  },
   "quantization_config": {
     "scalar": {
       "type": "int8",
@@ -20,6 +28,7 @@ PUT /collections/dev_movies
     }
   }
 }
+
 // Payload Indexes
 PUT /collections/dev_movies/index 
 {
