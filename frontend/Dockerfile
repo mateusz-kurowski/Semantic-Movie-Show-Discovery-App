@@ -26,6 +26,8 @@ FROM oven/bun:1 AS builder
 # Set working directory
 WORKDIR /app
 
+RUN mkdir -p public
+
 # Copy project dependencies from dependencies stage
 COPY --from=dependencies /app/node_modules ./node_modules
 
