@@ -64,3 +64,18 @@ services:
       - OPENAI_EMBEDDING_MODEL=${OPENAI_EMBEDDING_MODEL:-voyage/voyage-4-lite}
       - OPENAI_EMBEDDING_MODEL_DIMENSION=${OPENAI_EMBEDDING_MODEL_DIMENSION:-256}
       - REDIS_URL=${REDIS_URL}
+
+  catalog-ui:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    container_name: catalog-ui
+    restart: on-failure
+    pull_policy: never
+    env_file:
+      - .env
+    environment:
+      - PORT=3000
+      - NEXT_TELEMETRY_DISABLED=1
+      - NEXT_PUBLIC_SEARCH_API_URL=${NEXT_PUBLIC_SEARCH_API_URL:-http://catalog-api:3000}
+      - NEXT_PUBLIC_TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p/w500
