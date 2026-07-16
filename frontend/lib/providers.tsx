@@ -6,14 +6,14 @@ import type { PropsWithChildren } from "react";
 import { makeQueryClient } from "./query-client";
 
 const Providers = ({ children }: PropsWithChildren) => {
-  const queryClient = makeQueryClient();
+	const queryClient = makeQueryClient();
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <ReactQueryDevtools />
-    </QueryClientProvider>
-  );
+	return (
+		<QueryClientProvider client={queryClient}>
+			{children}
+			<ReactQueryDevtools />
+		</QueryClientProvider>
+	);
 };
 
 export default Providers;
