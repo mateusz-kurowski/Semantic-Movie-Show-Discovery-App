@@ -1,6 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "../ui/button";
@@ -20,16 +21,31 @@ const searchFormSchema = z.object({
 		.max(100, "Query must be less than 100 characters"),
 });
 
-const SearchForm = () => {
+interface SearchFormProps {
+	showRecommendationBadges?: boolean;
+	defaultValue?: string;
+}
+
+const SearchForm = ({
+	showRecommendationBadges,
+	defaultValue,
+}: SearchFormProps) => {
+	const router = useRouter();
+
 	const form = useForm<z.infer<typeof searchFormSchema>>({
 		resolver: zodResolver(searchFormSchema),
 		defaultValues: {
-			query: "",
+			query: defaultValue || "",
 		},
 	});
 
-	const onSubmit = (values: z.infer<typeof searchFormSchema>) => {
-		console.log(values);
+	const onSubmit = ({ query }: z.infer<typeof searchFormSchema>) => {
+		router.push(`/search?q=${query}`);
+	};
+
+	const handleRecommendationClick = (query: string) => {
+		form.setValue("query", query);
+		onSubmit({ query });
 	};
 
 	const formId = "form-movies-search";
@@ -58,7 +74,9 @@ const SearchForm = () => {
 									</Button>
 								</InputGroupAddon>
 							</InputGroup>
-							<RecommendationBadges />
+							{showRecommendationBadges && (
+								<RecommendationBadges onClick={handleRecommendationClick} />
+							)}
 						</Field>
 					)}
 				/>

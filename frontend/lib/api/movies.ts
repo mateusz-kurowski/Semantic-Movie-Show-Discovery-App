@@ -1,24 +1,24 @@
 export interface Movie {
 	id: string;
 	title: string;
-	voteAverage: number;
-	voteCount: number;
+	vote_average: number;
+	vote_count: number;
 	status: string;
-	releaseDate: string;
+	release_date: string;
 	revenue: number;
 	runtime: number;
 	adult: boolean;
-	backdropPath: string;
+	backdrop_path: string;
 	budget: number;
 	homepage: string;
-	imdbId: string;
-	originalLanguage: string;
-	originalTitle: string;
+	imdb_id: string;
+	original_language: string;
+	original_title: string;
 	overview: string;
 	popularity: number;
-	posterPath: string;
+	poster_path: string;
 	tagline: string;
-	isPresentInSearch: boolean;
+	is_present_in_search: boolean;
 }
 
 const getMovies = async ({

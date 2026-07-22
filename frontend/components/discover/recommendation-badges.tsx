@@ -1,16 +1,20 @@
 import { BrainCog, Clapperboard, Clock } from "lucide-react";
 import MovieRecommendationBadge from "./movie-recommendation-badge";
 
-const RecommendationBadges = () => {
+interface RecommendationBadgesProps {
+	onClick?: (query: string) => void;
+}
+
+const RecommendationBadges = ({ onClick }: RecommendationBadgesProps) => {
 	return (
 		<div className="flex flex-wrap gap-2 mt-2 justify-center">
-			<MovieRecommendationBadge icon={Clapperboard}>
+			<MovieRecommendationBadge icon={Clapperboard} onClick={onClick}>
 				Like Interstellar, but lighter
 			</MovieRecommendationBadge>
-			<MovieRecommendationBadge icon={BrainCog}>
+			<MovieRecommendationBadge icon={BrainCog} onClick={onClick}>
 				90s psychological thrillers
 			</MovieRecommendationBadge>
-			<MovieRecommendationBadge icon={Clock}>
+			<MovieRecommendationBadge icon={Clock} onClick={onClick}>
 				Feel-good films under 2 hours
 			</MovieRecommendationBadge>
 		</div>

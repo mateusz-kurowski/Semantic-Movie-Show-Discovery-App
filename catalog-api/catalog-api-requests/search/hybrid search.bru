@@ -7,7 +7,7 @@ meta {
 post {
   url: {{url}}/search/hybrid
   body: json
-  auth: inherit
+  auth: none
 }
 
 body:json {
@@ -16,9 +16,3 @@ body:json {
     "topK":5
   }
 }
-
-settings {
-  encodeUrl: true
-  timeout: 0
-}
-​
