@@ -1,7 +1,7 @@
 import os
 
 from dataset import explore_dataset, filter_df, get_tmdb_dataset, scan_and_load_dataset
-from db import create_db_and_tables, insert_movies_in_batches
+from db import insert_movies_in_batches
 from dotenv import load_dotenv
 from env import get_envs
 from logger import log
@@ -29,7 +29,6 @@ def main():
         explore_dataset(filtered_df)
 
     log.info(f"Loaded dataset: {len(filtered_df)} records")
-    create_db_and_tables()
 
     if len(filtered_df) == 0:
         log.info("no records to insert at the moment")

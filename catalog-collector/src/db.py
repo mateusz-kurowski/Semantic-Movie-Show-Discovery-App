@@ -16,7 +16,7 @@ from models.links import (
 from models.movie import Movie
 from models.named_entity import create_entries, get_all_records
 from sqlalchemy.dialects.postgresql import insert
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, create_engine
 
 envs = get_envs()
 connect_args = {}
@@ -24,14 +24,6 @@ connect_args = {}
 engine = create_engine(str(envs.database_url), echo=False, connect_args=connect_args)
 
 log.info("Connected to db")
-
-
-def create_db_and_tables():
-    try:
-        SQLModel.metadata.create_all(engine)
-        log.info("Ensured database tables exist")
-    except Exception as e:
-        log.error(f"Creating db and tables failed: {e}")
 
 
 def _upsert_entities(model_cls, names: list[str]) -> dict[str, int]:
