@@ -14,7 +14,7 @@ const app = new Elysia()
   .use(searchRoutes)
   .use(movieRoutes)
   .use(cors())
-  .listen(3000);
+  .listen(envs.apiPort);
 
 export type App = typeof app;
 

@@ -37,10 +37,18 @@ const getMovies = async ({
 	return data;
 };
 
-const getMainPagePopularMovies = async () =>
-	getMovies({ sortBy: "popularity", order: "desc", limit: 10 });
+export type ComparableMovieField =
+	| "vote_average"
+	| "vote_count"
+	| "popularity"
+	| "release_date"
+	| "runtime"
+	| "revenue";
+
+const getFeaturedMovies = async (by: ComparableMovieField) =>
+	getMovies({ sortBy: by, order: "desc", limit: 10 });
 
 export const movieService = {
 	getMovies,
-	getMainPagePopularMovies,
+	getFeaturedMovies,
 };
