@@ -122,7 +122,7 @@ func TestBuildSemanticText(t *testing.T) {
 		t.Parallel()
 		movie := Movie{
 			Title:   "Inception",
-			Tagline: new("Your mind is the scene of the crime."),
+			Tagline: "Your mind is the scene of the crime.",
 			Genres: []Genre{
 				{ID: 1, Name: "Action"},
 				{ID: 2, Name: "Adventure"},
@@ -165,7 +165,7 @@ func TestBuildSemanticText(t *testing.T) {
 		t.Parallel()
 		movie := Movie{
 			Title:    "Inception",
-			Tagline:  new("Your mind is the scene of the crime."),
+			Tagline:  "Your mind is the scene of the crime.",
 			Overview: "Some plot.",
 		}
 		result := movie.buildSemanticText()

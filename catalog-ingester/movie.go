@@ -13,30 +13,30 @@ import (
 
 type Movie struct {
 	Adult               bool
-	BackdropPath        *string
+	BackdropPath        string
 	Budget              int64
 	ChunkID             uint64  `gorm:"-"`
 	ChunkOrder          int     `gorm:"-"`
 	SemanticText        string  `gorm:"-"`
 	Genres              []Genre `gorm:"many2many:moviegenrelink;joinForeignKey:movie_id;joinReferences:genre_id"`
-	Homepage            *string
+	Homepage            string
 	ID                  uint64
-	ImdbID              *string
+	ImdbID              string
 	IsPresentInSearch   bool
 	Keywords            []Keyword `gorm:"many2many:moviekeywordlink;joinForeignKey:movie_id;joinReferences:keyword_id"`
 	OriginalLanguage    string
-	OriginalTitle       *string
+	OriginalTitle       string
 	Overview            string
 	Popularity          float64
-	PosterPath          *string
+	PosterPath          string
 	ProductionCompanies []Company `gorm:"many2many:moviecompanylink;joinForeignKey:movie_id;joinReferences:company_id"`
 	ProductionCountries []Country `gorm:"many2many:moviecountrylink;joinForeignKey:movie_id;joinReferences:country_id"`
-	ReleaseDate         time.Time
+	ReleaseDate         *time.Time
 	Revenue             int64
 	Runtime             int
 	SpokenLanguages     []Language `gorm:"many2many:movielanguagelink;joinForeignKey:movie_id;joinReferences:language_id"`
 	Status              string
-	Tagline             *string
+	Tagline             string
 	Title               string
 	VoteAverage         float64
 	VoteCount           int
@@ -64,6 +64,12 @@ func (m *Movie) toMap() map[string]any {
 		"chunk_order":       m.ChunkOrder,
 		"title":             m.Title,
 		"overview":          m.Overview,
+		"backdrop_path":     m.BackdropPath,
+		"poster_path":       m.PosterPath,
+		"tagline":           m.Tagline,
+		"original_title":    m.OriginalTitle,
+		"imdb_id":           m.ImdbID,
+		"homepage":          m.Homepage,
 	}
 
 	if m.ChunkID != 0 {
@@ -73,24 +79,6 @@ func (m *Movie) toMap() map[string]any {
 		result["semantic_text"] = m.SemanticText
 	}
 
-	if m.BackdropPath != nil {
-		result["backdrop_path"] = *m.BackdropPath
-	}
-	if m.Homepage != nil {
-		result["homepage"] = *m.Homepage
-	}
-	if m.ImdbID != nil {
-		result["imdb_id"] = *m.ImdbID
-	}
-	if m.OriginalTitle != nil {
-		result["original_title"] = *m.OriginalTitle
-	}
-	if m.PosterPath != nil {
-		result["poster_path"] = *m.PosterPath
-	}
-	if m.Tagline != nil {
-		result["tagline"] = *m.Tagline
-	}
 	if len(m.Genres) > 0 {
 		genres := namesFrom(m.Genres)
 		result["genres"] = StringSliceToAnySlicePlusTrimElements(genres)
@@ -131,15 +119,10 @@ func (m *Movie) ToQdrantPayload(
 }
 
 func (m *Movie) buildSemanticText() string {
-	tagline := ""
-	if m.Tagline != nil {
-		tagline = *m.Tagline
-	}
-
 	genres := strings.Join(namesFrom(m.Genres), ", ")
 	keywords := strings.Join(namesFrom(m.Keywords), ", ")
 
-	parts := []string{m.Title, tagline, genres, keywords, m.Overview}
+	parts := []string{m.Title, m.Tagline, genres, keywords, m.Overview}
 	nonEmpty := make([]string, 0, len(parts))
 	for _, p := range parts {
 		p = strings.TrimRight(p, ". ,")
