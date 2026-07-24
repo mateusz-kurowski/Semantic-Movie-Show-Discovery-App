@@ -38,37 +38,37 @@ export const language = pgTable("language", {
 });
 
 export const movie = pgTable("movie", {
-  id: bigserial({ mode: "number" }).primaryKey(),
-  title: varchar(),
-  voteAverage: doublePrecision("vote_average").notNull(),
-  voteCount: integer("vote_count").notNull(),
-  status: varchar().notNull(),
-  releaseDate: date("release_date"),
-  revenue: bigint({ mode: "number" }),
-  runtime: integer().notNull(),
   adult: boolean().notNull(),
-  backdropPath: varchar("backdrop_path"),
+  backdrop_path: varchar("backdrop_path"),
   budget: bigint({ mode: "number" }),
   homepage: varchar(),
-  imdbId: varchar("imdb_id"),
-  originalLanguage: varchar("original_language").notNull(),
-  originalTitle: varchar("original_title").notNull(),
+  id: bigserial({ mode: "number" }).primaryKey(),
+  imdb_id: varchar("imdb_id"),
+  is_present_in_search: boolean("is_present_in_search").notNull(),
+  original_language: varchar("original_language").notNull(),
+  original_title: varchar("original_title").notNull(),
   overview: varchar().notNull(),
   popularity: doublePrecision().notNull(),
-  posterPath: varchar("poster_path"),
+  poster_path: varchar("poster_path"),
+  release_date: date("release_date"),
+  revenue: bigint({ mode: "number" }),
+  runtime: integer().notNull(),
+  status: varchar().notNull(),
   tagline: varchar(),
-  isPresentInSearch: boolean("is_present_in_search").notNull(),
+  title: varchar(),
+  vote_average: doublePrecision("vote_average").notNull(),
+  vote_count: integer("vote_count").notNull(),
 });
 
 export const moviecompanylink = pgTable(
   "moviecompanylink",
   {
-    movieId: integer("movie_id")
-      .notNull()
-      .references(() => movie.id),
     companyId: integer("company_id")
       .notNull()
       .references(() => company.id),
+    movieId: integer("movie_id")
+      .notNull()
+      .references(() => movie.id),
   },
   (table) => [
     primaryKey({
@@ -81,12 +81,12 @@ export const moviecompanylink = pgTable(
 export const moviecountrylink = pgTable(
   "moviecountrylink",
   {
-    movieId: integer("movie_id")
-      .notNull()
-      .references(() => movie.id),
     countryId: integer("country_id")
       .notNull()
       .references(() => country.id),
+    movieId: integer("movie_id")
+      .notNull()
+      .references(() => movie.id),
   },
   (table) => [
     primaryKey({
@@ -99,12 +99,12 @@ export const moviecountrylink = pgTable(
 export const moviegenrelink = pgTable(
   "moviegenrelink",
   {
-    movieId: integer("movie_id")
-      .notNull()
-      .references(() => movie.id),
     genreId: integer("genre_id")
       .notNull()
       .references(() => genre.id),
+    movieId: integer("movie_id")
+      .notNull()
+      .references(() => movie.id),
   },
   (table) => [
     primaryKey({
@@ -117,12 +117,12 @@ export const moviegenrelink = pgTable(
 export const moviekeywordlink = pgTable(
   "moviekeywordlink",
   {
-    movieId: integer("movie_id")
-      .notNull()
-      .references(() => movie.id),
     keywordId: integer("keyword_id")
       .notNull()
       .references(() => keyword.id),
+    movieId: integer("movie_id")
+      .notNull()
+      .references(() => movie.id),
   },
   (table) => [
     primaryKey({
@@ -135,12 +135,12 @@ export const moviekeywordlink = pgTable(
 export const movielanguagelink = pgTable(
   "movielanguagelink",
   {
-    movieId: integer("movie_id")
-      .notNull()
-      .references(() => movie.id),
     languageId: integer("language_id")
       .notNull()
       .references(() => language.id),
+    movieId: integer("movie_id")
+      .notNull()
+      .references(() => movie.id),
   },
   (table) => [
     primaryKey({

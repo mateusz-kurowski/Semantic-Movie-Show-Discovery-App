@@ -7,7 +7,7 @@ meta {
 post {
   url: {{url}}/search/hybrid
   body: json
-  auth: inherit
+  auth: none
 }
 
 body:json {
@@ -15,9 +15,4 @@ body:json {
     "phrase":"bat man 8",
     "topK":5
   }
-}
-
-settings {
-  encodeUrl: true
-  timeout: 0
 }
