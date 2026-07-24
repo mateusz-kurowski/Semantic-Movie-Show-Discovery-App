@@ -2,11 +2,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import SearchForm from "@/components/discover/main-search";
 import MovieCard from "@/components/shared/movie-card";
 import { searchService } from "@/lib/api/search";
 
-const page = () => {
+function SearchResults() {
 	const searchParams = useSearchParams();
 	const query = searchParams.get("q");
 	const { data, isPending, isError, error } = useQuery({
@@ -34,6 +35,14 @@ const page = () => {
 			)}
 		</>
 	);
+}
+
+const Page = () => {
+	return (
+		<Suspense fallback={<div>Loading...</div>}>
+			<SearchResults />
+		</Suspense>
+	);
 };
 
-export default page;
+export default Page;
