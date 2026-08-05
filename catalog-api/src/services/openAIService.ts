@@ -1,5 +1,5 @@
 import { embed } from "ai";
-import type { RedisClient } from "bun";
+import type { RedisClientType } from "redis";
 import { createVoyage } from "voyage-ai-provider";
 import { env } from "../models/envModel";
 import cacheService from "./cacheService";
@@ -27,7 +27,7 @@ const getEmbedding = async (value: string) => {
 
 const getEmbeddingWithCache = async (
 	phrase: string,
-	cacheClient: RedisClient,
+	cacheClient: RedisClientType,
 ): Promise<number[]> => {
 	const cached = await cacheService.getVector(cacheClient, phrase);
 	if (cached) {

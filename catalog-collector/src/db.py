@@ -89,7 +89,7 @@ def insert_movies_in_batches(
     with Session(engine) as session:
         movie_stmt = insert(Movie)
 
-        # Exclude relationship fields from update_dict
+        # Exclude relationship fields and app-managed fields from update_dict
         excluded_cols = {
             "genres",
             "production_companies",
@@ -97,6 +97,8 @@ def insert_movies_in_batches(
             "spoken_languages",
             "keywords",
         }
+        if not get_envs().full_reload:
+            excluded_cols.add("is_present_in_search")
         update_dict = {
             c.name: c for c in movie_stmt.excluded if c.name not in excluded_cols
         }

@@ -24,6 +24,7 @@ def main():
 
     log.info(f"Loaded dataset. {len(filtered_df)} Rows.")
     envs = get_envs()
+    log.info(f"Reload mode: {'FULL' if envs.full_reload else 'INCREMENTAL'}")
 
     if envs.debug:
         explore_dataset(filtered_df)

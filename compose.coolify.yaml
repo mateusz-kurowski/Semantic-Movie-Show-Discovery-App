@@ -12,6 +12,7 @@ services:
       - PRODUCTION=${PRODUCTION:-false}
       - CATALOG_COLLECTOR_SERVICE_ON=${CATALOG_COLLECTOR_SERVICE_ON:-true}
       - DATASET_LOAD_PERCENTAGE=${DATASET_LOAD_PERCENTAGE:-100}
+      - FULL_RELOAD=${FULL_RELOAD:-false}
 
   catalog-ingester:
     container_name: catalog-ingester

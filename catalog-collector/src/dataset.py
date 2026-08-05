@@ -65,16 +65,16 @@ def scan_and_load_dataset(path: str) -> pl.DataFrame:
     csv_path = _resolve_dataset_csv(path)
     n_rows = _rows_to_load(csv_path, percentage)
 
-    query = (
-        pl.scan_csv(
-            str(csv_path),
-            try_parse_dates=True,
-            infer_schema_length=10000,
-            n_rows=n_rows,
-        )
-        # .filter(pl.col("original_language") == "pl")
-        .with_columns(pl.lit(False).alias("is_present_in_search"))
+    query = pl.scan_csv(
+        str(csv_path),
+        try_parse_dates=True,
+        infer_schema_length=10000,
+        n_rows=n_rows,
     )
+    # .filter(pl.col("original_language") == "pl")
+
+    if env.full_reload:
+        query = query.with_columns(pl.lit(False).alias("is_present_in_search"))
 
     return query.collect(engine="streaming")
 
@@ -100,7 +100,7 @@ def explore_dataset(df: pl.DataFrame) -> None:
         has_nulls = null_count > 0 or has_empty_strings
 
         log.info(
-            f"Column '{col_name: <25}' | Polars: {str(df.schema[col_name]): <12} | PyTypes: {types_str: <15} | Nulls/Empty: {str(has_nulls): <5} | Samples: {samples}"
+            f"Column '{col_name: <25}' | Polars: {df.schema[col_name]!s: <12} | PyTypes: {types_str: <15} | Nulls/Empty: {has_nulls!s: <5} | Samples: {samples}"
         )
 
 

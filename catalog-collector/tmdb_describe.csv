@@ -1,0 +1,10 @@
+statistic,id,title,vote_average,vote_count,status,release_date,revenue,runtime,adult,backdrop_path,budget,homepage,imdb_id,original_language,original_title,overview,popularity,poster_path,tagline,genres,production_companies,production_countries,spoken_languages,keywords,is_present_in_search
+count,138943.0,138943,138943.0,138943.0,138943,138757,138943.0,138943.0,138943.0,138943,138943.0,138943,138943,138943,138943,138943,138943.0,138943,138943,138943,138943,138943,138943,138943,138943.0
+null_count,0.0,0,0.0,0.0,0,186,0.0,0.0,0.0,0,0.0,0,0,0,0,0,0.0,0,0,0,0,0,0,0,0.0
+mean,265069.90478829446,,5.977298014293631,151.91533218658012,,1995-11-23 23:42:10.873397,5106933.826389239,85.2586456316619,0.007528266987181794,,1928993.764147888,,,,,,5.016165355577466,,,,,,,,0.0
+std,249120.86948863053,,1.1689071726745337,899.8605815027546,,,45617839.67976606,53.7327665693125,,,12099332.444944814,,,,,,20.74079086348725,,,,,,,,
+min,2.0,!W.A.R.: !Women Art Revolution,0.5,4.0,Planned,1874-12-09,0.0,0.0,0.0,"",0.0,"","",ab,!W.A.R.: !Women Art Revolution,"",0.0,"","","","","","","",0.0
+25%,61654.0,,5.241,6.0,,1981-12-01,0.0,77.0,,,0.0,,,,,,1.246,,,,,,,,
+50%,188984.0,,6.045,12.0,,2006-04-18,0.0,91.0,,,0.0,,,,,,2.265,,,,,,,,
+75%,409090.0,,6.8,35.0,,2015-08-27,0.0,103.0,,,0.0,,,,,,4.783,,,,,,,,
+max,1652987.0,극장판 타오르지마 버스터 - 블랙어썰트의 귀환,10.0,34495.0,Released,2026-02-25,2923706026.0,12480.0,1.0,/zzyl2ro4ayqnCJsVvexWJq7laAN.jpg,460000000.0,https://zomblogalypse.com/,tt9916362,zu,ｄビデオスペシャル　仮面ライダー4号,﻿﻿﻿﻿﻿This documentary looks at the Danish resistance movement's execution of 400 informers during the Nazi occupation and the ensuing cover-up.,2994.357,/zzylksiJ8hmzvsHIDBTuqYZJYTe.jpg,☑ Sing  ☑  Get drunk  ☑ Make friends ☐ Fall in love,"Western, War, Romance",한맥문화,Zimbabwe,"Zulu, English, Afrikaans",카운트다운,0.0

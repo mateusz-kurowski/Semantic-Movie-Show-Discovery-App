@@ -1,5 +1,6 @@
-from functools import lru_cache
 import os
+from functools import lru_cache
+
 from pydantic import Field, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -15,6 +16,7 @@ class EnvConfig(BaseSettings):
         alias="CATALOG_COLLECTOR_SERVICE_ON", default=True
     )
     dataset_load_percentage: float = Field(alias="DATASET_LOAD_PERCENTAGE", default=100)
+    full_reload: bool = Field(alias="FULL_RELOAD", default=True)
 
 
 @lru_cache

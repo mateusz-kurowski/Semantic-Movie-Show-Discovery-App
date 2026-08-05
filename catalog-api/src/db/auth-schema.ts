@@ -1,13 +1,146 @@
-// Auth tables managed by Drizzle migrations.
-// Tables here will be created/updated via `drizzle-kit migrate`.
-//
-// Catalog tables (movie, genre, etc.) live in catalog-schema.ts
-// and are NOT managed by migrations — they're created by catalog-collector.
-//
-// Populate this file when integrating better-auth.
-// better-auth's Drizzle adapter will add:
-//   - user, session, account, verification
-//
-// Add user-movie relation tables here too:
-//   - user_favorite, user_watchlist, user_rating, etc.
-export {};
+import {
+	bigint,
+	boolean,
+	index,
+	integer,
+	pgTable,
+	primaryKey,
+	text,
+	timestamp,
+} from "drizzle-orm/pg-core";
+
+import { movie } from "./catalog-schema";
+
+// Auth tables — managed by Drizzle migrations
+// ---------------------------------------------------------------------------
+
+export const user = pgTable("user", {
+	id: text("id").primaryKey(),
+	name: text("name").notNull(),
+	email: text("email").notNull().unique(),
+	emailVerified: boolean("email_verified").default(false).notNull(),
+	image: text("image"),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at")
+		.defaultNow()
+		.$onUpdate(() => /* @__PURE__ */ new Date())
+		.notNull(),
+});
+
+export const session = pgTable(
+	"session",
+	{
+		id: text("id").primaryKey(),
+		expiresAt: timestamp("expires_at").notNull(),
+		token: text("token").notNull().unique(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull(),
+		ipAddress: text("ip_address"),
+		userAgent: text("user_agent"),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+	},
+	(table) => [index("session_userId_idx").on(table.userId)],
+);
+
+export const account = pgTable(
+	"account",
+	{
+		id: text("id").primaryKey(),
+		accountId: text("account_id").notNull(),
+		providerId: text("provider_id").notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		accessToken: text("access_token"),
+		refreshToken: text("refresh_token"),
+		idToken: text("id_token"),
+		accessTokenExpiresAt: timestamp("access_token_expires_at"),
+		refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+		scope: text("scope"),
+		password: text("password"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull(),
+	},
+	(table) => [index("account_userId_idx").on(table.userId)],
+);
+
+export const verification = pgTable(
+	"verification",
+	{
+		id: text("id").primaryKey(),
+		identifier: text("identifier").notNull(),
+		value: text("value").notNull(),
+		expiresAt: timestamp("expires_at").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull(),
+	},
+	(table) => [index("verification_identifier_idx").on(table.identifier)],
+);
+
+// User ↔ Movie tables
+// ---------------------------------------------------------------------------
+
+export const usermoviefavorite = pgTable(
+	"usermoviefavorite",
+	{
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		movieId: bigint("movie_id", { mode: "number" })
+			.notNull()
+			.references(() => movie.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.userId, table.movieId] }),
+		index("usermoviefavorite_movieId_idx").on(table.movieId),
+	],
+);
+
+export const usermoviewatchlist = pgTable(
+	"usermoviewatchlist",
+	{
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		movieId: bigint("movie_id", { mode: "number" })
+			.notNull()
+			.references(() => movie.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.userId, table.movieId] }),
+		index("usermoviewatchlist_movieId_idx").on(table.movieId),
+	],
+);
+
+export const usermovierating = pgTable(
+	"usermovierating",
+	{
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		movieId: bigint("movie_id", { mode: "number" })
+			.notNull()
+			.references(() => movie.id, { onDelete: "cascade" }),
+		rating: integer("rating").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.userId, table.movieId] }),
+		index("usermovierating_movieId_idx").on(table.movieId),
+	],
+);

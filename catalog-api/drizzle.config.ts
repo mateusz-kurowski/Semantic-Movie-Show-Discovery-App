@@ -7,6 +7,6 @@ export default defineConfig({
   },
   dialect: "postgresql",
   out: "./drizzle",
-  schema: "./src/db/auth-schema.ts",
-  tablesFilter: ["user", "session", "account", "verification", "user_*"],
+  schema: "./src/db/schema.ts",
+  // All tables managed by Drizzle (catalog + auth + user-movie)
 });

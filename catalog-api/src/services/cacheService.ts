@@ -1,43 +1,48 @@
-import { env, RedisClient } from "bun";
+import type { RedisClientType } from "redis";
+import { createClient } from "redis";
+import { env } from "../models/envModel";
 
-const getClient = async () =>
-	new RedisClient(env.REDIS_URL || "redis://localhost:6379");
+const getClient = async () => {
+  const client = createClient({ url: env.redisUrl });
+  await client.connect();
+  return client;
+};
 
 const setVector = async (
-	client: RedisClient,
-	key: string,
-	vector: number[],
+  client: RedisClientType,
+  key: string,
+  vector: number[],
 ) => {
-	await client.set(key, JSON.stringify(vector));
+  await client.set(key, JSON.stringify(vector));
 };
 
 const getVector = async (
-	client: RedisClient,
-	key: string,
+  client: RedisClientType,
+  key: string,
 ): Promise<number[] | null> => {
-	const result = await client.get(key);
-	return result ? JSON.parse(result) : null;
+  const result = await client.get(key);
+  return result ? JSON.parse(result) : null;
 };
 
 const getVectors = async (
-	client: RedisClient,
-	keys: string[],
+  client: RedisClientType,
+  keys: string[],
 ): Promise<Record<string, number[] | null>> => {
-	if (keys.length === 0) return {};
-	const results = await client.mget(...keys);
+  if (keys.length === 0) return {};
+  const results = await client.mGet(keys);
 
-	const map: Record<string, number[] | null> = {};
-	keys.forEach((key, index) => {
-		map[key] = results[index] ? JSON.parse(results[index] as string) : null;
-	});
-	return map;
+  const map: Record<string, number[] | null> = {};
+  keys.forEach((key, index) => {
+    map[key] = results[index] ? JSON.parse(results[index] as string) : null;
+  });
+  return map;
 };
 
 const cacheService = {
-	getClient,
-	getVector,
-	getVectors,
-	setVector,
+  getClient,
+  getVector,
+  getVectors,
+  setVector,
 };
 
 export default cacheService;
