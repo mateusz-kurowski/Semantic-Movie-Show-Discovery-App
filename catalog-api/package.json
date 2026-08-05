@@ -29,6 +29,6 @@
 	},
 	"version": "1.0.50",
 	"overrides": {
-		"@sinclair/typebox": "0.34.0"
+		"@sinclair/typebox": "0.34.52"
 	}
 }

@@ -66,7 +66,7 @@ jobs:
           tags: ${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest
 
       - name: Run Trivy (CRITICAL)
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: "docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest"
           format: "table"
@@ -76,7 +76,7 @@ jobs:
           severity: "CRITICAL"
 
       - name: Run Trivy (HIGH)
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         if: always()
         with:
           image-ref: "docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:latest"
