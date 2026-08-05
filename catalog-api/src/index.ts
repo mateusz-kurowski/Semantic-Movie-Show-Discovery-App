@@ -1,23 +1,24 @@
 import { cors } from "@elysia/cors";
 import openapi from "@elysiajs/openapi";
 import { Elysia } from "elysia";
-import { auth, betterAuthView } from "./auth";
+import { auth } from "./auth";
 import { validateEnvs } from "./models/envModel";
-import authRoutes from "./routes/authRoutes";
 import embeddingRoutes from "./routes/embeddingRoutes";
 import movieRoutes from "./routes/movieRoutes";
 import searchRoutes from "./routes/searchRoutes";
 
 export const envs = validateEnvs();
 
-const app = new Elysia()
-  // .all("/auth/*", betterAuthView)
+const corsOrigins = process.env.CORS_ORIGINS?.split(",").filter(Boolean) ?? [
+  "http://localhost:3000",
+];
+
+const app = new Elysia({ name: "api", prefix: "/api" })
   .use(openapi())
   .use(embeddingRoutes)
   .use(searchRoutes)
   .use(movieRoutes)
-  .use(authRoutes)
-  .use(cors())
+  .use(cors({ origin: corsOrigins, credentials: true }))
   .mount(auth.handler)
   .macro({
     auth: {

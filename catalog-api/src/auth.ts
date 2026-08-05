@@ -1,6 +1,6 @@
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
-import type { Context } from "elysia";
+import { openAPI } from "better-auth/plugins";
 import { db } from "./clients";
 import * as schema from "./db/schema";
 
@@ -12,17 +12,10 @@ export const auth = betterAuth({
     provider: "pg",
     schema,
   }),
+  secret: process.env.BETTER_AUTH_SECRET,
+  baseURL: process.env.BETTER_AUTH_URL,
+  // Local Next.js dev origin; add more via BETTER_AUTH_TRUSTED_ORIGINS (comma-separated)
+  // for production/staging deployments.
+  trustedOrigins: ["http://localhost:3000"],
+  plugins: [openAPI()],
 });
-
-export const betterAuthView = (context: Context) => {
-  const BETTER_AUTH_ACCEPT_METHODS = ["POST", "GET"];
-  // validate request method
-  if (BETTER_AUTH_ACCEPT_METHODS.includes(context.request.method)) {
-    return auth.handler(context.request);
-  } else {
-    return new Response(null, {
-      status: 405,
-      statusText: "Method Not Allowed",
-    });
-  }
-};

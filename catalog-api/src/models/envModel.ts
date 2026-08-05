@@ -3,6 +3,8 @@ import { type Static, t } from "elysia";
 
 const envSchema = t.Object({
   apiPort: t.Number({ default: 8080, minimum: 1 }),
+  betterAuthSecret: t.String({ minLength: 1 }),
+  betterAuthUrl: t.String({ format: "uri" }),
   collectionName: t.String({ minLength: 1 }),
   openAIBaseUrl: t.String({ format: "uri" }),
   openAIEmbeddingModel: t.String({ minLength: 1 }),
@@ -32,6 +34,8 @@ export type Env = Static<typeof envSchema>;
 export const validateEnvs = (): Env => {
   const envs = {
     apiPort: process.env.API_PORT ? parseInt(process.env.API_PORT, 10) : 8080,
+    betterAuthSecret: process.env.BETTER_AUTH_SECRET,
+    betterAuthUrl: process.env.BETTER_AUTH_URL,
     collectionName: process.env.QDRANT_COLLECTION_NAME,
     openAIBaseUrl: process.env.OPENAI_BASE_URL,
     openAIEmbeddingModel: process.env.OPENAI_EMBEDDING_MODEL,
