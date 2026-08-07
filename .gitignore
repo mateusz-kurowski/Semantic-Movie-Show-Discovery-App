@@ -11,3 +11,5 @@ stack.env
 !**/.env.example
 
 /data
+
+design/

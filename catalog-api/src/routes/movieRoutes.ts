@@ -1,36 +1,32 @@
 import Elysia, { t } from "elysia";
-import dbService from "../services/dbService";
+import dbService, { type GetMoviesParams } from "../services/dbService";
+
+const allowedKeys = [
+  "id",
+  "title",
+  "voteAverage",
+  "voteCount",
+  "status",
+  "releaseDate",
+  "revenue",
+  "runtime",
+  "adult",
+  "backdropPath",
+  "budget",
+  "homepage",
+  "imdbId",
+  "originalLanguage",
+  "popularity",
+  "isPresentInSearch",
+];
 
 const movieRoutes = new Elysia({ name: "movies", prefix: "/movies" }).get(
   "",
-  async ({ query: { limit, sortBy, order } }: any) => {
-    const allowedKeys = [
-      "id",
-      "title",
-      "voteAverage",
-      "voteCount",
-      "status",
-      "releaseDate",
-      "revenue",
-      "runtime",
-      "adult",
-      "backdropPath",
-      "budget",
-      "homepage",
-      "imdbId",
-      "originalLanguage",
-      "popularity",
-      "isPresentInSearch",
-    ];
-
-    const key =
-      typeof sortBy === "string" && allowedKeys.includes(sortBy)
-        ? (sortBy as any)
-        : "popularity";
-
+  async ({ query: { limit, sortBy, order } }) => {
     const movies = dbService.getMovies({
       limit,
-      sortBy: { key, order },
+      sortBy,
+      order,
     });
     return movies;
   },
@@ -43,12 +39,15 @@ const movieRoutes = new Elysia({ name: "movies", prefix: "/movies" }).get(
         description: "Number of movies to return",
         examples: [10, 20, 50],
       }),
-      sortBy: t.String({
-        default: "popularity",
-        description: "Sort movies by this field",
-        examples: ["popularity", "release_date", "rating"],
-      }),
-      order: t.String({
+      sortBy: t.Union(
+        allowedKeys.map((key) => t.Literal(key)),
+        {
+          default: "popularity",
+          description: "Sort by field",
+          examples: ["title", "releaseDate", "popularity"],
+        },
+      ),
+      order: t.Union([t.Literal("asc"), t.Literal("desc")], {
         default: "desc",
         description: "Sort order",
         examples: ["asc", "desc"],

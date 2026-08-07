@@ -1,18 +1,12 @@
-import { type AnyColumn, asc, desc, type InferSelectModel } from "drizzle-orm";
-import { movie } from "../db/catalog-schema";
+import { type AnyColumn, asc, desc } from "drizzle-orm";
 import { db } from "../clients";
+import { movie } from "../db/catalog-schema";
+import type { Movie } from "../types/movie";
 
-type Movie = InferSelectModel<typeof movie>;
-
-interface GetMoviesParams {
+export interface GetMoviesParams {
   limit: number;
-  sortBy?: SortMapping;
+  sortBy?: keyof Movie;
   order?: "asc" | "desc";
-}
-
-interface SortMapping {
-  key: keyof Movie;
-  order: "asc" | "desc";
 }
 
 const getMovies = async ({
@@ -21,7 +15,7 @@ const getMovies = async ({
   order,
 }: GetMoviesParams): Promise<Movie[]> => {
   const columnRef =
-    (movie[sortBy?.key as keyof typeof movie] as AnyColumn) ?? "popularity";
+    (movie[sortBy as keyof typeof movie] as AnyColumn) ?? "popularity";
   const sortFn = order === "asc" ? asc : desc;
   const movies = await db
     .select()
