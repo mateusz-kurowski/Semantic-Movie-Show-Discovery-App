@@ -38,7 +38,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build Next.js application
-RUN bun run build
+RUN bun run build --webpack
 
 # ============================================
 # Stage 3: Run Next.js application
