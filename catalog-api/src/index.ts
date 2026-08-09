@@ -11,6 +11,7 @@ export const envs = validateEnvs();
 
 const corsOrigins = process.env.CORS_ORIGINS?.split(",").filter(Boolean) ?? [
   "http://localhost:3000",
+  "https://movies.mkurowski.dev",
 ];
 
 const app = new Elysia({ name: "api", prefix: "/api" })
@@ -18,7 +19,7 @@ const app = new Elysia({ name: "api", prefix: "/api" })
   .use(embeddingRoutes)
   .use(searchRoutes)
   .use(movieRoutes)
-  .use(cors({ origin: corsOrigins, credentials: true }))
+  .use(cors({ credentials: true, origin: corsOrigins }))
   .mount(auth.handler)
   .macro({
     auth: {
@@ -28,8 +29,8 @@ const app = new Elysia({ name: "api", prefix: "/api" })
         });
         if (!session) return status(401);
         return {
-          user: session.user,
           session: session.session,
+          user: session.user,
         };
       },
     },
