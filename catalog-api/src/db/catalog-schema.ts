@@ -67,7 +67,7 @@ export const moviecompanylink = pgTable(
 		companyId: integer("company_id")
 			.notNull()
 			.references(() => company.id),
-		movieId: bigint({ mode: "number" })
+		movieId: bigint("movie_id", { mode: "number" })
 			.notNull()
 			.references(() => movie.id),
 	},
@@ -85,7 +85,7 @@ export const moviecountrylink = pgTable(
 		countryId: integer("country_id")
 			.notNull()
 			.references(() => country.id),
-		movieId: bigint({ mode: "number" })
+		movieId: bigint("movie_id", { mode: "number" })
 			.notNull()
 			.references(() => movie.id),
 	},
@@ -103,7 +103,7 @@ export const moviegenrelink = pgTable(
 		genreId: integer("genre_id")
 			.notNull()
 			.references(() => genre.id),
-		movieId: bigint({ mode: "number" })
+		movieId: bigint("movie_id", { mode: "number" })
 			.notNull()
 			.references(() => movie.id),
 	},
@@ -121,7 +121,7 @@ export const moviekeywordlink = pgTable(
 		keywordId: integer("keyword_id")
 			.notNull()
 			.references(() => keyword.id),
-		movieId: bigint({ mode: "number" })
+		movieId: bigint("movie_id", { mode: "number" })
 			.notNull()
 			.references(() => movie.id),
 	},
@@ -139,7 +139,7 @@ export const movielanguagelink = pgTable(
 		languageId: integer("language_id")
 			.notNull()
 			.references(() => language.id),
-		movieId: bigint({ mode: "number" })
+		movieId: bigint("movie_id", { mode: "number" })
 			.notNull()
 			.references(() => movie.id),
 	},

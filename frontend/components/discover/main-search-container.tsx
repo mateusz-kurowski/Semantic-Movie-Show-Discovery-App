@@ -1,6 +1,6 @@
 "use client";
 import SearchForm from "./main-search";
-import FeaturedMovies from "./popuilar-movies";
+import FeaturedMovies from "./popular-movies";
 
 const MainSearchContainer = () => {
 	return (

@@ -1,11 +1,25 @@
-import { Button } from "../ui/button";
+"use client";
+import { useState } from "react";
+import { ToggleGroup } from "../ui/toggle-group";
+import SearchToggle from "./SearchToggle";
 
 const SearchModeContainer = () => {
+	const [isSearchMode, setSearchMode] = useState<boolean>(true);
 	return (
-		<>
-			<Button className="text-primary bg-sidebar">Ask AI</Button>
-			<Button className="text-white">Search</Button>
-		</>
+		// todo: user should be able to save his preference in local storage or in the user profile
+		<ToggleGroup
+			defaultValue={["search"]}
+			multiple={false}
+			onValueChange={(value) => setSearchMode(value[0] === "search")}
+			className="w-full"
+		>
+			<SearchToggle isActive={!isSearchMode} value="ai">
+				Ask AI
+			</SearchToggle>
+			<SearchToggle isActive={isSearchMode} value="search">
+				Search
+			</SearchToggle>
+		</ToggleGroup>
 	);
 };
 

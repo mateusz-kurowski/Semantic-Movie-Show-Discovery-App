@@ -19,6 +19,7 @@ export interface Movie {
 	poster_path: string;
 	tagline: string;
 	is_present_in_search: boolean;
+	genres: string[];
 }
 
 const getMovies = async ({
@@ -33,8 +34,14 @@ const getMovies = async ({
 	const response = await fetch(
 		`${process.env.NEXT_PUBLIC_SEARCH_API_URL}/movies?sortBy=${sortBy}&order=${order}&limit=${limit}`,
 	);
-	const data = await response.json();
-	return data;
+	return await response.json();
+};
+
+const getMovieById = async (movieId: string): Promise<Movie> => {
+	const response = await fetch(
+		`${process.env.NEXT_PUBLIC_SEARCH_API_URL}/movies/${movieId}`,
+	);
+	return await response.json();
 };
 
 export type ComparableMovieField =
@@ -51,4 +58,5 @@ const getFeaturedMovies = async (by: ComparableMovieField) =>
 export const movieService = {
 	getMovies,
 	getFeaturedMovies,
+	getMovieById,
 };

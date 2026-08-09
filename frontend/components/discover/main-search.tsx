@@ -55,21 +55,25 @@ const SearchForm = ({
 				<Controller
 					name="query"
 					control={form.control}
-					render={({ field, fieldState }) => (
-						<Field data-invalid={fieldState.invalid}>
-							<InputGroup>
-								<InputGroupAddon align="inline-start">
+					render={({ field, fieldState: { invalid } }) => (
+						<Field data-invalid={invalid}>
+							<InputGroup className="py-6 pr-3 rounded-md border-r-2 border-r-slate-200 dark:border-r-slate-700">
+								<InputGroupAddon align="inline-start" className="border-r">
 									<SearchModeContainer />
 								</InputGroupAddon>
 								<InputGroupInput
 									{...field}
 									id={field.name}
-									aria-invalid={fieldState.invalid}
+									aria-invalid={invalid}
 									placeholder="A hopeful sci-fi adventure about rebellion..."
 									autoComplete="off"
 								/>
 								<InputGroupAddon align="inline-end">
-									<Button className="text-white" type="submit" form={formId}>
+									<Button
+										className="text-white rounded-sm cursor-pointer"
+										type="submit"
+										form={formId}
+									>
 										<ArrowRight />
 									</Button>
 								</InputGroupAddon>
