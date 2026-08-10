@@ -1,7 +1,7 @@
-import MainSearchContainer from "@/components/discover/main-search-container";
+import HomePage from "@/components/discover/home-page";
 
 const page = () => {
-	return <MainSearchContainer />;
+	return <HomePage />;
 };
 
 export default page;

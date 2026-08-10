@@ -9,7 +9,7 @@ import { Button } from "../ui/button";
 interface FeaturedMoviesProps {
 	type: ComparableMovieField;
 }
-const FeaturedMovies = ({ type }: FeaturedMoviesProps) => {
+const MoviesGridComponent = ({ type }: FeaturedMoviesProps) => {
 	const { data, isPending, isError, error } = useQuery({
 		queryKey: [`${type}-movies`],
 		queryFn: () => movieService.getFeaturedMovies(type),
@@ -40,4 +40,4 @@ const FeaturedMovies = ({ type }: FeaturedMoviesProps) => {
 	);
 };
 
-export default FeaturedMovies;
+export default MoviesGridComponent;

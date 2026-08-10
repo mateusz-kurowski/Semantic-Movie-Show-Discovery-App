@@ -2,6 +2,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "../ui/button";
@@ -24,11 +25,21 @@ const searchFormSchema = z.object({
 interface SearchFormProps {
 	showRecommendationBadges?: boolean;
 	defaultValue?: string;
+	togglesVisible?: boolean;
+	btnVisible?: boolean;
+	icon?: ReactNode;
+	showIconWhenNotEmpty?: boolean;
+	compact?: boolean;
 }
 
 const SearchForm = ({
 	showRecommendationBadges,
 	defaultValue,
+	icon,
+	togglesVisible = true,
+	btnVisible = true,
+	showIconWhenNotEmpty = true,
+	compact = false,
 }: SearchFormProps) => {
 	const router = useRouter();
 
@@ -38,6 +49,8 @@ const SearchForm = ({
 			query: defaultValue || "",
 		},
 	});
+	const showIconSearchInputIcon =
+		icon && (showIconWhenNotEmpty ? true : !form.formState.isDirty);
 
 	const onSubmit = ({ query }: z.infer<typeof searchFormSchema>) => {
 		router.push(`/search?q=${query}`);
@@ -50,17 +63,25 @@ const SearchForm = ({
 
 	const formId = "form-movies-search";
 	return (
-		<form id={formId} className="w-full" onSubmit={form.handleSubmit(onSubmit)}>
+		<form
+			id={formId}
+			className={`${compact ? "py-6 w-70" : "py-2 w-full"}`}
+			onSubmit={form.handleSubmit(onSubmit)}
+		>
 			<FieldGroup>
 				<Controller
 					name="query"
 					control={form.control}
 					render={({ field, fieldState: { invalid } }) => (
 						<Field data-invalid={invalid}>
-							<InputGroup className="py-6 pr-3 rounded-md border-r-2 border-r-slate-200 dark:border-r-slate-700">
-								<InputGroupAddon align="inline-start" className="border-r">
-									<SearchModeContainer />
-								</InputGroupAddon>
+							<InputGroup
+								className={`py-6 pr-3 rounded-md border-r-2 border-r-slate-200 dark:border-r-slate-700 ${compact ? "rounded-3xl" : ""}`}
+							>
+								{togglesVisible && (
+									<InputGroupAddon align="inline-start" className="border-r">
+										<SearchModeContainer />
+									</InputGroupAddon>
+								)}
 								<InputGroupInput
 									{...field}
 									id={field.name}
@@ -68,15 +89,20 @@ const SearchForm = ({
 									placeholder="A hopeful sci-fi adventure about rebellion..."
 									autoComplete="off"
 								/>
-								<InputGroupAddon align="inline-end">
-									<Button
-										className="text-white rounded-sm cursor-pointer"
-										type="submit"
-										form={formId}
-									>
-										<ArrowRight />
-									</Button>
-								</InputGroupAddon>
+								{showIconSearchInputIcon && (
+									<InputGroupAddon align="inline-start">{icon}</InputGroupAddon>
+								)}
+								{btnVisible && (
+									<InputGroupAddon align="inline-end">
+										<Button
+											className="text-white rounded-sm cursor-pointer"
+											type="submit"
+											form={formId}
+										>
+											<ArrowRight />
+										</Button>
+									</InputGroupAddon>
+								)}
 							</InputGroup>
 							{showRecommendationBadges && (
 								<RecommendationBadges onClick={handleRecommendationClick} />

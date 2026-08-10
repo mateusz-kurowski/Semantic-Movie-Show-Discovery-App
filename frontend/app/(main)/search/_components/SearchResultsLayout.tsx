@@ -1,4 +1,6 @@
+"use client";
 import { useQuery } from "@tanstack/react-query";
+import { Search } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import SearchForm from "@/components/discover/main-search";
 import MovieCard from "@/components/shared/movie-card";
@@ -17,18 +19,36 @@ const SearchResultsLayout = () => {
 
 	return (
 		<>
-			<SearchForm defaultValue={query || ""} />
 			{isPending && <div>Loading...</div>}
 			{isError && <div>Error: {error.message}</div>}
 			{data && (
-				<div>
-					<h1>Search Results for "{query}"</h1>
+				<main className="flex flex-col gap-4">
+					<div className="top-results-section flex justify-between items-center">
+						<div className="title-and-count-section">
+							<h1 className="flex gap-2 text-2xl font-bold">
+								<span>Personalized Results for</span>
+								<span className="text-primary">"{query}"</span>
+							</h1>
+							<p className="text-on-surface-variant">
+								{data.length} films found
+							</p>
+						</div>
+						<SearchForm
+							togglesVisible={false}
+							defaultValue={query || ""}
+							btnVisible={false}
+							icon={<Search />}
+							compact
+						/>
+					</div>
+					{/* todo: fix the count, this should not be the length of the data array */}
+					<div>filters</div>
 					<ul>
 						{data.map((result) => (
 							<MovieCard movie={result.payload} key={result.id} />
 						))}
 					</ul>
-				</div>
+				</main>
 			)}
 		</>
 	);
