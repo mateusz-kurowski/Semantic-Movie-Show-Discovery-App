@@ -50,8 +50,7 @@ const searchRoutes = new Elysia({ name: "search", prefix: "/search" })
       console.log(`Hybrid search phrase: ${phrase}`);
 
       try {
-        const { points } = await searchService.hybridSearch(phrase, topK);
-        return points;
+        return await searchService.hybridSearch(phrase, topK);
       } catch (error) {
         console.error("Error during hybrid search:", error);
         if (error && typeof error === "object" && "data" in error) {

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import SearchForm from "@/components/discover/main-search";
-import MovieCard from "@/components/shared/movie-card";
+import MoviesGrid from "@/components/shared/movies-grid";
 import { searchService } from "@/lib/api/search";
 
 const SearchResultsLayout = () => {
@@ -15,8 +15,7 @@ const SearchResultsLayout = () => {
 			searchService.hybridSearch({ phrase: query!, topK: 10 }),
 		enabled: !!query,
 	});
-	console.log(data);
-
+	const movies = data?.map((result) => result.payload) || [];
 	return (
 		<>
 			{isPending && <div>Loading...</div>}
@@ -43,11 +42,8 @@ const SearchResultsLayout = () => {
 					</div>
 					{/* todo: fix the count, this should not be the length of the data array */}
 					<div>filters</div>
-					<ul>
-						{data.map((result) => (
-							<MovieCard movie={result.payload} key={result.id} />
-						))}
-					</ul>
+
+					<MoviesGrid movies={movies} />
 				</main>
 			)}
 		</>

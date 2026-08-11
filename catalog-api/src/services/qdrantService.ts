@@ -15,13 +15,15 @@ const semanticSearch = async (
   collectionName: string,
   vector: number[],
   topK: number,
-) =>
-  await client.query(collectionName, {
+) => {
+  const results = await client.query(collectionName, {
     limit: topK,
-    using: env.qdrantDenseVectorName,
     query: vector,
+    using: env.qdrantDenseVectorName,
     with_payload: true,
   });
+  return results.points;
+};
 
 const hybridSearch = async (
   client: QdrantClient,
@@ -30,7 +32,7 @@ const hybridSearch = async (
   text: string,
   topK: number,
 ) => {
-  return await client.query(collectionName, {
+  const results = await client.query(collectionName, {
     limit: topK,
     prefetch: [
       { limit: topK * 2, query: vector, using: env.qdrantDenseVectorName },
@@ -43,6 +45,8 @@ const hybridSearch = async (
     query: { fusion: "rrf" },
     with_payload: true,
   });
+  console.log(results.points);
+  return results.points;
 };
 
 const qdrantService = {

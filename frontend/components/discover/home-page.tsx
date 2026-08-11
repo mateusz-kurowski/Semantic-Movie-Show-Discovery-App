@@ -1,7 +1,7 @@
 "use client";
 import { Sparkles } from "lucide-react";
+import FeaturedMoviesGrid from "./featured-movies-grid";
 import SearchForm from "./main-search";
-import MoviesGridComponent from "./movies-grid";
 
 const HomePage = () => {
 	return (
@@ -12,7 +12,7 @@ const HomePage = () => {
 				showRecommendationBadges={true}
 				showIconWhenNotEmpty={false}
 			/>
-			<MoviesGridComponent type="popularity" />
+			<FeaturedMoviesGrid type="popularity" />
 		</main>
 	);
 };
