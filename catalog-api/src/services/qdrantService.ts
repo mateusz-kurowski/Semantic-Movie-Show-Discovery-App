@@ -45,7 +45,6 @@ const hybridSearch = async (
     query: { fusion: "rrf" },
     with_payload: true,
   });
-  console.log(results.points);
   return results.points;
 };
 

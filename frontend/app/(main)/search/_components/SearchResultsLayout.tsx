@@ -42,8 +42,9 @@ const SearchResultsLayout = () => {
 					</div>
 					{/* todo: fix the count, this should not be the length of the data array */}
 					<div>filters</div>
-
-					<MoviesGrid movies={movies} />
+					<div p-4>
+						<MoviesGrid movies={movies} />
+					</div>
 				</main>
 			)}
 		</>
