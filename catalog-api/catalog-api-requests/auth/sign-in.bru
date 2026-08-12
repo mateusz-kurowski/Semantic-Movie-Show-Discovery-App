@@ -1,23 +1,18 @@
 meta {
-  name: signup
+  name: sign-in
   type: http
-  seq: 1
+  seq: 2
 }
 
 post {
-  url: {{url}}/auth/sign-up/email
+  url: {{url}}/auth/sign-in/email
   body: json
   auth: inherit
-}
-
-headers {
-  Origin: http://localhost:3000
 }
 
 body:json {
   {
     "email":"mateusz.kurowski28@gmail.com",
-      "name":"mateusz.kurowski28@gmail.com",
     "password":"test"
   }
 }

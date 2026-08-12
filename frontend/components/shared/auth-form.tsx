@@ -19,6 +19,7 @@ import {
 	FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth/auth-client";
 
 const baseFormSchema = z.object({
 	email: z.email("Invalid email address."),
@@ -62,15 +63,19 @@ export function AuthForm({ mode }: AuthFormProps) {
 				: { mode, email: "", password: "" },
 	});
 
-	function onSubmit(data: AuthFormValues) {
-		if (data.mode === "sign-up") {
-			// TODO: wire up sign-up mutation
-			console.log("sign-up", data.email, data.password);
+	const onSubmit = async ({ email, password, mode }: AuthFormValues) => {
+		if (mode === "sign-up") {
+			const result = await authClient.signUp.email({
+				email,
+				password,
+				name: email,
+			});
+			console.log(result);
 		} else {
-			// TODO: wire up sign-in mutation
-			console.log("sign-in", data.email, data.password);
+			const result = await authClient.signIn.email({ email, password });
+			console.log(result);
 		}
-	}
+	};
 
 	return (
 		<Card className="w-full sm:max-w-md">
