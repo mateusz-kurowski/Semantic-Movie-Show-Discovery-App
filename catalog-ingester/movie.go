@@ -70,6 +70,7 @@ func (m *Movie) toMap() map[string]any {
 		"original_title":    m.OriginalTitle,
 		"imdb_id":           m.ImdbID,
 		"homepage":          m.Homepage,
+		"id":                m.ID,
 	}
 
 	if m.ChunkID != 0 {

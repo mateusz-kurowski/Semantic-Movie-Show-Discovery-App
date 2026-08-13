@@ -7,6 +7,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
 const MovieCard = ({ movie }: { movie: Movie }) => {
 	const releaseYear = new Date(movie.release_date).getFullYear();
+
 	return (
 		<Card className="relative mx-auto w-full max-w-sm pt-0">
 			<Link href={`/movies/${movie.id}`}>

@@ -1,19 +1,19 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import SearchForm from "@/components/discover/main-search";
 import MoviesGrid from "@/components/shared/movies-grid";
 import { searchService } from "@/lib/api/search";
 
-const SearchResultsLayout = () => {
-	const searchParams = useSearchParams();
-	const query = searchParams.get("q");
+interface SearchResultsLayoutProps {
+	phrase: string;
+}
+
+const SearchResultsLayout = ({ phrase }: SearchResultsLayoutProps) => {
 	const { data, isPending, isError, error } = useQuery({
-		queryKey: ["search-results", query],
-		queryFn: async () =>
-			searchService.hybridSearch({ phrase: query!, topK: 10 }),
-		enabled: !!query,
+		queryKey: ["search-results", phrase],
+		queryFn: async () => searchService.hybridSearch({ phrase, topK: 10 }),
+		enabled: !!phrase,
 	});
 	const movies = data?.map((result) => result.payload) || [];
 	return (
@@ -26,7 +26,7 @@ const SearchResultsLayout = () => {
 						<div className="title-and-count-section">
 							<h1 className="flex gap-2 text-2xl font-bold">
 								<span>Personalized Results for</span>
-								<span className="text-primary">"{query}"</span>
+								<span className="text-primary">"{phrase}"</span>
 							</h1>
 							<p className="text-on-surface-variant">
 								{data.length} films found
@@ -34,7 +34,7 @@ const SearchResultsLayout = () => {
 						</div>
 						<SearchForm
 							togglesVisible={false}
-							defaultValue={query || ""}
+							defaultValue={phrase || ""}
 							btnVisible={false}
 							icon={<Search />}
 							compact
@@ -42,7 +42,7 @@ const SearchResultsLayout = () => {
 					</div>
 					{/* todo: fix the count, this should not be the length of the data array */}
 					<div>filters</div>
-					<div p-4>
+					<div p-6>
 						<MoviesGrid movies={movies} />
 					</div>
 				</main>
