@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,8 @@ interface AuthFormProps {
 }
 
 export function AuthForm({ mode }: AuthFormProps) {
+	const router = useRouter();
+
 	const form = useForm<AuthFormValues>({
 		resolver: zodResolver(authFormSchema),
 		defaultValues:
@@ -64,14 +67,24 @@ export function AuthForm({ mode }: AuthFormProps) {
 	});
 
 	const onSubmit = async ({ email, password, mode }: AuthFormValues) => {
+		const fetchOptions = {
+			onSuccess: () => {
+				router.push("/");
+			},
+		};
 		if (mode === "sign-up") {
 			const result = await authClient.signUp.email({
 				email,
 				password,
 				name: email,
+				fetchOptions,
 			});
 		} else {
-			const result = await authClient.signIn.email({ email, password });
+			const result = await authClient.signIn.email({
+				email,
+				password,
+				fetchOptions,
+			});
 		}
 	};
 

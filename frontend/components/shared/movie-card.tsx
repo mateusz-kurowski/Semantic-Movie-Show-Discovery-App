@@ -18,6 +18,7 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
 					alt="Event cover"
 					className="relative z-20 w-full object-cover"
 					width={500}
+					loading="eager"
 					height={450}
 				/>
 				<Button
