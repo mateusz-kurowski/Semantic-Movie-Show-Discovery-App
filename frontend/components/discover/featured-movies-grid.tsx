@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { type ComparableMovieField, movieService } from "@/lib/api/movies";
+import { ComparableMovieField, movieService } from "@/lib/api/movies";
 import MoviesGrid from "../shared/movies-grid";
 import { Button } from "../ui/button";
 
@@ -15,7 +15,7 @@ const FeaturedMoviesGrid = ({ type }: FeaturedMoviesProps) => {
 		queryFn: () => movieService.getFeaturedMovies(type),
 	});
 
-	const isPopular = type === "popularity";
+	const isPopular = type === ComparableMovieField.POPULARITY;
 
 	return (
 		<div>
@@ -25,7 +25,7 @@ const FeaturedMoviesGrid = ({ type }: FeaturedMoviesProps) => {
 				</div>
 				<Button variant="link">
 					<Link
-						href={`/discover/${type}-movies`}
+						href={isPopular ? "/discover/popular" : `/discover/${type}-movies`}
 						className="text-primary flex items-center gap-1 hover:underline"
 					>
 						View all

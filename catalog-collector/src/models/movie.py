@@ -1,21 +1,22 @@
 from datetime import date
-from typing import TYPE_CHECKING, List
-from sqlalchemy import Column, BigInteger
-from sqlmodel import Field, SQLModel, Relationship
+from typing import TYPE_CHECKING
+
+from sqlalchemy import BigInteger, Column
+from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from models.genre import Genre
     from models.company import Company
     from models.country import Country
-    from models.language import Language
+    from models.genre import Genre
     from models.keyword import Keyword
+    from models.language import Language
 
 from models.links import (
-    MovieGenreLink,
     MovieCompanyLink,
     MovieCountryLink,
-    MovieLanguageLink,
+    MovieGenreLink,
     MovieKeywordLink,
+    MovieLanguageLink,
 )
 
 
@@ -42,10 +43,10 @@ class Movie(SQLModel, table=True):
     poster_path: str | None = None
     tagline: str | None = None
 
-    genres: List["Genre"] = Relationship(link_model=MovieGenreLink)
-    production_companies: List["Company"] = Relationship(link_model=MovieCompanyLink)
-    production_countries: List["Country"] = Relationship(link_model=MovieCountryLink)
-    spoken_languages: List["Language"] = Relationship(link_model=MovieLanguageLink)
-    keywords: List["Keyword"] = Relationship(link_model=MovieKeywordLink)
+    genres: list["Genre"] = Relationship(link_model=MovieGenreLink)
+    production_companies: list["Company"] = Relationship(link_model=MovieCompanyLink)
+    production_countries: list["Country"] = Relationship(link_model=MovieCountryLink)
+    spoken_languages: list["Language"] = Relationship(link_model=MovieLanguageLink)
+    keywords: list["Keyword"] = Relationship(link_model=MovieKeywordLink)
 
     is_present_in_search: bool = Field(default=False)

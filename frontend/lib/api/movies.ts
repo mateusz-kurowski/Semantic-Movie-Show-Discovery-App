@@ -44,13 +44,14 @@ const getMovieById = async (movieId: string): Promise<Movie> => {
 	return await response.json();
 };
 
-export type ComparableMovieField =
-	| "vote_average"
-	| "vote_count"
-	| "popularity"
-	| "release_date"
-	| "runtime"
-	| "revenue";
+export enum ComparableMovieField {
+	VOTE_AVERAGE = "vote_average",
+	VOTE_COUNT = "vote_count",
+	POPULARITY = "popularity",
+	RELEASE_DATE = "release_date",
+	RUNTIME = "runtime",
+	REVENUE = "revenue",
+}
 
 const getFeaturedMovies = async (by: ComparableMovieField) =>
 	getMovies({ sortBy: by, order: "desc", limit: 10 });

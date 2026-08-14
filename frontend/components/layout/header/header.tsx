@@ -9,7 +9,6 @@ import Nav from "./nav";
 
 function Header() {
 	const { data: session } = authClient.useSession();
-	console.log(session);
 
 	return (
 		<header className=" bg-surface-bright py-3 px-8 flex items-center justify-between">

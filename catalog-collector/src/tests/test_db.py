@@ -1,13 +1,13 @@
 import datetime
-import pytest
-import polars as pl
-from sqlmodel import Session, SQLModel, create_engine, select
 
+import polars as pl
+import pytest
 from db import _parse_list_col, _upsert_entities, insert_movies_in_batches
-from models.movie import Movie
 from models.genre import Genre
 from models.links import MovieGenreLink
+from models.movie import Movie
 from models.named_entity import get_all_records
+from sqlmodel import Session, SQLModel, create_engine, select
 
 
 # Arrange

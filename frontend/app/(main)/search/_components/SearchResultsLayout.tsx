@@ -42,7 +42,7 @@ const SearchResultsLayout = ({ phrase }: SearchResultsLayoutProps) => {
 					</div>
 					{/* todo: fix the count, this should not be the length of the data array */}
 					<div>filters</div>
-					<div p-6>
+					<div className="p-4">
 						<MoviesGrid movies={movies} />
 					</div>
 				</main>

@@ -1,5 +1,6 @@
 "use client";
 import { Sparkles } from "lucide-react";
+import { ComparableMovieField } from "@/lib/api/movies";
 import FeaturedMoviesGrid from "./featured-movies-grid";
 import SearchForm from "./main-search";
 
@@ -12,7 +13,7 @@ const HomePage = () => {
 				showRecommendationBadges={true}
 				showIconWhenNotEmpty={false}
 			/>
-			<FeaturedMoviesGrid type="popularity" />
+			<FeaturedMoviesGrid type={ComparableMovieField.POPULARITY} />
 		</main>
 	);
 };

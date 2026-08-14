@@ -70,10 +70,8 @@ export function AuthForm({ mode }: AuthFormProps) {
 				password,
 				name: email,
 			});
-			console.log(result);
 		} else {
 			const result = await authClient.signIn.email({ email, password });
-			console.log(result);
 		}
 	};
 

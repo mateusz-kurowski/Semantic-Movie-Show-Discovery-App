@@ -1,6 +1,7 @@
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import { openAPI } from "better-auth/plugins";
+import crypto from "node:crypto";
 import { db } from "./clients";
 import * as schema from "./db/schema";
 
@@ -10,18 +11,34 @@ export const auth = betterAuth({
     provider: "pg",
     schema,
   }),
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          if (user.image) return { data: user };
+
+          const emailHash = crypto
+            .createHash("sha256")
+            .update(user.email.trim().toLowerCase())
+            .digest("hex");
+
+          return {
+            data: {
+              ...user,
+              image: `https://seccdn.libravatar.org/avatar/${emailHash}?d=retro`,
+            },
+          };
+        },
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
   },
   plugins: [openAPI()],
   secret: process.env.BETTER_AUTH_SECRET,
+  skipOriginCheck: ["/api/auth"],
   // Local Next.js dev origin; add more via BETTER_AUTH_TRUSTED_ORIGINS (comma-separated)
   // for production/staging deployments.
   trustedOrigins: ["http://localhost:3000"],
-  // Skip origin validation for auth routes only (array form — keeps the
-  // cross-site navigation CSRF block intact). Needed for API clients that
-  // send cookies but no Origin header (Postman, curl, mobile apps); browsers
-  // always send Origin on POSTs, so this is a no-op for the web frontend.
-  // Paths are relative to the app prefix ("/api" in src/index.ts).
-  skipOriginCheck: ["/api/auth"],
 });
