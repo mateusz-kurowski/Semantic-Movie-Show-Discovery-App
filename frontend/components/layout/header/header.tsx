@@ -1,8 +1,14 @@
 "use client";
-import { DoorClosed } from "lucide-react";
+import { DoorClosed, DoorOpen, LogOut } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { authClient } from "@/lib/auth/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import Logo from "../shared/logo";
@@ -21,17 +27,36 @@ function Header() {
 
 			{session?.user ? (
 				<div className="flex items-center gap-4">
-					<Button
-						onClick={() => authClient.signOut()}
-						variant="outline"
-						size="icon"
-					>
-						<DoorClosed />
-					</Button>
-					<Avatar>
-						<AvatarImage src={image!} alt={name} />
-						<AvatarFallback>Profile</AvatarFallback>
-					</Avatar>
+					<Tooltip>
+						<TooltipTrigger
+							render={
+								<Button
+									onClick={() => authClient.signOut()}
+									variant="outline"
+									size="icon"
+									className="cursor-pointer"
+								>
+									<LogOut />
+								</Button>
+							}
+						></TooltipTrigger>
+						<TooltipContent>
+							<p>Sign Out</p>
+						</TooltipContent>
+					</Tooltip>
+					{isPending ? (
+						<Skeleton className="h-10 w-10 rounded-full" />
+					) : (
+						<Avatar>
+							<AvatarImage src={image!} alt={name} />
+							<AvatarFallback>
+								{name
+									?.split(" ")
+									.map((n) => n[0])
+									.join("")}
+							</AvatarFallback>
+						</Avatar>
+					)}
 				</div>
 			) : (
 				<ButtonGroup aria-label="Authentication buttons">

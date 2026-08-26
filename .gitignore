@@ -7,6 +7,9 @@ stack.env
 .env.local
 .env.development.local
 
+# MCP server credentials (see .env.mcp.example)
+.env.mcp
+
 # Always allow examples
 !**/.env.example
 

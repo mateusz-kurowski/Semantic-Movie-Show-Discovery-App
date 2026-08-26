@@ -1,0 +1,32 @@
+# Dependencies
+**/node_modules/
+**/.venv/
+**/__pycache__/
+
+# Build outputs
+**/.next/
+**/dist/
+**/build/
+catalog-ingester/catalog-ingester
+catalog-ingester/tmp/
+catalog-api/tmp/
+**/*.tsbuildinfo
+
+# Logs
+**/*.log
+
+# Coverage / cache
+**/cover.out
+**/.pytest_cache/
+**/.ruff_cache/
+**/.genkit/
+catalog-api/catalog-api-requests/
+
+# Large data / model / dataset files
+/data/
+catalog-collector/dataset/
+catalog-collector/*.csv
+
+# Misc large/binary artifacts
+*.zip
+config/screen.png

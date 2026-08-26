@@ -63,55 +63,65 @@ const SearchForm = ({
 
 	const formId = "form-movies-search";
 	return (
-		<form
-			id={formId}
-			className={`${compact ? "py-6 w-70" : "py-2 w-full"}`}
-			onSubmit={form.handleSubmit(onSubmit)}
-		>
-			<FieldGroup>
-				<Controller
-					name="query"
-					control={form.control}
-					render={({ field, fieldState: { invalid } }) => (
-						<Field data-invalid={invalid}>
-							<InputGroup
-								className={`py-6 pr-3 rounded-md border-r-2 border-r-slate-200 dark:border-r-slate-700 ${compact ? "rounded-3xl" : ""}`}
-							>
-								{togglesVisible && (
-									<InputGroupAddon align="inline-start" className="border-r">
-										<SearchModeContainer />
-									</InputGroupAddon>
-								)}
-								<InputGroupInput
-									{...field}
-									id={field.name}
-									aria-invalid={invalid}
-									placeholder="A hopeful sci-fi adventure about rebellion..."
-									autoComplete="off"
-								/>
-								{showIconSearchInputIcon && (
-									<InputGroupAddon align="inline-start">{icon}</InputGroupAddon>
-								)}
-								{btnVisible && (
-									<InputGroupAddon align="inline-end">
-										<Button
-											className="text-white rounded-sm cursor-pointer"
-											type="submit"
-											form={formId}
+		<div className={`flex flex-col ${compact ? "" : "w-full"}`}>
+			<form
+				id={formId}
+				className={`py-2 ${compact ? "w-70" : "w-full max-w-2xl mx-auto"} flex flex-col items-center gap-2`}
+				onSubmit={form.handleSubmit(onSubmit)}
+			>
+				<FieldGroup>
+					<Controller
+						name="query"
+						control={form.control}
+						render={({ field, fieldState: { invalid } }) => (
+							<Field data-invalid={invalid}>
+								<InputGroup className={compact ? undefined : "h-12 rounded-md"}>
+									{togglesVisible && (
+										<InputGroupAddon align="inline-start" className="border-r">
+											<SearchModeContainer />
+										</InputGroupAddon>
+									)}
+									<InputGroupInput
+										{...field}
+										id={field.name}
+										aria-invalid={invalid}
+										placeholder="A hopeful sci-fi adventure about rebellion..."
+										autoComplete="off"
+									/>
+									{showIconSearchInputIcon && (
+										<InputGroupAddon
+											align="inline-start"
+											className={compact ? undefined : "pl-3"}
 										>
-											<ArrowRight />
-										</Button>
-									</InputGroupAddon>
+											{icon}
+										</InputGroupAddon>
+									)}
+									{btnVisible && (
+										<InputGroupAddon align="inline-end">
+											<Button
+												className={`${compact ? "size-7 rounded-lg" : "size-9 rounded-md"} cursor-pointer`}
+												type="submit"
+												form={formId}
+											>
+												<ArrowRight />
+											</Button>
+										</InputGroupAddon>
+									)}
+								</InputGroup>
+								{showRecommendationBadges && (
+									<>
+										<p className="text-center mt-5 p-1 text-sm tracking-wider text-muted-foreground">
+											AI TRENDING MOODS
+										</p>
+										<RecommendationBadges onClick={handleRecommendationClick} />
+									</>
 								)}
-							</InputGroup>
-							{showRecommendationBadges && (
-								<RecommendationBadges onClick={handleRecommendationClick} />
-							)}
-						</Field>
-					)}
-				/>
-			</FieldGroup>
-		</form>
+							</Field>
+						)}
+					/>
+				</FieldGroup>
+			</form>
+		</div>
 	);
 };
 

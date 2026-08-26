@@ -6,7 +6,7 @@ import SearchForm from "./main-search";
 
 const HomePage = () => {
 	return (
-		<main className="flex flex-col items-center p-5 gap-5">
+		<main className="flex flex-col items-center p-5 gap-5 bg-black">
 			<h2 className="text-4xl font-bold">Find a film for any mood.</h2>
 			<SearchForm
 				icon={<Sparkles />}
