@@ -166,7 +166,11 @@ export function AuthForm({ mode }: AuthFormProps) {
 							</FieldGroup>
 						)}
 					</FieldGroup>
-					<Button type="submit" form="auth-form" className="ml-auto">
+					<Button
+						type="submit"
+						form="auth-form"
+						className="w-full sm:w-auto sm:ml-auto"
+					>
 						Submit
 					</Button>
 				</form>

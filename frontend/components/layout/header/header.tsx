@@ -1,5 +1,5 @@
 "use client";
-import { DoorClosed, DoorOpen, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -19,14 +19,14 @@ function Header() {
 	const { image, name } = session?.user || {};
 
 	return (
-		<header className=" bg-surface-bright py-3 px-8 flex items-center justify-between">
+		<header className="bg-surface-bright py-3 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
 			<Link href="/">
-				<Logo size="4xl" />
+				<Logo size="2xl" className="sm:text-4xl" />
 			</Link>
 			<Nav />
 
 			{session?.user ? (
-				<div className="flex items-center gap-4">
+				<div className="flex items-center gap-2 sm:gap-4">
 					<Tooltip>
 						<TooltipTrigger
 							render={
@@ -34,7 +34,7 @@ function Header() {
 									onClick={() => authClient.signOut()}
 									variant="outline"
 									size="icon"
-									className="cursor-pointer"
+									className="hidden sm:inline-flex cursor-pointer"
 								>
 									<LogOut />
 								</Button>
@@ -47,15 +47,17 @@ function Header() {
 					{isPending ? (
 						<Skeleton className="h-10 w-10 rounded-full" />
 					) : (
-						<Avatar>
-							<AvatarImage src={image!} alt={name} />
-							<AvatarFallback>
-								{name
-									?.split(" ")
-									.map((n) => n[0])
-									.join("")}
-							</AvatarFallback>
-						</Avatar>
+						<Link href="/profile">
+							<Avatar>
+								<AvatarImage src={image!} alt={name} />
+								<AvatarFallback>
+									{name
+										?.split(" ")
+										.map((n) => n[0])
+										.join("")}
+								</AvatarFallback>
+							</Avatar>
+						</Link>
 					)}
 				</div>
 			) : (

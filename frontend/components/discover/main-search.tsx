@@ -66,7 +66,7 @@ const SearchForm = ({
 		<div className={`flex flex-col ${compact ? "" : "w-full"}`}>
 			<form
 				id={formId}
-				className={`py-2 ${compact ? "w-70" : "w-full max-w-2xl mx-auto"} flex flex-col items-center gap-2`}
+				className={`py-2 ${compact ? "w-full max-w-[280px] sm:w-70" : "w-full max-w-2xl mx-auto"} flex flex-col items-center gap-2`}
 				onSubmit={form.handleSubmit(onSubmit)}
 			>
 				<FieldGroup>

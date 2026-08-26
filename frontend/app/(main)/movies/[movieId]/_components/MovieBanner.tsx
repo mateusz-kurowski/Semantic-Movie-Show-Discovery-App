@@ -13,16 +13,17 @@ interface MovieBannerProps {
 const MovieBanner = ({ movie }: MovieBannerProps) => {
 	return (
 		<>
-			<div className="top-container relative">
+			<div className="top-container relative w-full h-[45vh] sm:h-[55vh] md:h-[60vh]">
 				<Image
-					className="w-full object-cover relative"
+					className="object-cover"
 					src={getTmdbImageUrl(movie.backdrop_path, "original")}
 					alt={movie.title}
-					width={500}
-					height={300}
+					fill
+					priority
 				/>
-				<div className="badges-and-title flex gap-1 absolute bottom-2 left-2">
-					<div className="badges">
+				<div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+				<div className="badges-and-title absolute bottom-0 left-0 right-0 flex flex-col gap-2 p-4 sm:p-6">
+					<div className="badges flex flex-wrap gap-1.5">
 						<Badge className="backdrop-blur-2xl">
 							{format(new Date(movie.release_date), "yyyy")}
 						</Badge>
@@ -33,14 +34,16 @@ const MovieBanner = ({ movie }: MovieBannerProps) => {
 							{movie.vote_average.toFixed(1)} <Star />
 						</Badge>
 					</div>
-					<h1 className="text-4xl font-bold">{movie.title}</h1>
+					<h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+						{movie.title}
+					</h1>
 				</div>
 			</div>
 			<div>
-				<div className="overview flex justify-between">
+				<div className="overview flex flex-col md:flex-row md:justify-between gap-4 p-4 sm:p-6">
 					<div>
-						<p className="w-2/3">{movie.overview}</p>
-						<div className="genres flex gap-1.5">
+						<p className="w-full md:w-2/3">{movie.overview}</p>
+						<div className="genres flex flex-wrap gap-1.5 mt-2">
 							{movie.genres.map((genre) => (
 								<Badge
 									key={genre}
@@ -51,11 +54,11 @@ const MovieBanner = ({ movie }: MovieBannerProps) => {
 							))}
 						</div>
 					</div>
-					<div className="actions flex-col gap-2">
-						<Button className="flex bg-primary text-primary-foreground cursor-pointer rounded-sm">
+					<div className="actions flex flex-col gap-2 w-full sm:w-auto">
+						<Button className="flex justify-center bg-primary text-primary-foreground cursor-pointer rounded-sm w-full sm:w-auto">
 							<Play /> Watch Trailer
 						</Button>
-						<Button className="flex bg-black cursor-pointer rounded-sm text-white ">
+						<Button className="flex justify-center bg-black cursor-pointer rounded-sm text-white w-full sm:w-auto">
 							<Plus /> Add to Watchlist
 						</Button>
 					</div>

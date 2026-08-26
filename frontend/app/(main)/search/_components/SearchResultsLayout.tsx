@@ -21,10 +21,10 @@ const SearchResultsLayout = ({ phrase }: SearchResultsLayoutProps) => {
 			{isPending && <div>Loading...</div>}
 			{isError && <div>Error: {error.message}</div>}
 			{data && (
-				<main className="flex flex-col gap-4">
-					<div className="top-results-section flex justify-between items-center">
+				<main className="flex flex-col gap-4 px-4 sm:px-6 lg:px-8 py-4">
+					<div className="top-results-section flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<div className="title-and-count-section">
-							<h1 className="flex gap-2 text-2xl font-bold">
+							<h1 className="flex flex-wrap gap-2 text-2xl font-bold">
 								<span>Personalized Results for</span>
 								<span className="text-primary">"{phrase}"</span>
 							</h1>
@@ -42,9 +42,7 @@ const SearchResultsLayout = ({ phrase }: SearchResultsLayoutProps) => {
 					</div>
 					{/* todo: fix the count, this should not be the length of the data array */}
 					<div>filters</div>
-					<div className="p-4">
-						<MoviesGrid movies={movies} />
-					</div>
+					<MoviesGrid movies={movies} />
 				</main>
 			)}
 		</>

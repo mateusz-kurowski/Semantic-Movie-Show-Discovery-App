@@ -1,6 +1,7 @@
 import { ThemeProvider } from "@wrksz/themes";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import BottomNav from "@/components/layout/bottom-nav/bottom-nav";
 import Footer from "@/components/layout/footer/footer";
 import Header from "@/components/layout/header/header";
 import Providers from "@/lib/providers";
@@ -33,7 +34,7 @@ export default function RootLayout({
 			className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
 			suppressHydrationWarning
 		>
-			<body className="min-h-full flex flex-col">
+			<body className="min-h-full flex flex-col pb-16 md:pb-0">
 				<ThemeProvider
 					attribute="class"
 					defaultTheme="system"
@@ -44,6 +45,7 @@ export default function RootLayout({
 						<Header />
 						{children}
 						<Footer />
+						<BottomNav />
 					</Providers>
 				</ThemeProvider>
 			</body>

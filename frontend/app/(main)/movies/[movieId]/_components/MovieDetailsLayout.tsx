@@ -17,11 +17,19 @@ const MovieDetailsLayout = ({ movieId }: MovieDetailsLayoutProps) => {
 	});
 
 	if (isLoading) {
-		return <div>Loading...</div>;
+		return (
+			<div className="flex justify-center py-16 text-on-surface-variant">
+				Loading...
+			</div>
+		);
 	}
 
 	if (isError || !movie) {
-		return <div>Error loading movie details.</div>;
+		return (
+			<div className="flex justify-center py-16 text-on-surface-variant">
+				Error loading movie details.
+			</div>
+		);
 	}
 
 	return (
