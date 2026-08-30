@@ -25,9 +25,10 @@ const ProfilePageLayout = () => {
 
 	if (isPending) {
 		return (
-			<div className="flex flex-col items-center gap-4 py-16 px-4">
+			<div className="flex flex-1 flex-col items-center gap-4 px-4 py-16">
 				<Skeleton className="size-20 rounded-full" />
-				<Skeleton className="h-5 w-40" />
+				<Skeleton className="h-6 w-40" />
+				<Skeleton className="h-4 w-56" />
 			</div>
 		);
 	}
@@ -43,8 +44,8 @@ const ProfilePageLayout = () => {
 	}
 
 	return (
-		<div className="flex flex-col items-center text-center gap-4 py-16 px-4">
-			<Avatar size="lg">
+		<div className="mx-auto flex w-full max-w-115 flex-1 flex-col items-center gap-5 px-4 py-16 text-center">
+			<Avatar size="lg" className="ring-1 ring-foreground/12">
 				<AvatarImage src={image!} alt={name} />
 				<AvatarFallback>
 					{name
@@ -53,14 +54,16 @@ const ProfilePageLayout = () => {
 						.join("")}
 				</AvatarFallback>
 			</Avatar>
-			<div>
-				<h1 className="text-xl font-bold">{name}</h1>
+			<div className="flex flex-col gap-1">
+				<h1 className="text-2xl leading-8 font-bold tracking-[-0.03em]">
+					{name}
+				</h1>
 				<p className="text-on-surface-variant">{email}</p>
 			</div>
 			<Button
 				onClick={handleSignOut}
 				variant="outline"
-				className="cursor-pointer"
+				className="h-10 cursor-pointer rounded-full px-4"
 			>
 				<LogOut /> Sign Out
 			</Button>

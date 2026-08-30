@@ -12,8 +12,10 @@ bunx @biomejs/biome check --write .   # lint + format, autofix
 
 bunx tsc --noEmit        # type check — must stay clean
 bunx next typegen        # regenerate route types after moving/renaming routes
-```
 
-No test runner is installed yet (`AGENTS.md` documents the intended Vitest + Testing Library setup) — there is no single-test command to run until that's set up.
+bun run test             # unit tests (= vitest run)
+bun run test:watch       # unit tests in watch mode
+bun run test movie-card  # single file — vitest filters by path substring
+```
 
 @AGENTS.md

@@ -66,7 +66,7 @@ const SearchForm = ({
 		<div className={`flex flex-col ${compact ? "" : "w-full"}`}>
 			<form
 				id={formId}
-				className={`py-2 ${compact ? "w-full max-w-[280px] sm:w-70" : "w-full max-w-2xl mx-auto"} flex flex-col items-center gap-2`}
+				className={`${compact ? "w-full max-w-[280px] sm:w-105" : "mx-auto w-full max-w-215"} flex flex-col items-center gap-2`}
 				onSubmit={form.handleSubmit(onSubmit)}
 			>
 				<FieldGroup>
@@ -75,9 +75,15 @@ const SearchForm = ({
 						control={form.control}
 						render={({ field, fieldState: { invalid } }) => (
 							<Field data-invalid={invalid}>
-								<InputGroup className={compact ? undefined : "h-12 rounded-md"}>
+								<InputGroup
+									className={
+										compact
+											? "h-10 rounded-full border-foreground/12 bg-card px-1.5 has-[input:focus-visible]:ring-3"
+											: "h-14 rounded-full border-foreground/12 bg-card px-2.5 shadow-[0_0_0_6px_rgba(208,188,255,0.06),0_24px_60px_rgba(0,0,0,0.5)] sm:h-17"
+									}
+								>
 									{togglesVisible && (
-										<InputGroupAddon align="inline-start" className="border-r">
+										<InputGroupAddon align="inline-start" className="pr-1">
 											<SearchModeContainer />
 										</InputGroupAddon>
 									)}
@@ -87,11 +93,12 @@ const SearchForm = ({
 										aria-invalid={invalid}
 										placeholder="A hopeful sci-fi adventure about rebellion..."
 										autoComplete="off"
+										className={compact ? undefined : "text-base sm:text-lg"}
 									/>
 									{showIconSearchInputIcon && (
 										<InputGroupAddon
 											align="inline-start"
-											className={compact ? undefined : "pl-3"}
+											className={compact ? undefined : "pl-3 text-primary"}
 										>
 											{icon}
 										</InputGroupAddon>
@@ -99,7 +106,7 @@ const SearchForm = ({
 									{btnVisible && (
 										<InputGroupAddon align="inline-end">
 											<Button
-												className={`${compact ? "size-7 rounded-lg" : "size-9 rounded-md"} cursor-pointer`}
+												className={`${compact ? "size-7" : "size-10 sm:size-12"} cursor-pointer rounded-full`}
 												type="submit"
 												form={formId}
 											>
@@ -109,12 +116,7 @@ const SearchForm = ({
 									)}
 								</InputGroup>
 								{showRecommendationBadges && (
-									<>
-										<p className="text-center mt-5 p-1 text-sm tracking-wider text-muted-foreground">
-											AI TRENDING MOODS
-										</p>
-										<RecommendationBadges onClick={handleRecommendationClick} />
-									</>
+									<RecommendationBadges onClick={handleRecommendationClick} />
 								)}
 							</Field>
 						)}

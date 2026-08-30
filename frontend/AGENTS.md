@@ -34,7 +34,7 @@ This project is a Next.js 16 App Router application (React 19, TypeScript, Tailw
 
 ## Unit Tests
 
-- **Setup (not yet installed):** use **Vitest** + **@testing-library/react** + **jsdom**. Add a `test` script to `package.json` (`"test": "vitest run"`), a `vitest.config.ts` with `environment: "jsdom"`, and the `@testing-library/jest-dom` matchers.
+- **Setup:** **Vitest** + **@testing-library/react** + **jsdom**, configured in `vitest.config.mts` (jsdom environment, `@` alias, `NEXT_PUBLIC_SEARCH_API_URL` stubbed) and `vitest.setup.ts` (jest-dom matchers, per-test cleanup, jsdom shims for `scrollBy`/pointer capture/`ResizeObserver`/`matchMedia`). `test/render.tsx` exports `renderWithQuery` for components that read from TanStack Query.
 - Test files are colocated next to the code: `lib/api/movies.test.ts`, `components/.../component.test.tsx`. Use `*.test.ts(x)` naming.
 - Focus tests on: the `lib/api/*` service layer (mock `fetch` or inject a mock client), query hooks, forms (submit + validation), and pure helpers/enums. Prefer behavior assertions (`render`, `fireEvent`/`userEvent`, `screen.getByRole`) over implementation details.
 - Mock boundaries: mock `@/lib/api/*` modules and `next/navigation` — never hit the real network, and never mock the component under test's own internals.

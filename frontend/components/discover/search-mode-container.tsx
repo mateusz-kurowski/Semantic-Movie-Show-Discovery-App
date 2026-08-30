@@ -11,7 +11,7 @@ const SearchModeContainer = () => {
 			defaultValue={["search"]}
 			multiple={false}
 			onValueChange={(value) => setSearchMode(value[0] === "search")}
-			className="w-full"
+			className="gap-0.5 rounded-full bg-surface-container-lowest/70 p-[3px]"
 		>
 			<SearchToggle isActive={!isSearchMode} value="ai">
 				Ask AI

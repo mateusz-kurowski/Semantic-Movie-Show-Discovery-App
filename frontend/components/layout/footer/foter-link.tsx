@@ -13,7 +13,7 @@ const FooterLink = ({
 			<Link href={href} target="_blank" rel="noopener noreferrer">
 				<Button
 					variant="link"
-					className="text-surface-bright hover:underline cursor-pointer"
+					className="cursor-pointer text-outline hover:text-on-surface hover:underline"
 				>
 					{children}
 				</Button>

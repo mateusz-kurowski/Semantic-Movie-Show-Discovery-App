@@ -13,3 +13,7 @@ pre-push:
       glob: "**/*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,css}"
       root: frontend/
       run: bunx @biomejs/biome check --no-errors-on-unmatched --colors=off {push_files}
+    frontend-test:
+      glob: "**/*.{js,ts,cjs,mjs,jsx,tsx,json,css}"
+      root: frontend/
+      run: bun run test

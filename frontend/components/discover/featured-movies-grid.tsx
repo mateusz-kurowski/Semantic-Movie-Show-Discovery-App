@@ -1,56 +1,105 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useRef } from "react";
 import { ComparableMovieField, movieService } from "@/lib/api/movies";
-import MoviesGrid from "../shared/movies-grid";
+import MovieCard from "../shared/movie-card";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 
 interface FeaturedMoviesProps {
 	type: ComparableMovieField;
+	order?: "asc" | "desc";
+	title?: string;
 }
-const FeaturedMoviesGrid = ({ type }: FeaturedMoviesProps) => {
+const FeaturedMoviesGrid = ({
+	type,
+	order = "desc",
+	title,
+}: FeaturedMoviesProps) => {
+	const railRef = useRef<HTMLDivElement>(null);
+
 	const { data, isPending, isError, error } = useQuery({
-		queryKey: [`${type}-movies`],
-		queryFn: () => movieService.getFeaturedMovies(type),
+		queryKey: order === "desc" ? [`${type}-movies`] : [`${type}-movies`, order],
+		queryFn: () =>
+			order === "desc"
+				? movieService.getFeaturedMovies(type)
+				: movieService.getMovies({ sortBy: type, order, limit: 10 }),
 	});
 
 	const isPopular = type === ComparableMovieField.POPULARITY;
+	const heading = title ?? (isPopular ? "Popular discoveries" : "");
+
+	const scrollRail = (direction: -1 | 1) => {
+		railRef.current?.scrollBy({ left: direction * 480, behavior: "smooth" });
+	};
 
 	return (
-		<div>
-			<div className="flex justify-between items-center w-full mb-4">
-				<h2 className="font-heading font-bold text-xl sm:text-2xl">
-					{isPopular && "Popular discoveries"}
+		<section className="flex flex-col gap-4">
+			<div className="flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+				<h2 className="font-heading text-xl font-semibold tracking-[-0.01em] sm:text-2xl">
+					{heading}
 				</h2>
-				<Button variant="link">
-					<Link
-						href={isPopular ? "/discover/popular" : `/discover/${type}-movies`}
-						className="text-primary flex items-center gap-1 hover:underline"
+				<div className="flex items-center gap-2">
+					{isPopular && (
+						<Button variant="link" className="cursor-pointer">
+							<Link
+								href="/discover/popular"
+								className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface"
+							>
+								View all
+							</Link>
+						</Button>
+					)}
+					<Button
+						variant="outline"
+						size="icon"
+						aria-label="Scroll left"
+						onClick={() => scrollRail(-1)}
+						className="hidden size-8.5 cursor-pointer rounded-full sm:inline-flex"
 					>
-						View all
-						<ArrowRight />
-					</Link>
-				</Button>
+						<ChevronLeft />
+					</Button>
+					<Button
+						variant="outline"
+						size="icon"
+						aria-label="Scroll right"
+						onClick={() => scrollRail(1)}
+						className="hidden size-8.5 cursor-pointer rounded-full sm:inline-flex"
+					>
+						<ChevronRight />
+					</Button>
+				</div>
 			</div>
 			{isPending && (
-				<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
-					<Skeleton className="aspect-[2/3] w-full rounded-xl" />
-					<Skeleton className="aspect-[2/3] w-full rounded-xl" />
-					<Skeleton className="aspect-[2/3] w-full rounded-xl" />
-					<Skeleton className="aspect-[2/3] w-full rounded-xl" />
-					<Skeleton className="aspect-[2/3] w-full rounded-xl" />
-					<Skeleton className="aspect-[2/3] w-full rounded-xl" />
+				<div className="flex gap-4 overflow-hidden px-4 sm:gap-6 sm:px-6 lg:px-8">
+					{Array.from({ length: 7 }, (_, i) => `skeleton-${i}`).map((key) => (
+						<Skeleton
+							key={key}
+							className="aspect-[2/3] w-38 flex-none rounded-2xl sm:w-53"
+						/>
+					))}
 				</div>
 			)}
 			{isError && (
-				<p className="text-destructive text-center py-8">
+				<p className="px-4 py-8 text-center text-destructive sm:px-6 lg:px-8">
 					Error: {error.message}
 				</p>
 			)}
-			{data && <MoviesGrid movies={data} />}
-		</div>
+			{data && (
+				<div
+					ref={railRef}
+					className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:gap-6 sm:px-6 lg:px-8 [&::-webkit-scrollbar]:hidden"
+				>
+					{data.map((movie) => (
+						<div key={movie.id} className="w-38 flex-none snap-start sm:w-53">
+							<MovieCard movie={movie} />
+						</div>
+					))}
+				</div>
+			)}
+		</section>
 	);
 };
 

@@ -2,7 +2,6 @@
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Tooltip,
@@ -19,11 +18,13 @@ function Header() {
 	const { image, name } = session?.user || {};
 
 	return (
-		<header className="bg-surface-bright py-3 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-			<Link href="/">
-				<Logo size="2xl" className="sm:text-4xl" />
-			</Link>
-			<Nav />
+		<header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-surface-container-lowest/85 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+			<div className="flex items-center gap-6 md:gap-10">
+				<Link href="/">
+					<Logo size="xl" />
+				</Link>
+				<Nav />
+			</div>
 
 			{session?.user ? (
 				<div className="flex items-center gap-2 sm:gap-4">
@@ -34,7 +35,7 @@ function Header() {
 									onClick={() => authClient.signOut()}
 									variant="outline"
 									size="icon"
-									className="hidden sm:inline-flex cursor-pointer"
+									className="hidden cursor-pointer rounded-full sm:inline-flex"
 								>
 									<LogOut />
 								</Button>
@@ -45,10 +46,10 @@ function Header() {
 						</TooltipContent>
 					</Tooltip>
 					{isPending ? (
-						<Skeleton className="h-10 w-10 rounded-full" />
+						<Skeleton className="h-8 w-8 rounded-full" />
 					) : (
 						<Link href="/profile">
-							<Avatar>
+							<Avatar className="size-8 ring-1 ring-foreground/12">
 								<AvatarImage src={image!} alt={name} />
 								<AvatarFallback>
 									{name
@@ -61,10 +62,13 @@ function Header() {
 					)}
 				</div>
 			) : (
-				<ButtonGroup aria-label="Authentication buttons">
+				<div className="flex items-center gap-2" aria-label="Authentication">
 					<Link
 						href={"/sign-in"}
-						className={buttonVariants({ variant: "link" })}
+						className={buttonVariants({
+							variant: "ghost",
+							className: "h-9 rounded-full px-3 text-on-surface-variant",
+						})}
 					>
 						Sign In
 					</Link>
@@ -72,12 +76,12 @@ function Header() {
 						href={"/sign-up"}
 						className={buttonVariants({
 							variant: "default",
-							className: "rounded-sm",
+							className: "h-9 rounded-full px-4 font-semibold",
 						})}
 					>
 						Sign Up
 					</Link>
-				</ButtonGroup>
+				</div>
 			)}
 		</header>
 	);

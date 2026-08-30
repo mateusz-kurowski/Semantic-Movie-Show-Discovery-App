@@ -7,7 +7,7 @@ interface RecommendationBadgesProps {
 
 const RecommendationBadges = ({ onClick }: RecommendationBadgesProps) => {
 	return (
-		<div className="flex flex-wrap gap-2 mt-2 justify-center">
+		<div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
 			<MovieRecommendationBadge icon={Clapperboard} onClick={onClick}>
 				Like Interstellar, but lighter
 			</MovieRecommendationBadge>

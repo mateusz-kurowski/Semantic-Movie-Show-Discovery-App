@@ -22,7 +22,7 @@ const BottomNav = () => {
 	const pathname = usePathname();
 
 	return (
-		<nav className="fixed inset-x-0 bottom-0 z-50 flex md:hidden items-center justify-around h-16 border-t border-border bg-surface-container-low">
+		<nav className="fixed inset-x-0 bottom-0 z-50 flex h-16 items-center justify-around border-t border-border bg-surface-container-lowest/85 backdrop-blur-xl md:hidden">
 			{items.map(({ href, label, icon: Icon }) => {
 				const isActive =
 					href === "/" ? pathname === href : pathname.startsWith(href);
@@ -32,8 +32,8 @@ const BottomNav = () => {
 						key={href}
 						href={href}
 						className={cn(
-							"flex flex-col items-center justify-center gap-1 flex-1 h-full text-xs",
-							isActive ? "text-primary" : "text-on-surface-variant",
+							"flex h-full flex-1 flex-col items-center justify-center gap-1 text-xs transition-colors",
+							isActive ? "text-primary" : "text-outline",
 						)}
 					>
 						<Icon className="size-5" />

@@ -18,16 +18,20 @@ const PopularPage = () => {
 	});
 
 	return (
-		<main className="flex flex-col items-center p-5 gap-5">
-			<h1 className="text-3xl font-bold">Popular movies</h1>
+		<main className="flex flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+			<div className="flex flex-col gap-2">
+				<p className="text-xs font-semibold tracking-[0.1em] text-outline">
+					DISCOVER
+				</p>
+				<h1 className="text-2xl leading-8 font-bold tracking-[-0.03em] sm:text-3xl sm:leading-9">
+					Popular movies
+				</h1>
+			</div>
 			{isPending && (
-				<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 w-full">
-					<Skeleton className="aspect-[2/3] w-full rounded-xl" />
-					<Skeleton className="aspect-[2/3] w-full rounded-xl" />
-					<Skeleton className="aspect-[2/3] w-full rounded-xl" />
-					<Skeleton className="aspect-[2/3] w-full rounded-xl" />
-					<Skeleton className="aspect-[2/3] w-full rounded-xl" />
-					<Skeleton className="aspect-[2/3] w-full rounded-xl" />
+				<div className="grid w-full grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+					{Array.from({ length: 12 }, (_, i) => `skeleton-${i}`).map((key) => (
+						<Skeleton key={key} className="aspect-[2/3] w-full rounded-2xl" />
+					))}
 				</div>
 			)}
 			{isError && (

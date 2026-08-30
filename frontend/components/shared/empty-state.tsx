@@ -8,10 +8,12 @@ interface EmptyStateProps {
 
 const EmptyState = ({ icon: Icon, title, description }: EmptyStateProps) => {
 	return (
-		<div className="flex flex-col items-center text-center gap-3 py-16 px-4">
-			<Icon className="size-10 text-on-surface-variant" />
-			<h1 className="text-xl font-bold">{title}</h1>
-			<p className="text-on-surface-variant max-w-sm">{description}</p>
+		<div className="flex flex-1 flex-col items-center gap-4 px-4 py-24 text-center">
+			<span className="flex size-14 items-center justify-center rounded-2xl border border-border bg-card text-outline">
+				<Icon className="size-6" />
+			</span>
+			<h1 className="text-lg leading-6.5 font-semibold">{title}</h1>
+			<p className="max-w-sm text-on-surface-variant">{description}</p>
 		</div>
 	);
 };

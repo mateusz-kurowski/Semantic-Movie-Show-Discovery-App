@@ -5,7 +5,7 @@ interface SearchToggleProps {
 	isActive: boolean;
 	value: string;
 }
-const activeStyle = "text-primary shadow-md bg-surface-";
+const activeStyle = "bg-foreground/10 text-on-surface";
 const SearchToggle = ({
 	isActive,
 	value,
@@ -14,7 +14,7 @@ const SearchToggle = ({
 	return (
 		<ToggleGroupItem
 			value={value}
-			className={`text-on-surface-variant ${isActive ? activeStyle : ""} rounded-sm cursor-pointer p-3 transition-colors`}
+			className={`h-8 cursor-pointer rounded-full px-3 text-sm font-semibold text-outline transition-colors sm:h-10.5 sm:px-4 ${isActive ? activeStyle : value === "ai" ? "text-primary hover:text-primary-fixed" : "hover:text-on-surface"}`}
 		>
 			{children}
 		</ToggleGroupItem>

@@ -3,15 +3,15 @@ import FooterLink from "./foter-link";
 
 const footer = () => {
 	return (
-		<footer className="flex flex-col md:flex-row items-center justify-between gap-3 md:gap-0 px-4 sm:px-6 lg:px-8 py-4 text-center md:text-left">
-			<Logo size="2xl" />
+		<footer className="mt-auto flex flex-col items-center justify-between gap-3 border-t border-border px-4 py-6 text-center sm:px-6 md:flex-row md:gap-0 md:text-left lg:px-8">
+			<Logo size="xl" />
 
-			<ul className="flex flex-wrap justify-center gap-3 text-surface-bright list-style-none">
+			<ul className="list-style-none flex flex-wrap justify-center gap-3">
 				<FooterLink href="/privacy-policy">Privacy Policy</FooterLink>
 				<FooterLink href="/terms-of-service">Terms of Service</FooterLink>
 				<FooterLink href="/api-support">API Support</FooterLink>
 			</ul>
-			<div className="text-secondary">
+			<div className="text-sm text-outline">
 				© 2024 ReelFind. Cinematic Discovery.
 			</div>
 		</footer>
