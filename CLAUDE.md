@@ -55,8 +55,20 @@ Project MCP servers are declared in `.mcp.json` (repo root). Credentials live in
 - **`postgres`** — read the same Postgres DB the services share. Use to check actual row data or migration results instead of inferring them from the Drizzle schema alone.
 - **`redis`** — inspect `catalog-api`'s query-embedding cache.
 
+## Versioning & releases
+
+**One version for the whole app**, not one per service. All four services ship together (`compose.coolify.yaml` builds every image from this repo) and a change to the Postgres seam has to land in three of them at once, so per-service versions could not be honest.
+
+The **git tag is the source of truth**, and every service manifest mirrors it: release-please rewrites `frontend/package.json`, `catalog-api/package.json` and `catalog-collector/pyproject.toml` on each release via `extra-files`. Those numbers are bot-written and always hold the *app* version, never a service-specific one — never bump them by hand.
+
+Releases are automated by `release-please` (`.github/workflows/release-please.yml`; config in `release-please-config.json`, current version in `.release-please-manifest.json`). It reads the Conventional Commits on `main`, maintains a standing `chore(main): release x.y.z` PR with a generated `CHANGELOG.md`, and tags `vX.Y.Z` when that PR is merged. `feat:` bumps the minor, `fix:` the patch, `feat!:`/`BREAKING CHANGE:` the major — except below `1.0.0`, where a breaking change bumps the minor instead. The `go` release-type is deliberate: it is the only strategy that updates no manifest on its own, which keeps the tag authoritative and the `extra-files` list explicit.
+
+The footer reads that stamped version directly — `frontend/components/layout/footer/footer.tsx` imports `version` from `package.json` — so there is nothing to configure in any environment; CI, Coolify and `bun run dev` all show the last released version. Coolify auto-deploys `main`, so production usually runs some commits *ahead* of the version it displays, and the footer flips to the new number when the release PR merge triggers its redeploy.
+
+Docker tags follow the same split: `:latest` tracks the tip of `main` (published by each service's own workflow on every push touching its directory), while `:vX.Y.Z` is published only by the `publish-images` job in `release-please.yml`, built from the tag itself. That job deliberately lives in the release workflow rather than an `on: push: tags` one, because a tag created with `GITHUB_TOKEN` cannot trigger another workflow run. Note that the release commit rewrites three service manifests, so it does trip the `frontend`, `catalog-api` and `catalog-collector` path filters and re-runs their normal CI. `catalog-api` and `frontend` publish no images at all; Coolify builds them from source.
+
 ## Project rules
 
-- **Conventional Commits.** All commit messages must follow the `type(scope): summary` format (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, etc.). Prefer scoping to the service directory when the change is service-local, e.g. `fix(catalog-api): validate qdrant vector dimension`.
+- **Conventional Commits.** All commit messages must follow the `type(scope): summary` format (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, etc.). Prefer scoping to the service directory when the change is service-local, e.g. `fix(catalog-api): validate qdrant vector dimension`. The type now drives the release: only `feat`, `fix` and `deps` bump the version, so use `test:`/`refactor:`/`chore:` literally — labelling a test or a refactor as `feat:` publishes a minor release for it. Squash-merge PRs, so intermediate `fix:` commits for bugs that never reached `main` stay out of the changelog.
 - **No cross-service direct code imports.** `catalog-api`, `catalog-ingester`, `catalog-collector`, and `frontend` communicate only through Postgres, Qdrant, and HTTP — never import source files, packages, or modules across service directories. Shared data-shape changes are duplicated deliberately per service (see Architecture above), not extracted into a shared library.
 - **Never delete or weaken existing unit tests while refactoring.** If a refactor makes a test obsolete, that's a signal to update the test to match new behavior, not to delete or skip it. Removing test coverage requires explicit user confirmation first.

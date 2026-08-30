@@ -1,0 +1,17 @@
+{
+	"$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+	"packages": {
+		".": {
+			"release-type": "go",
+			"package-name": "reelfind",
+			"changelog-path": "CHANGELOG.md",
+			"include-component-in-tag": false,
+			"bump-minor-pre-major": true,
+			"extra-files": [
+				{ "type": "json", "path": "frontend/package.json", "jsonpath": "$.version" },
+				{ "type": "json", "path": "catalog-api/package.json", "jsonpath": "$.version" },
+				{ "type": "generic", "path": "catalog-collector/pyproject.toml" }
+			]
+		}
+	}
+}

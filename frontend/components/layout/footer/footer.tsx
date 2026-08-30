@@ -1,3 +1,4 @@
+import { version } from "@/package.json";
 import Logo from "../shared/logo";
 import FooterLink from "./foter-link";
 
@@ -11,8 +12,9 @@ const footer = () => {
 				<FooterLink href="/terms-of-service">Terms of Service</FooterLink>
 				<FooterLink href="/api-support">API Support</FooterLink>
 			</ul>
-			<div className="text-sm text-outline">
-				© 2024 ReelFind. Cinematic Discovery.
+			<div className="flex items-center gap-2.5 text-sm text-outline">
+				<span>© 2024 ReelFind. Cinematic Discovery.</span>
+				<span className="font-mono text-xs tracking-tight">v{version}</span>
 			</div>
 		</footer>
 	);
