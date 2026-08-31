@@ -1,0 +1,20 @@
+meta {
+  name: list models
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{url}}/chat/models
+  body: none
+  auth: inherit
+}
+
+docs {
+  Requires authentication. Lists the chat models available to the server's OPENAI_CHAT_KEY (a separate LiteLLM virtual key from the one used for embeddings, scoped to whatever models that key is provisioned to see). Pass one of the returned ids as `model` in POST /chat/:id/stream.
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

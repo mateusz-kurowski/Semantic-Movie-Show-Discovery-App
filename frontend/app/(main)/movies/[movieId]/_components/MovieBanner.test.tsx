@@ -1,7 +1,22 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Movie } from "@/lib/api/movies";
+import { renderWithQuery } from "@/test/render";
 import MovieBanner from "./MovieBanner";
+
+const { useSession } = vi.hoisted(() => ({ useSession: vi.fn() }));
+vi.mock("@/lib/auth/auth-client", () => ({ authClient: { useSession } }));
+vi.mock("@/lib/api/watchlist", () => ({
+	watchlistService: {
+		addToWatchlist: vi.fn(),
+		getWatchlist: vi.fn(),
+		removeFromWatchlist: vi.fn(),
+	},
+}));
+
+beforeEach(() => {
+	useSession.mockReturnValue({ data: null });
+});
 
 const movie: Movie = {
 	adult: false,
@@ -29,7 +44,7 @@ const movie: Movie = {
 
 describe("MovieBanner", () => {
 	it("shows the headline metadata row", () => {
-		render(<MovieBanner movie={movie} />);
+		renderWithQuery(<MovieBanner movie={movie} />);
 
 		expect(
 			screen.getByRole("heading", { level: 1, name: "Inception" }),
@@ -41,7 +56,7 @@ describe("MovieBanner", () => {
 	});
 
 	it("renders the tagline, genres and overview", () => {
-		render(<MovieBanner movie={movie} />);
+		renderWithQuery(<MovieBanner movie={movie} />);
 
 		expect(
 			screen.getByText("Your mind is the scene of the crime."),
@@ -54,7 +69,7 @@ describe("MovieBanner", () => {
 	});
 
 	it("fills the facts panel from fields the API already returns", () => {
-		render(<MovieBanner movie={movie} />);
+		renderWithQuery(<MovieBanner movie={movie} />);
 
 		expect(screen.getByText("Released")).toBeInTheDocument();
 		expect(screen.getByText("EN")).toBeInTheDocument();
@@ -64,13 +79,15 @@ describe("MovieBanner", () => {
 	});
 
 	it("dashes out money the dataset does not have", () => {
-		render(<MovieBanner movie={{ ...movie, budget: 0, revenue: 0 }} />);
+		renderWithQuery(
+			<MovieBanner movie={{ ...movie, budget: 0, revenue: 0 }} />,
+		);
 
 		expect(screen.getAllByText("—")).toHaveLength(2);
 	});
 
 	it("links out to IMDb when the id is known", () => {
-		render(<MovieBanner movie={movie} />);
+		renderWithQuery(<MovieBanner movie={movie} />);
 
 		expect(screen.getByRole("link", { name: /View on IMDb/ })).toHaveAttribute(
 			"href",
@@ -79,7 +96,9 @@ describe("MovieBanner", () => {
 	});
 
 	it("drops the IMDb link and tagline when they are missing", () => {
-		render(<MovieBanner movie={{ ...movie, imdb_id: "", tagline: "" }} />);
+		renderWithQuery(
+			<MovieBanner movie={{ ...movie, imdb_id: "", tagline: "" }} />,
+		);
 
 		expect(screen.queryByRole("link", { name: /View on IMDb/ })).toBeNull();
 		expect(
@@ -88,7 +107,7 @@ describe("MovieBanner", () => {
 	});
 
 	it("uses the original backdrop and the w500 poster", () => {
-		render(<MovieBanner movie={movie} />);
+		renderWithQuery(<MovieBanner movie={movie} />);
 
 		expect(
 			screen.getByRole("img", { name: "Inception" }).getAttribute("src"),

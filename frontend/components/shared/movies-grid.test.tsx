@@ -1,7 +1,22 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Movie } from "@/lib/api/movies";
+import { renderWithQuery } from "@/test/render";
 import MoviesGrid from "./movies-grid";
+
+const { useSession } = vi.hoisted(() => ({ useSession: vi.fn() }));
+vi.mock("@/lib/auth/auth-client", () => ({ authClient: { useSession } }));
+vi.mock("@/lib/api/watchlist", () => ({
+	watchlistService: {
+		addToWatchlist: vi.fn(),
+		getWatchlist: vi.fn(),
+		removeFromWatchlist: vi.fn(),
+	},
+}));
+
+beforeEach(() => {
+	useSession.mockReturnValue({ data: null });
+});
 
 const movies = [
 	{ id: "1", release_date: "2016-11-11", title: "Arrival", vote_average: 7.6 },
@@ -15,7 +30,7 @@ const movies = [
 
 describe("MoviesGrid", () => {
 	it("renders one card per movie", () => {
-		render(<MoviesGrid movies={movies} />);
+		renderWithQuery(<MoviesGrid movies={movies} />);
 
 		expect(screen.getAllByRole("link")).toHaveLength(2);
 		expect(screen.getByText("Arrival")).toBeInTheDocument();
@@ -23,7 +38,7 @@ describe("MoviesGrid", () => {
 	});
 
 	it("renders nothing for an empty result set", () => {
-		render(<MoviesGrid movies={[]} />);
+		renderWithQuery(<MoviesGrid movies={[]} />);
 
 		expect(screen.queryAllByRole("link")).toHaveLength(0);
 	});

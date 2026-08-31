@@ -1,0 +1,31 @@
+meta {
+  name: create message
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{url}}/chat/:id/messages
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: replace-me
+}
+
+body:json {
+  {
+    "role": "user",
+    "content": "Hello, find me a sci-fi movie like Interstellar"
+  }
+}
+
+docs {
+  Requires authentication. Creates a message in the specified chat. Params: id (chat ID). Body: role "user" | "assistant" | "system", content 1-10000 chars. Updates chat updatedAt on success.
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

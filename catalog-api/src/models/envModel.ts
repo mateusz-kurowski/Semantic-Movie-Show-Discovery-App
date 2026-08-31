@@ -7,13 +7,15 @@ const envSchema = t.Object({
   betterAuthUrl: t.String({ format: "uri" }),
   collectionName: t.String({ minLength: 1 }),
   openAIBaseUrl: t.String({ format: "uri" }),
+  openAIChatKey: t.String({ minLength: 1 }),
+  openAIChatModel: t.String({ default: "GPT-5.6-Luna", minLength: 1 }),
+  openAIEmbeddingKey: t.String({ minLength: 1 }),
   openAIEmbeddingModel: t.String({ minLength: 1 }),
   openAIEmbeddingModelDimension: t.Number({
     default: 256,
     maximum: 1024,
     minimum: 1,
   }),
-  openAIKey: t.String({ minLength: 1 }),
   qdrantApiKey: t.String({ minLength: 1 }),
   qdrantDenseVectorName: t.String({
     default: "overview-dense-vector",
@@ -38,11 +40,13 @@ export const validateEnvs = (): Env => {
     betterAuthUrl: process.env.BETTER_AUTH_URL,
     collectionName: process.env.QDRANT_COLLECTION_NAME,
     openAIBaseUrl: process.env.OPENAI_BASE_URL,
+    openAIChatKey: process.env.OPENAI_CHAT_KEY,
+    openAIChatModel: process.env.OPENAI_CHAT_MODEL || "GPT-5.6-Luna",
+    openAIEmbeddingKey: process.env.OPENAI_EMBEDDING_KEY,
     openAIEmbeddingModel: process.env.OPENAI_EMBEDDING_MODEL,
     openAIEmbeddingModelDimension: process.env.OPENAI_EMBEDDING_MODEL_DIMENSION
       ? parseInt(process.env.OPENAI_EMBEDDING_MODEL_DIMENSION, 10)
       : 256,
-    openAIKey: process.env.OPENAI_API_KEY,
     qdrantApiKey: process.env.QDRANT_API_KEY,
     qdrantDenseVectorName:
       process.env.QDRANT_DENSE_VECTOR_NAME || "overview-dense-vector",

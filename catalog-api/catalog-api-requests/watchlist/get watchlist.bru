@@ -1,0 +1,20 @@
+meta {
+  name: get watchlist
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{url}}/watchlist
+  body: none
+  auth: inherit
+}
+
+docs {
+  Requires authentication. Returns the signed-in user's saved movies.
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

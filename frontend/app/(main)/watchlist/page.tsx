@@ -1,14 +1,5 @@
-import { Bookmark } from "lucide-react";
-import EmptyState from "@/components/shared/empty-state";
+import WatchlistLayout from "./_components/WatchlistLayout";
 
-const Page = () => {
-	return (
-		<EmptyState
-			icon={Bookmark}
-			title="Your watchlist is empty"
-			description="Movies and shows you save will show up here."
-		/>
-	);
-};
+const Page = () => <WatchlistLayout />;
 
 export default Page;

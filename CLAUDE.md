@@ -14,8 +14,8 @@ Self-hosted semantic movie/show discovery app: search films by vibe or natural l
   -> [Postgres]                   shared seam: movies + related entity tables
   -> catalog-ingester  (Go)       reads unprocessed movies, chunks + embeds text, upserts into Qdrant
   -> [Qdrant]                     dense vectors, queried at search time
-  -> catalog-api       (TypeScript/Elysia/Bun)  REST API: search, embeddings, movies, auth, watchlist
-  -> frontend          (Next.js 16 App Router)  search UI, movie details, auth, watchlist
+  -> catalog-api       (TypeScript/Elysia/Bun)  REST API: search, embeddings, movies, auth, watchlist, AI chat
+  -> frontend          (Next.js 16 App Router)  search UI, Ask AI chat, movie details, auth, watchlist
 ```
 
 This is a **Transactional Outbox**-style pipeline: `catalog-collector` writes movies (+ related entities) in one transaction; `catalog-ingester` independently polls for unprocessed rows and marks them processed after indexing. Long overviews are chunked before embedding (each chunk becomes a separate Qdrant point linked by `chunk_id`), preserving semantic granularity for search.

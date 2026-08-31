@@ -1,0 +1,24 @@
+meta {
+  name: create chat with default title
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{url}}/chat
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {}
+}
+
+docs {
+  Requires authentication. Creates a new chat without a title — server assigns a default title. Title is optional (1-100 chars when provided).
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

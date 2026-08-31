@@ -1,0 +1,26 @@
+meta {
+  name: create chat alias
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{url}}/chat/create
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": "My first chat"
+  }
+}
+
+docs {
+  Requires authentication. Alias for POST /chat — creates a new chat at /chat/create. Title is optional (1-100 chars). Remove title field or send {} for default title.
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

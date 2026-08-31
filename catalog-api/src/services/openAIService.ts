@@ -6,7 +6,7 @@ import cacheService from "./cacheService";
 
 const voyageClient = createVoyage({
 	baseURL: env.openAIBaseUrl,
-	apiKey: env.openAIKey,
+	apiKey: env.openAIEmbeddingKey,
 });
 
 const getEmbedding = async (value: string) => {

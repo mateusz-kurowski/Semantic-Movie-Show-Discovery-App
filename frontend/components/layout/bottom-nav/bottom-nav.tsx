@@ -1,7 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { Bookmark, Clock, Compass } from "lucide-react";
+import { Bookmark, Clock, Compass, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ interface BottomNavItem {
 
 const items: BottomNavItem[] = [
 	{ href: "/", label: "Discover", icon: Compass },
+	{ href: "/ask", label: "Ask AI", icon: Sparkles },
 	{ href: "/watchlist", label: "Watchlist", icon: Bookmark },
 	{ href: "/history", label: "History", icon: Clock },
 ];

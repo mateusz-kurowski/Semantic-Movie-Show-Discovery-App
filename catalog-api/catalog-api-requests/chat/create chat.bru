@@ -1,0 +1,26 @@
+meta {
+  name: create chat
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{url}}/chat
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": "My first chat"
+  }
+}
+
+docs {
+  Requires authentication. Creates a new chat with a custom title (1-100 chars).
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

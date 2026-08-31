@@ -82,7 +82,7 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		QdrantPort:             qdrantPortInt,
 		QdrantUseSSL:           qdrantUseSSL,
 		VectorDimension:        vectorDimensionInt,
-		OpenAiAPIKey:           os.Getenv("OPENAI_API_KEY"),
+		OpenAiAPIKey:           os.Getenv("OPENAI_EMBEDDING_KEY"),
 		OpenAiBaseURL:          os.Getenv("OPENAI_BASE_URL"),
 	}
 

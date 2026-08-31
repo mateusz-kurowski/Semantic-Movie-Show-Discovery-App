@@ -3,9 +3,11 @@ import openapi from "@elysiajs/openapi";
 import { Elysia } from "elysia";
 import { auth } from "./auth";
 import { validateEnvs } from "./models/envModel";
+import chatRoutes from "./routes/chatRoutes";
 import embeddingRoutes from "./routes/embeddingRoutes";
 import movieRoutes from "./routes/movieRoutes";
 import searchRoutes from "./routes/searchRoutes";
+import watchlistRoutes from "./routes/watchlistRoutes";
 
 export const envs = validateEnvs();
 
@@ -21,20 +23,8 @@ const app = new Elysia({ name: "api", prefix: "/api" })
   .use(movieRoutes)
   .use(cors({ credentials: true, origin: corsOrigins }))
   .mount(auth.handler)
-  .macro({
-    auth: {
-      async resolve({ status, request: { headers } }) {
-        const session = await auth.api.getSession({
-          headers,
-        });
-        if (!session) return status(401);
-        return {
-          session: session.session,
-          user: session.user,
-        };
-      },
-    },
-  })
+  .use(chatRoutes)
+  .use(watchlistRoutes)
   .listen(envs.apiPort);
 
 export type App = typeof app;

@@ -1,0 +1,26 @@
+meta {
+  name: add to watchlist
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{url}}/watchlist
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "movieId": 634649
+  }
+}
+
+docs {
+  Requires authentication. Saves a movie to the signed-in user's watchlist. Body: movieId (number, >=1). Saving a movie that is already on the list is a no-op.
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

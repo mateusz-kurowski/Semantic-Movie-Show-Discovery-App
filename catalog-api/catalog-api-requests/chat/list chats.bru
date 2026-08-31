@@ -1,0 +1,25 @@
+meta {
+  name: list chats
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{url}}/chat?limit=20&offset=0
+  body: none
+  auth: inherit
+}
+
+params:query {
+  limit: 20
+  offset: 0
+}
+
+docs {
+  Requires authentication. Lists chats for the authenticated user, ordered by updatedAt desc. Query params: limit 1-100 (default 20), offset >=0 (default 0).
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

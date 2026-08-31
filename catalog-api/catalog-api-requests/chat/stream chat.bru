@@ -1,0 +1,38 @@
+meta {
+  name: stream chat
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{url}}/chat/:id/stream
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: replace-me
+}
+
+body:json {
+  {
+    "messages": [
+      {
+        "id": "msg_1",
+        "role": "user",
+        "parts": [
+          { "type": "text", "text": "Something like Interstellar, but hopeful and under 2.5 hours" }
+        ]
+      }
+    ]
+  }
+}
+
+docs {
+  Requires authentication. Runs the given conversation (AI SDK UIMessage[]) through the ReelFind AI model and streams back a UI message stream (text/event-stream). The chat must already exist and belong to the signed-in user — create one first and replace `replace-me` with its ID. Every turn resends the full message list, since the endpoint is stateless per request; only the final user/assistant turn is persisted to `messages` server-side. The model may call a searchMovies tool, whose result parts carry the film cards shown in the UI — Bruno will show the raw SSE stream rather than a rendered chat.
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

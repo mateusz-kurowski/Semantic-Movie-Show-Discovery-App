@@ -1,9 +1,11 @@
+"use client";
 import { format } from "date-fns";
-import { ExternalLink, Play, Plus, Star } from "lucide-react";
+import { BookmarkCheck, ExternalLink, Play, Plus, Star } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Movie } from "@/lib/api/movies";
+import { useWatchlistEntry } from "@/lib/hooks/useWatchlistEntry";
 import { getTmdbImageUrl } from "@/lib/utils/tmdbUtils";
 
 interface MovieBannerProps {
@@ -19,6 +21,7 @@ const currency = new Intl.NumberFormat("en-US", {
 const formatMoney = (value: number) => (value ? currency.format(value) : "—");
 
 const MovieBanner = ({ movie }: MovieBannerProps) => {
+	const watchlist = useWatchlistEntry(movie.id);
 	const facts: { label: string; value: string; mono?: boolean }[] = [
 		{ label: "Status", value: movie.status },
 		{ label: "Language", value: movie.original_language?.toUpperCase() },
@@ -55,12 +58,18 @@ const MovieBanner = ({ movie }: MovieBannerProps) => {
 						width={500}
 						height={750}
 					/>
-					<Button
-						size="lg"
-						className="h-12 w-full cursor-pointer justify-center rounded-full text-[15px] font-semibold"
-					>
-						<Plus /> Add to watchlist
-					</Button>
+					{watchlist.canSave && (
+						<Button
+							size="lg"
+							variant={watchlist.isSaved ? "outline" : "default"}
+							disabled={watchlist.isPending}
+							onClick={watchlist.toggle}
+							className="h-12 w-full cursor-pointer justify-center rounded-full text-[15px] font-semibold"
+						>
+							{watchlist.isSaved ? <BookmarkCheck /> : <Plus />}
+							{watchlist.isSaved ? "In your watchlist" : "Add to watchlist"}
+						</Button>
+					)}
 				</div>
 
 				<div className="flex min-w-0 flex-1 flex-col gap-8 md:flex-row md:gap-12 md:pt-37">

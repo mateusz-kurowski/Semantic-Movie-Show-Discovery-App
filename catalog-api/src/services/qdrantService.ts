@@ -6,7 +6,7 @@ const getClient = async () =>
     apiKey: env.qdrantApiKey,
     checkCompatibility: false,
     host: env.qdrantHost,
-    https: false,
+    https: env.qdrantSSL,
     port: env.qdrantPort,
   });
 

@@ -3,4 +3,5 @@
 
 export * from "./auth-schema";
 export * from "./catalog-schema";
+export * from "./chat-schema";
 export * from "./relations";

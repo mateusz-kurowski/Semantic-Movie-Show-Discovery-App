@@ -1,0 +1,26 @@
+meta {
+  name: embed phrase
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{url}}/embedding
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "phrase": "What are some good movies to watch?"
+  }
+}
+
+docs {
+  Returns the (cached or freshly computed) embedding vector for a phrase, or [] for an empty phrase. No authentication required.
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

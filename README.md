@@ -249,7 +249,7 @@ See `compose.coolify.yaml` for the production service definitions. Deploy:
 | `REDIS_URL`                | api                | ✓        | Redis connection URL                         |
 | `EMBEDDING_SERVICE_URL`    | api                | ✓        | Embedding API endpoint                       |
 | `OPENAI_BASE_URL`          | ingester           | ✓        | Embedding API base URL (OpenAI-compatible)   |
-| `OPENAI_API_KEY`           | ingester           | ✓        | Embedding API key                            |
+| `OPENAI_EMBEDDING_KEY`     | ingester/api       | ✓        | Embedding API key                            |
 | `INGEST_BATCH_SIZE`        | ingester           |          | Batch size (default: 8)                      |
 | `INGEST_PERIOD_SECONDS`    | ingester           | ✓        | Polling interval / 0 = continuous            |
 | `VECTOR_DIMENSION`         | ingester           |          | Embedding dimension (default: 256)           |

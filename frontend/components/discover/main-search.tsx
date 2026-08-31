@@ -84,7 +84,7 @@ const SearchForm = ({
 								>
 									{togglesVisible && (
 										<InputGroupAddon align="inline-start" className="pr-1">
-											<SearchModeContainer />
+											<SearchModeContainer query={field.value} />
 										</InputGroupAddon>
 									)}
 									<InputGroupInput

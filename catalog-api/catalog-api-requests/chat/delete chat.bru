@@ -1,0 +1,24 @@
+meta {
+  name: delete chat
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{url}}/chat/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: replace-me
+}
+
+docs {
+  Requires authentication. Deletes a chat by ID (cascades to messages). Replace `replace-me` with a real chat ID. Returns 404 if not found or not owned by user.
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
