@@ -37,8 +37,10 @@ export const auth = betterAuth({
   },
   plugins: [openAPI()],
   secret: process.env.BETTER_AUTH_SECRET,
-  skipOriginCheck: ["/api/auth"],
-  // Local Next.js dev origin; add more via BETTER_AUTH_TRUSTED_ORIGINS (comma-separated)
-  // for production/staging deployments.
-  trustedOrigins: ["http://localhost:3000"],
+  // Mirrors index.ts's corsOrigins default — CORS and this are separate checks
+  // (Elysia's cors() sets response headers; this rejects the request outright)
+  // but both need the same origins trusted, or one blocks what the other allows.
+  trustedOrigins: process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",").filter(
+    Boolean,
+  ) ?? ["http://localhost:3000", "https://movies.mkurowski.dev"],
 });
