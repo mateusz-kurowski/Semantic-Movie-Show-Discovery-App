@@ -8,6 +8,24 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+Service-specific commands for `frontend` (Next.js 16 App Router). See the root `AGENTS.md` for cross-service architecture and rules.
+
+## Commands
+
+```bash
+bun run dev              # local dev server (next dev)
+
+bun run lint             # lint + format check (= biome check)
+bunx @biomejs/biome check --write .   # lint + format, autofix
+
+bunx tsc --noEmit        # type check — must stay clean
+bunx next typegen        # regenerate route types after moving/renaming routes
+
+bun run test             # unit tests (= vitest run)
+bun run test:watch       # unit tests in watch mode
+bun run test movie-card  # single file — vitest filters by path substring
+```
+
 # Frontend Development Guidelines
 
 This project is a Next.js 16 App Router application (React 19, TypeScript, Tailwind CSS v4, shadcn/ui on Base UI, TanStack Query, Biome). Follow these rules unless the code in front of you proves otherwise.

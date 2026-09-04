@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-Service-specific commands for `catalog-collector` (Python / uv). See the root `CLAUDE.md` for cross-service architecture and rules.
+Service-specific commands for `catalog-collector` (Python / uv). See the root `AGENTS.md` for cross-service architecture and rules.
 
 ## Commands
 

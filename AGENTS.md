@@ -1,10 +1,10 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI agents when working with code in this repository.
 
 ## Project overview
 
-Self-hosted semantic movie/show discovery app: search films by vibe or natural language via hybrid vector search (Qdrant). Four polyglot services form a pipeline, plus a Next.js frontend. Each service has its own `CLAUDE.md` with commands specific to that directory — read this file for cross-service architecture and rules, and the service's own `CLAUDE.md` before working inside it.
+Self-hosted semantic movie/show discovery app: search films by vibe or natural language via hybrid vector search (Qdrant). Four polyglot services form a pipeline, plus a Next.js frontend. Each service has its own `AGENTS.md` with commands specific to that directory — read this file for cross-service architecture and rules, and the service's own `AGENTS.md` before working inside it.
 
 ## Architecture & data flow
 
@@ -40,7 +40,7 @@ cd catalog-api && bunx drizzle-kit migrate
 lefthook run pre-commit
 ```
 
-There is no end-to-end test suite configured yet in this repo. Each service has its own unit test command — see that service's `CLAUDE.md`. When adding E2E coverage, wire it up against `docker compose` services rather than mocking cross-service boundaries.
+There is no end-to-end test suite configured yet in this repo. Each service has its own unit test command — see that service's `AGENTS.md`. When adding E2E coverage, wire it up against `docker compose` services rather than mocking cross-service boundaries.
 
 Each service has its own `.env`/`.env.example` — copy and fill in before running that service.
 

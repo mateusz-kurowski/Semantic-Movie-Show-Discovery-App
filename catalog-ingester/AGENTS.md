@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-Service-specific commands for `catalog-ingester` (Go). See the root `CLAUDE.md` for cross-service architecture and rules.
+Service-specific commands for `catalog-ingester` (Go). See the root `AGENTS.md` for cross-service architecture and rules.
 
 ## Commands
 
