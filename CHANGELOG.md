@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/compare/v1.0.0...v1.1.0) (2026-09-05)
+
+
+### Features
+
+* add movies support to chat messages and enhance chat functionality ([7c5a9f9](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/7c5a9f94db341670bf8611e5fde2f1a6a46af6b9))
+* enhance chat functionality with movie details retrieval and year filtering ([e6f4275](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/e6f42755883906836fdfec2871cfef11453d5d81))
+* implement reranking functionality with configurable options and integrate into search service ([e11c35a](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/e11c35ab3bdf4724534ee8512151e9d2b4f0a439))
+
 ## 1.0.0 (2026-09-05)
 
 
