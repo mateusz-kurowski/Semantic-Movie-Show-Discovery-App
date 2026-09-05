@@ -29,6 +29,11 @@ const envSchema = t.Object({
   }),
   qdrantSSL: t.Boolean({ default: false }),
   redisUrl: t.String({ format: "uri" }),
+  rerankCandidateMax: t.Number({ default: 24, minimum: 1 }),
+  rerankCandidateMultiplier: t.Number({ default: 4, minimum: 1 }),
+  rerankEnabled: t.Boolean({ default: false }),
+  rerankModel: t.String({ default: "rerank-2.5-lite", minLength: 1 }),
+  rerankTimeoutMs: t.Number({ default: 500, minimum: 1 }),
 });
 
 export type Env = Static<typeof envSchema>;
@@ -57,6 +62,17 @@ export const validateEnvs = (): Env => {
     qdrantSSL: process.env.QDRANT_SSL === "true",
     qdrantUrl: process.env.QDRANT_URL,
     redisUrl: process.env.REDIS_URL,
+    rerankCandidateMax: process.env.RERANK_CANDIDATE_MAX
+      ? parseInt(process.env.RERANK_CANDIDATE_MAX, 10)
+      : 24,
+    rerankCandidateMultiplier: process.env.RERANK_CANDIDATE_MULTIPLIER
+      ? parseInt(process.env.RERANK_CANDIDATE_MULTIPLIER, 10)
+      : 4,
+    rerankEnabled: process.env.RERANK_ENABLED === "true",
+    rerankModel: process.env.RERANK_MODEL || "rerank-2.5-lite",
+    rerankTimeoutMs: process.env.RERANK_TIMEOUT_MS
+      ? parseInt(process.env.RERANK_TIMEOUT_MS, 10)
+      : 500,
   };
 
   const isValid = Value.Check(envSchema, envs);

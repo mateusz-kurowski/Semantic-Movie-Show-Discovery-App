@@ -82,15 +82,16 @@ const searchMovies = tool({
 	description:
 		"Search the ReelFind catalogue for films matching a natural-language description of mood, theme or plot. Returns the films to show the user. Optionally pre-filters by release year when the user states a decade or years.",
 	execute: async ({ phrase, limit, yearFrom, yearTo }) => {
-		// The ingester splits long overviews into several points, so one film can
-		// come back more than once — collapse to the best-ranked hit per film.
+		// Per-movie collapse, rerank, and slicing to the requested count all
+		// happen in searchService.hybridSearch; the byId guard below only
+		// protects against residual duplicates.
 		const yearFilter =
 			yearFrom === undefined && yearTo === undefined
 				? undefined
 				: { yearFrom, yearTo };
 		const points = await searchService.hybridSearch(
 			phrase,
-			(limit ?? 4) * 3,
+			limit ?? 4,
 			yearFilter,
 		);
 		const byId = new Map<number, MoviePick>();
@@ -183,10 +184,12 @@ const getMovieDetails = tool({
 		}
 
 		const phrase = year !== undefined ? `${normalized} ${year}` : normalized;
+		// Top-1 disambiguation keeps raw RRF order — it bypasses rerank.
 		const points = await searchService.hybridSearch(
 			phrase,
 			1,
 			year !== undefined ? { yearFrom: year, yearTo: year } : undefined,
+			{ rerank: false },
 		);
 		const payload = points[0]?.payload as SearchPayload | undefined;
 		if (!payload?.title) {
