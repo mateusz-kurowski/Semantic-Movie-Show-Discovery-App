@@ -10,16 +10,16 @@
   "mcp": {
     "playwright": {
       "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp@latest"],
+      "command": ["bunx", "@playwright/mcp@latest"],
       "enabled": true
     },
     "qdrant": {
       "type": "local",
-      "command": ["uvx", "mcp-server-qdrant"],
+      "command": ["uvx", "--python", "3.12", "mcp-server-qdrant"],
       "enabled": true,
       "environment": {
-        "MOVIE_QDRANT_URL": "{env:MOVIE_QDRANT_URL}",
-        "MOVIE_QDRANT_API_KEY": "{env:MOVIE_QDRANT_API_KEY}",
+        "QDRANT_URL": "{env:MOVIE_QDRANT_URL}",
+        "QDRANT_API_KEY": "{env:MOVIE_QDRANT_API_KEY}",
         "COLLECTION_NAME": "{env:MOVIE_QDRANT_COLLECTION_NAME}",
         "EMBEDDING_PROVIDER": "fastembed",
         "EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2"
@@ -27,12 +27,12 @@
     },
     "postgres": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-postgres", "{env:MOVIE_DATABASE_URL}"],
+      "command": ["bunx", "@modelcontextprotocol/server-postgres", "{env:MOVIE_DATABASE_URL}"],
       "enabled": true
     },
     "redis": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-redis", "{env:MOVIE_REDIS_URL}"],
+      "command": ["bunx", "@modelcontextprotocol/server-redis", "{env:MOVIE_REDIS_URL}"],
       "enabled": true
     }
   }
