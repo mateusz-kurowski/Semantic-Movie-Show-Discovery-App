@@ -29,7 +29,15 @@ const getEmbeddingWithCache = async (
 	phrase: string,
 	cacheClient: RedisClientType,
 ): Promise<number[]> => {
-	const cached = await cacheService.getVector(cacheClient, phrase);
+	let cached: number[] | null = null;
+	try {
+		cached = await cacheService.getVector(cacheClient, phrase);
+	} catch (err) {
+		console.warn(
+			`[EmbeddingService] Cache read failed for phrase: "${phrase}", falling back to direct embedding...`,
+			err,
+		);
+	}
 	if (cached) {
 		console.log(`[EmbeddingService] Cache hit for phrase: "${phrase}"`);
 		return cached;
@@ -37,8 +45,16 @@ const getEmbeddingWithCache = async (
 
 	console.log(`[EmbeddingService] Cache miss for phrase: "${phrase}"`);
 	const embedding = await getEmbedding(phrase);
-	if (embedding.length)
-		await cacheService.setVector(cacheClient, phrase, embedding);
+	if (embedding.length) {
+		try {
+			await cacheService.setVector(cacheClient, phrase, embedding);
+		} catch (err) {
+			console.warn(
+				`[EmbeddingService] Cache write failed for phrase: "${phrase}", skipping...`,
+				err,
+			);
+		}
+	}
 
 	return embedding;
 };
