@@ -121,4 +121,40 @@ describe("ChatComposer", () => {
 			"Default model",
 		);
 	});
+
+	it("keeps the model picker controlled across the undefined-to-picked switch", () => {
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const props = {
+			isStreaming: false,
+			models: ["GPT-5.6-Luna", "claude-opus-5"],
+			onModelChange: vi.fn(),
+			onSend: vi.fn(),
+			onStop: vi.fn(),
+		};
+		const { rerender } = render(<ChatComposer model={undefined} {...props} />);
+
+		expect(screen.getByLabelText("Chat model")).toHaveTextContent(
+			"Default model",
+		);
+
+		// Simulate the parent storing the picked model, as AskPageContent does.
+		rerender(<ChatComposer model="claude-opus-5" {...props} />);
+
+		expect(screen.getByLabelText("Chat model")).toHaveTextContent(
+			"claude-opus-5",
+		);
+		const switched = [...errorSpy.mock.calls, ...warnSpy.mock.calls].some(
+			(args) =>
+				args.some(
+					(arg) =>
+						typeof arg === "string" &&
+						arg.includes("uncontrolled") &&
+						arg.includes("controlled"),
+				),
+		);
+		expect(switched).toBe(false);
+		errorSpy.mockRestore();
+		warnSpy.mockRestore();
+	});
 });

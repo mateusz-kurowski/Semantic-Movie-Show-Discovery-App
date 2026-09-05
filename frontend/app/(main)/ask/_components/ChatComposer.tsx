@@ -72,7 +72,12 @@ const ChatComposer = ({
 				<div className="flex min-w-0 items-center gap-3">
 					{models.length > 0 && (
 						<Select
-							value={model}
+							// Coalesced so the picker is controlled from the first
+							// render: model stays undefined (= server default) in the
+							// parent until the user picks, which previously flipped
+							// this Select from uncontrolled to controlled. "" matches
+							// no item, so the placeholder keeps showing.
+							value={model ?? ""}
 							onValueChange={(value) => {
 								if (value) onModelChange(value);
 							}}

@@ -488,6 +488,22 @@ describe("AskPageContent", () => {
 		);
 	});
 
+	it("never creates a chat when restoring from ?chat", async () => {
+		searchParams.set("chat", "c1");
+		vi.mocked(chatService.getChat).mockResolvedValue({
+			createdAt: "",
+			id: "c1",
+			messages: [],
+			title: "Old chat",
+			updatedAt: "",
+		});
+
+		renderWithQuery(<AskPageContent />);
+
+		await waitFor(() => expect(chatService.getChat).toHaveBeenCalled());
+		expect(chatService.createChat).not.toHaveBeenCalled();
+	});
+
 	it("drops an unknown ?chat param and surfaces the error", async () => {
 		searchParams.set("chat", "missing");
 		vi.mocked(chatService.getChat).mockRejectedValue(

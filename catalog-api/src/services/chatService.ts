@@ -7,8 +7,9 @@ import {
 	tool,
 	type UIMessage,
 } from "ai";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../clients";
+import { genre, movie, moviegenrelink } from "../db/catalog-schema";
 import { chats, messages as messagesTable } from "../db/chat-schema";
 import { env } from "../models/envModel";
 import { searchService } from "./searchService";
@@ -27,10 +28,18 @@ const SYSTEM_PROMPT = `You are ReelFind's film concierge. The catalogue is a pri
 
 Rules:
 - Always call searchMovies before naming any film. Never recommend a film from memory.
+- Always call searchMovies before answering, including on follow-ups — never answer from conversation context alone.
 - Translate the mood, plot fragment or comparison the user gives you into a descriptive search phrase. Search again with a different phrase when they narrow the request.
+- When the user states a decade or years, pass yearFrom/yearTo to searchMovies and keep the phrase to vibe and plot only.
+- Always present the closest matches the tool returns, with honest caveats when they fall outside the requested years (e.g. "closest in the catalogue, outside your decade") — never end with zero cards shown when the tool returned movies.
+- Never claim to filter by family-suitability or age rating: the catalogue carries no certification data, only an adult flag. If asked, say suitability cannot be verified from catalogue data.
 - Keep replies to two or three sentences before that line. Say why the picks fit the request, and name anything you deliberately left out.
 - The tool result is already shown to the user as film cards, so do not repeat titles, years or ratings as a list.
 - If the search comes back empty, say so and suggest how to loosen the request.
+- When the user asks about a specific film (names a title, "tell me about X", "the spider-man movie from 2002"), call getMovieDetails with that title and the stated year when one is given, and prefer it over searchMovies for such asks.
+- Keep searchMovies for mood/vibe/discovery requests ("something like...", "show me...", "find...").
+- Details answers are prose built from the getMovieDetails result; film cards still come only from searchMovies output, so do not present the details result as a card list.
+- If getMovieDetails returns found false, say so and suggest how to loosen the request (check spelling, drop the year) instead of inventing details.
 - End EVERY reply with a standalone last line in exactly this format: Try: <one concrete follow-up search the user could send next> (e.g. a loosened phrase adding setting, decade, or actor).`;
 
 interface SearchPayload {
@@ -39,8 +48,10 @@ interface SearchPayload {
 	release_date?: string;
 	runtime?: number;
 	vote_average?: number;
+	vote_count?: number;
 	poster_path?: string;
 	overview?: string;
+	tagline?: string;
 	genres?: string[];
 }
 
@@ -69,11 +80,19 @@ const toPick = (payload: SearchPayload): MoviePick | null => {
 
 const searchMovies = tool({
 	description:
-		"Search the ReelFind catalogue for films matching a natural-language description of mood, theme or plot. Returns the films to show the user.",
-	execute: async ({ phrase, limit }) => {
+		"Search the ReelFind catalogue for films matching a natural-language description of mood, theme or plot. Returns the films to show the user. Optionally pre-filters by release year when the user states a decade or years.",
+	execute: async ({ phrase, limit, yearFrom, yearTo }) => {
 		// The ingester splits long overviews into several points, so one film can
 		// come back more than once — collapse to the best-ranked hit per film.
-		const points = await searchService.hybridSearch(phrase, (limit ?? 4) * 3);
+		const yearFilter =
+			yearFrom === undefined && yearTo === undefined
+				? undefined
+				: { yearFrom, yearTo };
+		const points = await searchService.hybridSearch(
+			phrase,
+			(limit ?? 4) * 3,
+			yearFilter,
+		);
 		const byId = new Map<number, MoviePick>();
 		for (const point of points) {
 			const pick = toPick(point.payload as SearchPayload);
@@ -84,7 +103,12 @@ const searchMovies = tool({
 			phrase,
 		};
 	},
-	inputSchema: jsonSchema<{ phrase: string; limit?: number }>({
+	inputSchema: jsonSchema<{
+		phrase: string;
+		limit?: number;
+		yearFrom?: number;
+		yearTo?: number;
+	}>({
 		properties: {
 			limit: {
 				description: "How many films to return. Defaults to 4.",
@@ -94,8 +118,18 @@ const searchMovies = tool({
 			},
 			phrase: {
 				description:
-					"A descriptive phrase to match against film overviews, e.g. 'hopeful space exploration with a warm ending'.",
+					"A descriptive phrase to match against film overviews, e.g. 'hopeful space exploration with a warm ending'. Keep to vibe and plot only; never bake years into the phrase.",
 				type: "string",
+			},
+			yearFrom: {
+				description:
+					"Earliest release year (inclusive), e.g. 1990 for '90s films. Only set when the user states a decade or years.",
+				type: "number",
+			},
+			yearTo: {
+				description:
+					"Latest release year (inclusive), e.g. 1999. Only set when the user states a decade or years.",
+				type: "number",
 			},
 		},
 		required: ["phrase"],
@@ -103,7 +137,94 @@ const searchMovies = tool({
 	}),
 });
 
-export const chatTools = { searchMovies };
+const yearOf = (releaseDate: string | null): number | null => {
+	const year = releaseDate ? Number(releaseDate.slice(0, 4)) : NaN;
+	return Number.isInteger(year) ? year : null;
+};
+
+const getMovieDetails = tool({
+	description:
+		"Look up details for a specific film by title, optionally disambiguated by release year. Use for asks naming a film ('tell me about X', 'the spider-man movie from 2002'). Falls back to a catalogue search when no title row matches.",
+	execute: async ({ title, year }) => {
+		const normalized = title.trim();
+		const conditions = [
+			sql`lower(${movie.title}) = ${normalized.toLowerCase()}`,
+		];
+		if (year !== undefined) {
+			conditions.push(sql`EXTRACT(YEAR FROM ${movie.release_date}) = ${year}`);
+		}
+		const rows = await db
+			.select({ genreName: genre.name, movie: movie })
+			.from(movie)
+			.leftJoin(moviegenrelink, eq(moviegenrelink.movieId, movie.id))
+			.leftJoin(genre, eq(moviegenrelink.genreId, genre.id))
+			.where(and(...conditions));
+
+		if (rows.length > 0) {
+			const first = rows[0].movie;
+			const genres = rows
+				.filter((row) => row.movie.id === first.id)
+				.map((row) => row.genreName)
+				.filter((name): name is string => name !== null);
+			const releaseDate = first.release_date ?? null;
+			return {
+				found: true,
+				genres,
+				overview: first.overview,
+				posterPath: first.poster_path,
+				releaseDate,
+				runtime: first.runtime,
+				tagline: first.tagline || undefined,
+				title: first.title,
+				voteAverage: first.vote_average,
+				voteCount: first.vote_count,
+				year: yearOf(releaseDate),
+			};
+		}
+
+		const phrase = year !== undefined ? `${normalized} ${year}` : normalized;
+		const points = await searchService.hybridSearch(
+			phrase,
+			1,
+			year !== undefined ? { yearFrom: year, yearTo: year } : undefined,
+		);
+		const payload = points[0]?.payload as SearchPayload | undefined;
+		if (!payload?.title) {
+			return { found: false, title: normalized, year: year ?? null };
+		}
+		const releaseDate = payload.release_date ?? null;
+		return {
+			found: true,
+			genres: payload.genres ?? [],
+			overview: payload.overview ?? null,
+			posterPath: payload.poster_path ?? null,
+			releaseDate,
+			runtime: payload.runtime ?? null,
+			...(payload.tagline ? { tagline: payload.tagline } : {}),
+			title: payload.title,
+			voteAverage: payload.vote_average ?? null,
+			voteCount: payload.vote_count ?? null,
+			year: yearOf(releaseDate) ?? year ?? null,
+		};
+	},
+	inputSchema: jsonSchema<{ title: string; year?: number }>({
+		properties: {
+			title: {
+				description: "Film title as named by the user, e.g. 'Spider-Man'.",
+				type: "string",
+			},
+			year: {
+				description:
+					"Release year when the user states one, e.g. 2002. Only set when stated.",
+				type: "number",
+			},
+		},
+		required: ["title"],
+		type: "object",
+	}),
+});
+
+export const chatTools = { getMovieDetails, searchMovies };
 
 const textOf = (message: UIMessage) =>
 	message.parts

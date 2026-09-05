@@ -82,6 +82,9 @@ const AskPageContent = () => {
 	const queryClient = useQueryClient();
 
 	const chatIdRef = useRef<string | null>(null);
+	// Holds the in-flight chat creation so concurrent sends share it instead
+	// of each creating a duplicate chat row.
+	const chatIdPromiseRef = useRef<Promise<string> | null>(null);
 	// Remembers which ?chat id the mount-restore already attempted, so
 	// StrictMode double-effects can't double-fetch it.
 	const restoreAttemptedRef = useRef<string | null>(null);
@@ -120,10 +123,25 @@ const AskPageContent = () => {
 			// The chat row is only created on the first send, so opening the page and
 			// leaving does not litter the database with empty conversations.
 			if (chatIdRef.current) return chatIdRef.current;
-			const chat = await chatService.createChat(title);
-			chatIdRef.current = chat.id;
-			syncChatParam(chat.id);
-			return chat.id;
+			// Sends racing before the first create resolves (double-click, Enter
+			// + button, rapid chip taps) share one in-flight request instead of
+			// each creating a duplicate chat row.
+			if (!chatIdPromiseRef.current) {
+				chatIdPromiseRef.current = chatService
+					.createChat(title)
+					.then((chat) => {
+						chatIdRef.current = chat.id;
+						syncChatParam(chat.id);
+						return chat.id;
+					})
+					.catch((error) => {
+						// Let a later send retry instead of hanging on a rejection.
+						// The error still propagates to the send's error path.
+						chatIdPromiseRef.current = null;
+						throw error;
+					});
+			}
+			return chatIdPromiseRef.current;
 		},
 		[syncChatParam],
 	);
@@ -168,6 +186,9 @@ const AskPageContent = () => {
 
 	const startNewChat = () => {
 		chatIdRef.current = null;
+		// Drop any cached creation too, or the next send would resurrect the
+		// old id instead of creating a fresh chat.
+		chatIdPromiseRef.current = null;
 		setMessages([]);
 		setShortlist([]);
 		setHistoryOpen(false);
