@@ -258,6 +258,54 @@ See `compose.coolify.yaml` for the production service definitions. Deploy:
 
 ---
 
+## AI Assistant Setup (opencode MCP)
+
+`opencode.json` (repo root) wires the same Postgres / Qdrant / Redis the services share,
+plus Playwright, into opencode as MCP servers — useful for checking real row data,
+migration results, or ingested points instead of inferring them from schemas.
+
+### Prerequisites
+
+- [opencode](https://opencode.ai) installed
+- `bun` (runs the three npm-based servers — plain `npx`/`node` is not required)
+- `uv` / `uvx` (runs the Qdrant server)
+
+### Configure
+
+`opencode.json` reads its values from the shell environment (`{env:VAR}` interpolation —
+opencode does **not** load `.env` files itself), so export these before launching:
+
+```bash
+export MOVIE_QDRANT_URL="https://<your-qdrant-host>:6333"
+export MOVIE_QDRANT_API_KEY="<qdrant-api-key>"
+export MOVIE_QDRANT_COLLECTION_NAME="<collection-name>"
+export MOVIE_DATABASE_URL="postgres://<user>:<password>@<host>:5432/<db>"
+export MOVIE_REDIS_URL="redis://<host>:6379"
+```
+
+(`.env.mcp.example` lists the equivalent plain names — `QDRANT_URL`, `DATABASE_URL`, etc. —
+used by `.mcp.json` for other clients. The `MOVIE_*` names above are what `opencode.json` reads.)
+
+| Server     | Launcher | Notes                                                              |
+| ---------- | -------- | ------------------------------------------------------------------ |
+| `qdrant`   | `uvx`    | Pinned to `--python 3.12`; queries the same collection the ingester writes |
+| `postgres` | `bunx`   | Same DB the services share                                         |
+| `redis`    | `bunx`   | `catalog-api`'s query-embedding cache                              |
+| `playwright` | `bunx` | Drive the frontend (`bun run dev`) to verify UI changes           |
+
+Config is loaded once at startup — **quit and restart opencode** after editing `opencode.json`.
+First launch downloads the npm/Python packages (one-time delay, then cached).
+
+### Troubleshooting
+
+- MCPs fail to spawn: make sure the five `MOVIE_*` vars are exported in the shell opencode
+  starts from (unset vars interpolate to empty strings).
+- `mcp-server-qdrant` build failure under Python 3.14 (`pydantic-core` / PyO3 error):
+  keep the `--python 3.12` pin in the `qdrant` command.
+- No `node`/`npx` on the machine: the `bunx` commands already cover this, no Node install needed.
+
+---
+
 ## Learning Resources
 
 - [Qdrant Essentials Course](https://qdrant.tech/course/essentials/)
