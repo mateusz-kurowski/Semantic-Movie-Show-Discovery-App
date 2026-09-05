@@ -1,3 +1,5 @@
+import type { MoviePick } from "@/app/(main)/ask/_components/AiMovieCard";
+
 export interface Chat {
 	id: string;
 	title: string;
@@ -10,6 +12,7 @@ export interface StoredMessage {
 	chatId: string;
 	role: "user" | "assistant" | "system";
 	content: string;
+	movies: MoviePick[];
 	createdAt: string;
 }
 

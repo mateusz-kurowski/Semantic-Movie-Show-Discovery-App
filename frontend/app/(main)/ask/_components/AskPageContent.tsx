@@ -2,10 +2,10 @@
 import { useChat } from "@ai-sdk/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { History, Loader2, Plus, Sparkles } from "lucide-react";
+import { History, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EmptyState from "@/components/shared/empty-state";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -53,15 +53,57 @@ const partKey = (message: UIMessage, part: unknown, index: number) =>
 		? String((part as { toolCallId: string }).toolCallId)
 		: `${message.id}-${index}`;
 
+const splitSuggestion = (
+	text: string,
+): { body: string; suggestion?: string } => {
+	const lines = text.trimEnd().split("\n");
+	const lastLine = lines[lines.length - 1] ?? "";
+	const match = lastLine.match(/^Try:\s*(.+)$/);
+	if (!match?.[1]) {
+		return { body: text };
+	}
+	const suggestion = match[1].trim();
+	if (!suggestion) {
+		return { body: text };
+	}
+	const body = lines.slice(0, -1).join("\n").trimEnd();
+	return { body, suggestion };
+};
+
 const AskPageContent = () => {
 	const { data: session, isPending: isSessionPending } =
 		authClient.useSession();
 	// Carries over what the user already typed in the search bar when they flip
 	// the mode toggle to Ask AI, so they don't retype it.
-	const seedQuery = useSearchParams().get("q")?.trim() || undefined;
+	const searchParams = useSearchParams();
+	const pathname = usePathname();
+	const router = useRouter();
+	const seedQuery = searchParams.get("q")?.trim() || undefined;
 	const queryClient = useQueryClient();
 
 	const chatIdRef = useRef<string | null>(null);
+	// Remembers which ?chat id the mount-restore already attempted, so
+	// StrictMode double-effects can't double-fetch it.
+	const restoreAttemptedRef = useRef<string | null>(null);
+
+	// Mirrors the active chat id into ?chat (preserving the rest of the query
+	// string, e.g. ?q) via replace, so refreshes restore the conversation
+	// without spamming history. No-ops when the URL already matches.
+	const syncChatParam = useCallback(
+		(chatId: string | null) => {
+			const next = new URLSearchParams(searchParams.toString());
+			if (chatId) {
+				if (next.get("chat") === chatId) return;
+				next.set("chat", chatId);
+			} else {
+				if (!next.has("chat")) return;
+				next.delete("chat");
+			}
+			const query = next.toString();
+			router.replace(query ? `${pathname}?${query}` : pathname);
+		},
+		[pathname, router, searchParams],
+	);
 	const [shortlist, setShortlist] = useState<MoviePick[]>([]);
 	const [isHistoryOpen, setHistoryOpen] = useState(false);
 	// undefined = let the server pick its configured default model.
@@ -73,14 +115,18 @@ const AskPageContent = () => {
 		queryKey: ["chat-models"],
 	});
 
-	const ensureChatId = useCallback(async (title?: string) => {
-		// The chat row is only created on the first send, so opening the page and
-		// leaving does not litter the database with empty conversations.
-		if (chatIdRef.current) return chatIdRef.current;
-		const chat = await chatService.createChat(title);
-		chatIdRef.current = chat.id;
-		return chat.id;
-	}, []);
+	const ensureChatId = useCallback(
+		async (title?: string) => {
+			// The chat row is only created on the first send, so opening the page and
+			// leaving does not litter the database with empty conversations.
+			if (chatIdRef.current) return chatIdRef.current;
+			const chat = await chatService.createChat(title);
+			chatIdRef.current = chat.id;
+			syncChatParam(chat.id);
+			return chat.id;
+		},
+		[syncChatParam],
+	);
 
 	const transport = useMemo(
 		() =>
@@ -125,25 +171,78 @@ const AskPageContent = () => {
 		setMessages([]);
 		setShortlist([]);
 		setHistoryOpen(false);
+		syncChatParam(null);
 	};
 
 	const openChat = useMutation({
 		mutationFn: chatService.getChat,
 		onSuccess: (chat) => {
 			chatIdRef.current = chat.id;
+			syncChatParam(chat.id);
 			setMessages(
 				chat.messages
 					.filter((message) => message.role !== "system")
-					.map((message) => ({
-						id: message.id,
-						parts: [{ text: message.content, type: "text" as const }],
-						role: message.role as "user" | "assistant",
-					})),
+					.map((message) => {
+						const parts: UIMessage["parts"] = [
+							{ text: message.content, type: "text" as const },
+						];
+						if (
+							message.role === "assistant" &&
+							Array.isArray(message.movies) &&
+							message.movies.length > 0
+						) {
+							parts.push({
+								input: { phrase: "" },
+								output: { movies: message.movies, phrase: "" },
+								state: "output-available" as const,
+								toolCallId: `restored-${message.id}`,
+								type: "tool-searchMovies" as const,
+							});
+						}
+						return {
+							id: message.id,
+							parts,
+							role: message.role as "user" | "assistant",
+						};
+					}),
 			);
 			setShortlist([]);
 			setHistoryOpen(false);
 		},
+		onError: (_error, failedId) => {
+			// A bookmarked or refreshed ?chat id that no longer exists falls
+			// back to a fresh chat; the error itself surfaces via the alert.
+			// History clicks don't touch the param, so only clear it for the
+			// mount-restore attempt.
+			if (restoreAttemptedRef.current === failedId) {
+				syncChatParam(null);
+			}
+		},
 	});
+
+	const deleteChat = useMutation({
+		mutationFn: chatService.deleteChat,
+		onSuccess: (_data, deletedId) => {
+			queryClient.invalidateQueries({ queryKey: ["chats"] });
+			if (chatIdRef.current === deletedId) {
+				startNewChat();
+			}
+		},
+	});
+
+	// Restores a bookmarked or refreshed ?chat=<id> on mount through the same
+	// path as opening from history (movie cards included). Guarded so
+	// StrictMode double-effects and param cleanups can't double-fetch or loop:
+	// one attempt per id, and never while a chat is already loaded.
+	useEffect(() => {
+		if (!session?.user) return;
+		const chatParam = searchParams.get("chat")?.trim();
+		if (!chatParam) return;
+		if (chatIdRef.current) return;
+		if (restoreAttemptedRef.current === chatParam) return;
+		restoreAttemptedRef.current = chatParam;
+		openChat.mutate(chatParam);
+	}, [openChat.mutate, searchParams, session?.user]);
 
 	const toggleShortlist = (movie: MoviePick) =>
 		setShortlist((current) =>
@@ -224,23 +323,50 @@ const AskPageContent = () => {
 						{pastChats.data?.length === 0 && (
 							<p className="text-sm text-outline">No past conversations yet.</p>
 						)}
-						{pastChats.data?.map((chat) => (
-							<Button
-								key={chat.id}
-								variant="ghost"
-								disabled={openChat.isPending}
-								className="h-9 cursor-pointer justify-start rounded-lg text-sm font-normal text-on-surface-variant hover:text-on-surface"
-								onClick={() => openChat.mutate(chat.id)}
-							>
-								{openChat.isPending && openChat.variables === chat.id ? (
-									<Loader2 className="size-3.5 animate-spin" />
-								) : null}
-								{chat.title}
-							</Button>
-						))}
+						{pastChats.data?.map((chat) => {
+							const isDeleting =
+								deleteChat.isPending && deleteChat.variables === chat.id;
+							return (
+								<div key={chat.id} className="flex items-center gap-1">
+									<Button
+										variant="ghost"
+										disabled={openChat.isPending}
+										className="h-9 flex-1 cursor-pointer justify-start rounded-lg text-sm font-normal text-on-surface-variant hover:text-on-surface"
+										onClick={() => openChat.mutate(chat.id)}
+									>
+										{openChat.isPending && openChat.variables === chat.id ? (
+											<Loader2 className="size-3.5 animate-spin" />
+										) : null}
+										{chat.title}
+									</Button>
+									<Button
+										variant="ghost"
+										size="icon-sm"
+										aria-label={`Delete ${chat.title}`}
+										disabled={isDeleting}
+										className="cursor-pointer text-outline hover:text-destructive"
+										onClick={(event) => {
+											event.stopPropagation();
+											deleteChat.mutate(chat.id);
+										}}
+									>
+										{isDeleting ? (
+											<Loader2 className="size-3.5 animate-spin" />
+										) : (
+											<Trash2 className="size-3.5" />
+										)}
+									</Button>
+								</div>
+							);
+						})}
 						{openChat.isError && (
 							<p role="alert" className="text-sm text-destructive">
 								{openChat.error.message}
+							</p>
+						)}
+						{deleteChat.isError && (
+							<p role="alert" className="text-sm text-destructive">
+								{deleteChat.error.message}
 							</p>
 						)}
 					</div>
@@ -272,14 +398,18 @@ const AskPageContent = () => {
 						</div>
 					)}
 
-					{messages.map((message) =>
-						message.role === "user" ? (
-							<div key={message.id} className="flex justify-end">
-								<div className="max-w-140 rounded-[18px] rounded-br-[6px] border border-primary/20 bg-primary/12 px-4.5 py-3.5 leading-6">
-									{textOf(message)}
+					{messages.map((message) => {
+						if (message.role === "user") {
+							return (
+								<div key={message.id} className="flex justify-end">
+									<div className="max-w-140 rounded-[18px] rounded-br-[6px] border border-primary/20 bg-primary/12 px-4.5 py-3.5 leading-6">
+										{textOf(message)}
+									</div>
 								</div>
-							</div>
-						) : (
+							);
+						}
+						const { suggestion } = splitSuggestion(textOf(message));
+						return (
 							<div key={message.id} className="flex gap-3.5">
 								<span className="flex size-7.5 flex-none items-center justify-center rounded-[10px] bg-primary/14 text-primary">
 									<Sparkles className="size-4" />
@@ -287,12 +417,14 @@ const AskPageContent = () => {
 								<div className="flex min-w-0 flex-1 flex-col gap-4">
 									{message.parts.map((part, index) => {
 										if (part.type === "text") {
+											const { body } = splitSuggestion(part.text);
+											if (!body.trim()) return null;
 											return (
 												<p
 													key={partKey(message, part, index)}
 													className="max-w-160 leading-6"
 												>
-													{part.text}
+													{body}
 												</p>
 											);
 										}
@@ -332,10 +464,21 @@ const AskPageContent = () => {
 											</div>
 										);
 									})}
+									{suggestion ? (
+										<div>
+											<Button
+												variant="outline"
+												className="h-8 cursor-pointer rounded-full px-3 text-[13px]"
+												onClick={() => sendMessage({ text: suggestion })}
+											>
+												↻ Try: {suggestion}
+											</Button>
+										</div>
+									) : null}
 								</div>
 							</div>
-						),
-					)}
+						);
+					})}
 
 					{isStreaming && (
 						<p className="flex items-center gap-2 pl-11 text-sm text-outline">
@@ -347,6 +490,12 @@ const AskPageContent = () => {
 					{error && (
 						<p role="alert" className="text-sm text-destructive">
 							{error.message}
+						</p>
+					)}
+
+					{openChat.isError && !isHistoryOpen && (
+						<p role="alert" className="text-sm text-destructive">
+							{openChat.error.message}
 						</p>
 					)}
 

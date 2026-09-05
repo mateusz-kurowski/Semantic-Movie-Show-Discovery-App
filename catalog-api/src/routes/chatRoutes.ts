@@ -5,6 +5,13 @@ import { db } from "../clients";
 import { chats, messages } from "../db/chat-schema";
 import chatService from "../services/chatService";
 
+// jsonb comes back parsed (or null for rows written before the movies
+// column existed); every stored message JSON gains movies, defaulting to [].
+const serializeMessage = (message: typeof messages.$inferSelect) => ({
+	...message,
+	movies: Array.isArray(message.movies) ? message.movies : [],
+});
+
 const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 	.use(authMacro)
 	.guard({
@@ -150,7 +157,7 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 					.where(eq(messages.chatId, params.id))
 					.orderBy(asc(messages.createdAt));
 
-				return { ...chat, messages: chatMessages };
+				return { ...chat, messages: chatMessages.map(serializeMessage) };
 			} catch (error) {
 				console.error("[ChatRoutes] Error fetching chat:", error);
 				return status(500, "Failed to fetch chat");
@@ -185,9 +192,16 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 					return status(404, "Chat not found");
 				}
 
-				await db.delete(chats).where(eq(chats.id, params.id));
+				const [deleted] = await db
+					.delete(chats)
+					.where(eq(chats.id, params.id))
+					.returning({ id: chats.id });
 
-				return { success: true };
+				if (!deleted) {
+					return status(404, "Chat not found");
+				}
+
+				return { id: deleted.id };
 			} catch (error) {
 				console.error("[ChatRoutes] Error deleting chat:", error);
 				return status(500, "Failed to delete chat");
@@ -236,7 +250,7 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 					.set({ updatedAt: new Date() })
 					.where(eq(chats.id, params.id));
 
-				return message;
+				return serializeMessage(message);
 			} catch (error) {
 				console.error("[ChatRoutes] Error creating message:", error);
 				return status(500, "Failed to create message");

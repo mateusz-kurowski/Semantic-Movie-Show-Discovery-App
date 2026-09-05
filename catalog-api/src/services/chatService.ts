@@ -28,9 +28,10 @@ const SYSTEM_PROMPT = `You are ReelFind's film concierge. The catalogue is a pri
 Rules:
 - Always call searchMovies before naming any film. Never recommend a film from memory.
 - Translate the mood, plot fragment or comparison the user gives you into a descriptive search phrase. Search again with a different phrase when they narrow the request.
-- Keep replies to two or three sentences. Say why the picks fit the request, and name anything you deliberately left out.
+- Keep replies to two or three sentences before that line. Say why the picks fit the request, and name anything you deliberately left out.
 - The tool result is already shown to the user as film cards, so do not repeat titles, years or ratings as a list.
-- If the search comes back empty, say so and suggest how to loosen the request.`;
+- If the search comes back empty, say so and suggest how to loosen the request.
+- End EVERY reply with a standalone last line in exactly this format: Try: <one concrete follow-up search the user could send next> (e.g. a loosened phrase adding setting, decade, or actor).`;
 
 interface SearchPayload {
 	id?: number;
@@ -111,13 +112,46 @@ const textOf = (message: UIMessage) =>
 		.join("")
 		.trim();
 
+// Tool outputs arrive as UI parts (static `tool-searchMovies` or
+// `dynamic-tool` with toolName), each carrying the execute() result
+// { movies, phrase } once the state is output-available.
+const moviesOf = (message: UIMessage): MoviePick[] => {
+	const byId = new Map<number, MoviePick>();
+	for (const part of message.parts) {
+		const toolPart = part as {
+			type: string;
+			toolName?: string;
+			state?: string;
+			output?: { movies?: MoviePick[] };
+		};
+		const isSearchMovies =
+			toolPart.type === "tool-searchMovies" ||
+			(toolPart.type === "dynamic-tool" &&
+				toolPart.toolName === "searchMovies");
+		if (
+			!isSearchMovies ||
+			toolPart.state !== "output-available" ||
+			!Array.isArray(toolPart.output?.movies)
+		) {
+			continue;
+		}
+		for (const movie of toolPart.output.movies ?? []) {
+			if (movie && !byId.has(movie.id)) byId.set(movie.id, movie);
+		}
+	}
+	return [...byId.values()];
+};
+
 const persist = async (
 	chatId: string,
 	role: "user" | "assistant",
 	content: string,
+	movies?: MoviePick[],
 ) => {
 	if (!content) return;
-	await db.insert(messagesTable).values({ chatId, content, role });
+	await db
+		.insert(messagesTable)
+		.values({ chatId, content, movies: movies ?? null, role });
 	await db
 		.update(chats)
 		.set({ updatedAt: new Date() })
@@ -144,7 +178,12 @@ const streamChat = async (
 
 	return result.toUIMessageStreamResponse({
 		onFinish: async ({ responseMessage }) => {
-			await persist(chatId, "assistant", textOf(responseMessage));
+			await persist(
+				chatId,
+				"assistant",
+				textOf(responseMessage),
+				moviesOf(responseMessage),
+			);
 		},
 	});
 };

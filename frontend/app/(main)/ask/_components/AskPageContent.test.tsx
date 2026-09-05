@@ -18,7 +18,10 @@ const { useChat, useSession, sendMessage, setMessages, stop } = vi.hoisted(
 
 vi.mock("@ai-sdk/react", () => ({ useChat }));
 const searchParams = new URLSearchParams();
+const replaceMock = vi.fn();
 vi.mock("next/navigation", () => ({
+	usePathname: () => "/ask",
+	useRouter: () => ({ replace: replaceMock }),
 	useSearchParams: () => searchParams,
 }));
 vi.mock("@/lib/auth/auth-client", () => ({ authClient: { useSession } }));
@@ -71,6 +74,7 @@ const chatWith = (messages: unknown[], status = "ready") =>
 	});
 
 beforeEach(() => {
+	searchParams.delete("chat");
 	searchParams.delete("q");
 	useSession.mockReturnValue({
 		data: { user: { id: "u1" } },
@@ -235,6 +239,7 @@ describe("AskPageContent", () => {
 					content: "Something hopeful",
 					createdAt: "",
 					id: "m1",
+					movies: [],
 					role: "user",
 				},
 				{
@@ -242,6 +247,7 @@ describe("AskPageContent", () => {
 					content: "Here you go.",
 					createdAt: "",
 					id: "m2",
+					movies: [],
 					role: "assistant",
 				},
 			],
@@ -268,6 +274,73 @@ describe("AskPageContent", () => {
 			]),
 		);
 		expect(chatService.getChat).toHaveBeenCalledWith("c1", expect.anything());
+	});
+
+	it("restores persisted movie cards when opening a past chat", async () => {
+		const user = userEvent.setup();
+		const movies = [
+			{
+				genres: ["Drama"],
+				id: 354912,
+				posterPath: "/coco.jpg",
+				releaseDate: "2017-10-27",
+				runtime: 105,
+				title: "Coco",
+				voteAverage: 8.2,
+			},
+		];
+		vi.mocked(chatService.getChat).mockResolvedValue({
+			createdAt: "",
+			id: "c1",
+			messages: [
+				{
+					chatId: "c1",
+					content: "Something hopeful",
+					createdAt: "",
+					id: "m1",
+					movies: [],
+					role: "user",
+				},
+				{
+					chatId: "c1",
+					content: "Here you go.",
+					createdAt: "",
+					id: "m2",
+					movies,
+					role: "assistant",
+				},
+			],
+			title: "Old chat",
+			updatedAt: "",
+		});
+		renderWithQuery(<AskPageContent />);
+
+		await user.click(screen.getByRole("button", { name: /Past chats/ }));
+		await user.click(await screen.findByRole("button", { name: "Old chat" }));
+
+		await waitFor(() =>
+			expect(setMessages).toHaveBeenCalledWith([
+				{
+					id: "m1",
+					parts: [{ text: "Something hopeful", type: "text" }],
+					role: "user",
+				},
+				{
+					id: "m2",
+					parts: [
+						{ text: "Here you go.", type: "text" },
+						{
+							input: { phrase: "" },
+							output: { movies, phrase: "" },
+							state: "output-available",
+							toolCallId: "restored-m2",
+							type: "tool-searchMovies",
+						},
+					],
+					role: "assistant",
+				},
+			]),
+		);
 	});
 
 	it("disables past chats while one is loading", async () => {
@@ -304,6 +377,129 @@ describe("AskPageContent", () => {
 		expect(await screen.findByRole("alert")).toHaveTextContent(
 			"Sign in to use Ask AI.",
 		);
+	});
+
+	it("deletes a past chat from the history list", async () => {
+		const user = userEvent.setup();
+		vi.mocked(chatService.deleteChat).mockResolvedValue(undefined);
+		renderWithQuery(<AskPageContent />);
+
+		await user.click(screen.getByRole("button", { name: /Past chats/ }));
+		await user.click(
+			await screen.findByRole("button", { name: "Delete Old chat" }),
+		);
+
+		await waitFor(() =>
+			expect(chatService.deleteChat).toHaveBeenCalledWith(
+				"c1",
+				expect.anything(),
+			),
+		);
+	});
+
+	it("resets to a fresh chat when the open chat is deleted", async () => {
+		const user = userEvent.setup();
+		vi.mocked(chatService.getChat).mockResolvedValue({
+			createdAt: "",
+			id: "c1",
+			messages: [
+				{
+					chatId: "c1",
+					content: "Something hopeful",
+					createdAt: "",
+					id: "m1",
+					movies: [],
+					role: "user",
+				},
+			],
+			title: "Old chat",
+			updatedAt: "",
+		});
+		vi.mocked(chatService.deleteChat).mockResolvedValue(undefined);
+		renderWithQuery(<AskPageContent />);
+
+		await user.click(screen.getByRole("button", { name: /Past chats/ }));
+		await user.click(await screen.findByRole("button", { name: "Old chat" }));
+		await waitFor(() => expect(chatService.getChat).toHaveBeenCalled());
+
+		await user.click(screen.getByRole("button", { name: /Past chats/ }));
+		await user.click(
+			await screen.findByRole("button", { name: "Delete Old chat" }),
+		);
+
+		await waitFor(() =>
+			expect(chatService.deleteChat).toHaveBeenCalledWith(
+				"c1",
+				expect.anything(),
+			),
+		);
+		await waitFor(() => expect(setMessages).toHaveBeenCalledWith([]));
+	});
+
+	it("surfaces a failed delete instead of leaving the click silent", async () => {
+		const user = userEvent.setup();
+		vi.mocked(chatService.deleteChat).mockRejectedValue(
+			new Error("Chat not found."),
+		);
+		renderWithQuery(<AskPageContent />);
+
+		await user.click(screen.getByRole("button", { name: /Past chats/ }));
+		await user.click(
+			await screen.findByRole("button", { name: "Delete Old chat" }),
+		);
+
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"Chat not found.",
+		);
+	});
+
+	it("restores the chat from the ?chat param on mount", async () => {
+		searchParams.set("chat", "c1");
+		vi.mocked(chatService.getChat).mockResolvedValue({
+			createdAt: "",
+			id: "c1",
+			messages: [
+				{
+					chatId: "c1",
+					content: "Something hopeful",
+					createdAt: "",
+					id: "m1",
+					movies: [],
+					role: "user",
+				},
+			],
+			title: "Old chat",
+			updatedAt: "",
+		});
+
+		renderWithQuery(<AskPageContent />);
+
+		await waitFor(() =>
+			expect(chatService.getChat).toHaveBeenCalledWith("c1", expect.anything()),
+		);
+		await waitFor(() =>
+			expect(setMessages).toHaveBeenCalledWith([
+				{
+					id: "m1",
+					parts: [{ text: "Something hopeful", type: "text" }],
+					role: "user",
+				},
+			]),
+		);
+	});
+
+	it("drops an unknown ?chat param and surfaces the error", async () => {
+		searchParams.set("chat", "missing");
+		vi.mocked(chatService.getChat).mockRejectedValue(
+			new Error("Chat not found."),
+		);
+
+		renderWithQuery(<AskPageContent />);
+
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"Chat not found.",
+		);
+		await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/ask"));
 	});
 
 	it("does not fetch chat models for a signed-out visitor", () => {

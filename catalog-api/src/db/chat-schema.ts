@@ -1,6 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import type { MoviePick } from "../services/chatService";
 
 // 1. Tabela Chat
 export const chats = pgTable("chats", {
@@ -28,6 +29,10 @@ export const messages = pgTable("messages", {
 		.references(() => chats.id, { onDelete: "cascade" }),
 	role: text("role", { enum: ["user", "assistant", "system"] }).notNull(),
 	content: text("content").notNull(),
+	// AI-suggested movie cards for this message (searchMovies tool output), so
+	// past chats can restore them. Null for messages without picks; readers
+	// default it to []. Type-only import keeps MoviePick canonical in the service.
+	movies: jsonb("movies").$type<MoviePick[]>(),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.defaultNow()
 		.notNull(),
