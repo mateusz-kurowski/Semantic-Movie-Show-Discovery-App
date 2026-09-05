@@ -46,8 +46,21 @@ const createChat = async (title?: string): Promise<Chat> => {
 	return await response.json();
 };
 
-const listChats = async (): Promise<Chat[]> => {
-	const response = await authedFetch(chatUrl());
+export interface ListChatsParams {
+	limit?: number;
+	offset?: number;
+}
+
+const listChats = async (params?: ListChatsParams): Promise<Chat[]> => {
+	const search = new URLSearchParams();
+	if (params?.limit !== undefined) {
+		search.set("limit", String(params.limit));
+	}
+	if (params?.offset !== undefined) {
+		search.set("offset", String(params.offset));
+	}
+	const query = search.toString();
+	const response = await authedFetch(chatUrl(query ? `?${query}` : ""));
 	return await response.json();
 };
 

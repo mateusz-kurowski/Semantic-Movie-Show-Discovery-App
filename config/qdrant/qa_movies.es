@@ -1,10 +1,10 @@
-// Canonical Qdrant schema for the DEV `dev_movies` collection.
+// Canonical Qdrant schema for the DEV `qa_movies` collection.
 // Ownership: keep in agreement with the ingester's CreateCollection
 // (catalog-ingester/search.go) and catalog-api's vector/payload expectations.
 // Covered by the qdrant-consistency skill. Apply top-to-bottom after
-// DELETE /collections/dev_movies. Prod counterpart: movies.es (identical
+// DELETE /collections/qa_movies. Prod counterpart: movies.es (identical
 // except the collection name).
-PUT /collections/dev_movies
+PUT /collections/qa_movies
 {
   "vectors": {
     "overview-dense-vector": {
@@ -37,67 +37,67 @@ PUT /collections/dev_movies
 }
 
 // Payload Indexes
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "genres",
   "field_schema": "keyword"
 }
 
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "keywords",
   "field_schema": "keyword"
 }
 
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "original_language",
   "field_schema": "keyword"
 }
 
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "status",
   "field_schema": "keyword"
 }
 
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "adult",
   "field_schema": "bool"
 }
 
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "vote_average",
   "field_schema": "float"
 }
 
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "vote_count",
   "field_schema": "integer"
 }
 
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "release_date",
   "field_schema": "datetime"
 }
 
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "runtime",
   "field_schema": "integer"
 }
 
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "popularity",
   "field_schema": "float"
 }
 
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "title",
   "field_schema": {
@@ -109,7 +109,7 @@ PUT /collections/dev_movies/index
   }
 }
 
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "original_title",
   "field_schema": {
@@ -121,7 +121,7 @@ PUT /collections/dev_movies/index
   }
 }
 
-PUT /collections/dev_movies/index
+PUT /collections/qa_movies/index
 {
   "field_name": "original_id",
   "field_schema": "integer"

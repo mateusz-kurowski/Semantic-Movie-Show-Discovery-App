@@ -5,6 +5,7 @@ import type { Movie } from "../types/movie";
 
 export interface GetMoviesParams {
   limit: number;
+  offset: number;
   sortBy?: keyof Movie;
   order?: "asc" | "desc";
 }
@@ -13,6 +14,7 @@ export type MovieWithGenres = Movie & { genres: string[] };
 
 const getMovies = async ({
   limit,
+  offset,
   sortBy,
   order,
 }: GetMoviesParams): Promise<Movie[]> => {
@@ -23,7 +25,8 @@ const getMovies = async ({
     .select()
     .from(movie)
     .orderBy(sortFn(columnRef))
-    .limit(limit);
+    .limit(limit)
+    .offset(offset);
   return movies;
 };
 

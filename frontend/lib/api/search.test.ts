@@ -34,6 +34,29 @@ describe("searchService.hybridSearch", () => {
 		});
 	});
 
+	it("sends the paging offset in the POST body", async () => {
+		await searchService.hybridSearch({
+			phrase: "hopeful sci-fi",
+			topK: 10,
+			offset: 10,
+		});
+
+		expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+			phrase: "hopeful sci-fi",
+			topK: 10,
+			offset: 10,
+		});
+	});
+
+	it("omits offset when the caller does not set one", async () => {
+		await searchService.hybridSearch({ phrase: "noir", topK: 10 });
+
+		expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+			phrase: "noir",
+			topK: 10,
+		});
+	});
+
 	it("returns the scored results untouched", async () => {
 		// catalog-api fuses with RRF, so score is a rank sum (~0.03), not a 0-1
 		// similarity — nothing in the client may rescale it.

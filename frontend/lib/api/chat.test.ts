@@ -41,6 +41,20 @@ describe("chatService", () => {
 		expect(fetchMock.mock.calls[1][0]).toBe("http://api.test/chat/chat_1");
 	});
 
+	it("requests a page of chats with limit and offset", async () => {
+		await chatService.listChats({ limit: 20, offset: 20 });
+
+		expect(fetchMock.mock.calls[0][0]).toBe(
+			"http://api.test/chat?limit=20&offset=20",
+		);
+	});
+
+	it("sends only the pagination params it is given", async () => {
+		await chatService.listChats({ offset: 40 });
+
+		expect(fetchMock.mock.calls[0][0]).toBe("http://api.test/chat?offset=40");
+	});
+
 	it("explains an unauthenticated request", async () => {
 		fetchMock.mockResolvedValue({ ok: false, status: 401 } as Response);
 

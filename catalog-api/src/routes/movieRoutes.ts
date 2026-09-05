@@ -23,9 +23,10 @@ const allowedKeys = [
 const movieRoutes = new Elysia({ name: "movies", prefix: "/movies" })
   .get(
     "",
-    async ({ query: { limit, sortBy, order } }) => {
+    async ({ query: { limit, offset, sortBy, order } }) => {
       const movies = movieService.getMovies({
         limit,
+        offset,
         order,
         sortBy,
       });
@@ -39,6 +40,12 @@ const movieRoutes = new Elysia({ name: "movies", prefix: "/movies" })
           examples: [10, 20, 50],
           maximum: 100,
           minimum: 1,
+        }),
+        offset: t.Number({
+          default: 0,
+          description: "Number of movies to skip",
+          examples: [0, 20, 40],
+          minimum: 0,
         }),
         order: t.Union([t.Literal("asc"), t.Literal("desc")], {
           default: "desc",

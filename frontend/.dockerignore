@@ -9,3 +9,8 @@ biome.json
 Dockerfile
 README.md
 *.md
+design/
+*.tsbuildinfo
+next-env.d.ts
+*.log
+coverage/

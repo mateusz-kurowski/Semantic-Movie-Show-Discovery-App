@@ -1,6 +1,13 @@
 "use client";
 import { useChat } from "@ai-sdk/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	type InfiniteData,
+	type QueryKey,
+	useInfiniteQuery,
+	useMutation,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { History, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -9,7 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EmptyState from "@/components/shared/empty-state";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { chatService, chatStreamUrl } from "@/lib/api/chat";
+import { type Chat, chatService, chatStreamUrl } from "@/lib/api/chat";
 import { watchlistService } from "@/lib/api/watchlist";
 import { authClient } from "@/lib/auth/auth-client";
 import AiMovieCard, { type MoviePick } from "./AiMovieCard";
@@ -29,6 +36,11 @@ const OPENERS = [
 	"A 90s thriller I can watch with my parents",
 	"That film where a man relives the same day",
 ];
+
+// Matches the backend's default page size (GET /chat: limit default 20,
+// max 100). A page that comes back short means there is nothing left to
+// fetch, so the history list stops there.
+export const CHAT_HISTORY_PAGE_SIZE = 20;
 
 interface SearchMoviesOutput {
 	movies: MoviePick[];
@@ -166,11 +178,62 @@ const AskPageContent = () => {
 
 	const isStreaming = status === "streaming" || status === "submitted";
 
-	const pastChats = useQuery({
+	const pastChats = useInfiniteQuery<
+		Chat[],
+		Error,
+		InfiniteData<Chat[]>,
+		QueryKey,
+		number
+	>({
 		enabled: isHistoryOpen,
-		queryFn: chatService.listChats,
+		getNextPageParam: (lastPage, allPages) => {
+			if (lastPage.length < CHAT_HISTORY_PAGE_SIZE) {
+				return undefined;
+			}
+			return allPages.flat().length;
+		},
+		initialPageParam: 0,
+		queryFn: ({ pageParam }) =>
+			chatService.listChats({
+				limit: CHAT_HISTORY_PAGE_SIZE,
+				offset: pageParam,
+			}),
 		queryKey: ["chats"],
 	});
+	const pastChatList = useMemo(
+		() => pastChats.data?.pages.flat() ?? [],
+		[pastChats.data],
+	);
+	const {
+		fetchNextPage: fetchNextChatPage,
+		hasNextPage: hasMoreChats,
+		isFetchingNextPage: isFetchingMoreChats,
+	} = pastChats;
+
+	// Infinite scroll for the history list: a sentinel div at the end of the
+	// list pulls the next page in when it scrolls into view. Native
+	// IntersectionObserver on purpose — no extra dependency for one trigger.
+	const loadMoreChatsRef = useRef<HTMLDivElement | null>(null);
+	useEffect(() => {
+		if (!isHistoryOpen) return;
+		const target = loadMoreChatsRef.current;
+		if (!target) return;
+		if (typeof IntersectionObserver === "undefined") return;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (
+					entries.some((entry) => entry.isIntersecting) &&
+					hasMoreChats &&
+					!isFetchingMoreChats
+				) {
+					void fetchNextChatPage();
+				}
+			},
+			{ rootMargin: "200px" },
+		);
+		observer.observe(target);
+		return () => observer.disconnect();
+	}, [fetchNextChatPage, hasMoreChats, isFetchingMoreChats, isHistoryOpen]);
 
 	const saveAll = useMutation({
 		mutationFn: async (movies: MoviePick[]) => {
@@ -341,10 +404,14 @@ const AskPageContent = () => {
 								{pastChats.error.message}
 							</p>
 						)}
-						{pastChats.data?.length === 0 && (
-							<p className="text-sm text-outline">No past conversations yet.</p>
-						)}
-						{pastChats.data?.map((chat) => {
+						{!pastChats.isPending &&
+							!pastChats.isError &&
+							pastChatList.length === 0 && (
+								<p className="text-sm text-outline">
+									No past conversations yet.
+								</p>
+							)}
+						{pastChatList.map((chat) => {
 							const isDeleting =
 								deleteChat.isPending && deleteChat.variables === chat.id;
 							return (
@@ -380,6 +447,32 @@ const AskPageContent = () => {
 								</div>
 							);
 						})}
+						{hasMoreChats && (
+							<div
+								ref={loadMoreChatsRef}
+								aria-hidden="true"
+								data-testid="chat-history-sentinel"
+								className="flex justify-center py-1"
+							>
+								{isFetchingMoreChats && (
+									<Skeleton className="h-9 w-full rounded-lg" />
+								)}
+							</div>
+						)}
+						{pastChats.isFetchNextPageError && (
+							<div className="flex items-center gap-2">
+								<p className="text-sm text-destructive">
+									Could not load more chats.
+								</p>
+								<Button
+									variant="ghost"
+									className="h-8 cursor-pointer rounded-full text-[13px]"
+									onClick={() => void fetchNextChatPage()}
+								>
+									Retry
+								</Button>
+							</div>
+						)}
 						{openChat.isError && (
 							<p role="alert" className="text-sm text-destructive">
 								{openChat.error.message}
@@ -450,7 +543,15 @@ const AskPageContent = () => {
 											);
 										}
 
-										if (part.type !== "tool-searchMovies") return null;
+										if (
+											part.type !== "tool-searchMovies" &&
+											!(
+												part.type === "dynamic-tool" &&
+												"toolName" in part &&
+												part.toolName === "searchMovies"
+											)
+										)
+											return null;
 
 										if (part.state !== "output-available") {
 											return (

@@ -15,8 +15,24 @@ const authedFetch = async (url: string, init?: RequestInit) => {
 	return response;
 };
 
-const getWatchlist = async (): Promise<Movie[]> => {
-	const response = await authedFetch(watchlistUrl());
+// Matches the backend default (GET /watchlist: limit default 20, max 100).
+export const WATCHLIST_PAGE_SIZE = 20;
+
+export interface ListWatchlistParams {
+	limit?: number;
+	offset?: number;
+}
+
+const getWatchlist = async (params?: ListWatchlistParams): Promise<Movie[]> => {
+	const search = new URLSearchParams();
+	if (params?.limit !== undefined) {
+		search.set("limit", String(params.limit));
+	}
+	if (params?.offset !== undefined) {
+		search.set("offset", String(params.offset));
+	}
+	const query = search.toString();
+	const response = await authedFetch(watchlistUrl(query ? `?${query}` : ""));
 	return await response.json();
 };
 

@@ -35,6 +35,14 @@ describe("movieService.getMovies", () => {
 		);
 	});
 
+	it("appends the offset when paging", async () => {
+		await movieService.getMovies({ limit: 10, offset: 10 });
+
+		expect(requestedUrl()).toBe(
+			"http://api.test/movies?sortBy=popularity&order=desc&limit=10&offset=10",
+		);
+	});
+
 	it("returns the parsed body", async () => {
 		const movies = [{ id: "1", title: "Arrival" }] as Movie[];
 		fetchMock.mockResolvedValue(jsonResponse(movies));

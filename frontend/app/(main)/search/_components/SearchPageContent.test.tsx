@@ -41,6 +41,7 @@ describe("SearchPageContent", () => {
 			expect(searchService.hybridSearch).toHaveBeenCalledWith({
 				phrase: "hopeful sci-fi",
 				topK: 10,
+				offset: 0,
 			}),
 		);
 	});
@@ -52,6 +53,7 @@ describe("SearchPageContent", () => {
 			expect(searchService.hybridSearch).toHaveBeenCalledWith({
 				phrase: "hopeful sci-fi",
 				topK: 10,
+				offset: 0,
 			}),
 		);
 	});

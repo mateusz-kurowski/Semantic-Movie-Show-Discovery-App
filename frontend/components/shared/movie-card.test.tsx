@@ -8,6 +8,7 @@ import MovieCard from "./movie-card";
 const { useSession } = vi.hoisted(() => ({ useSession: vi.fn() }));
 vi.mock("@/lib/auth/auth-client", () => ({ authClient: { useSession } }));
 vi.mock("@/lib/api/watchlist", () => ({
+	WATCHLIST_PAGE_SIZE: 20,
 	watchlistService: {
 		addToWatchlist: vi.fn(),
 		getWatchlist: vi.fn(),
@@ -78,6 +79,19 @@ describe("MovieCard", () => {
 			expect(watchlistService.addToWatchlist).toHaveBeenCalledWith(27205),
 		);
 		expect(fireEvent.click(screen.getByRole("link"))).toBe(true);
+	});
+
+	it("reads bookmark state through the paged watchlist", async () => {
+		signIn();
+		renderWithQuery(<MovieCard movie={movie} />);
+
+		await screen.findByRole("button", {
+			name: "Save Inception to watchlist",
+		});
+		expect(watchlistService.getWatchlist).toHaveBeenCalledWith({
+			limit: 20,
+			offset: 0,
+		});
 	});
 
 	it("removes a film that is already saved", async () => {

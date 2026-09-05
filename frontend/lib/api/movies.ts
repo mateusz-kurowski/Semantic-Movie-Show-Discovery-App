@@ -26,13 +26,23 @@ const getMovies = async ({
 	sortBy = "popularity",
 	order = "desc",
 	limit = 10,
+	offset,
 }: {
 	sortBy?: string;
 	order?: "asc" | "desc";
 	limit: number;
+	offset?: number;
 }): Promise<Movie[]> => {
+	const params = new URLSearchParams({
+		sortBy,
+		order,
+		limit: String(limit),
+	});
+	if (offset !== undefined) {
+		params.set("offset", String(offset));
+	}
 	const response = await fetch(
-		`${process.env.NEXT_PUBLIC_SEARCH_API_URL}/movies?sortBy=${sortBy}&order=${order}&limit=${limit}`,
+		`${process.env.NEXT_PUBLIC_SEARCH_API_URL}/movies?${params.toString()}`,
 	);
 	return await response.json();
 };

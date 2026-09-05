@@ -4,11 +4,11 @@ import { searchService } from "../services/searchService";
 const searchRoutes = new Elysia({ name: "search", prefix: "/search" })
   .post(
     "/semantic",
-    async ({ body: { phrase, topK } }) => {
+    async ({ body: { phrase, topK, offset } }) => {
       console.log(`Search phrase: ${phrase}`);
 
       try {
-        return await searchService.semanticSearch(phrase, topK);
+        return await searchService.semanticSearch(phrase, topK, offset);
       } catch (error) {
         console.error("Error during search:", error);
         if (error && typeof error === "object" && "data" in error) {
@@ -41,16 +41,27 @@ const searchRoutes = new Elysia({ name: "search", prefix: "/search" })
           minimum: 1,
           title: "Top K Results",
         }),
+        offset: t.Number({
+          default: 0,
+          description: "The number of ranked results to skip",
+          error: "Offset must be a non-negative integer",
+          examples: [0, 5, 10],
+          maximum: 100,
+          minimum: 0,
+          title: "Result Offset",
+        }),
       }),
     },
   )
   .post(
     "/hybrid",
-    async ({ body: { phrase, topK } }) => {
+    async ({ body: { phrase, topK, offset } }) => {
       console.log(`Hybrid search phrase: ${phrase}`);
 
       try {
-        return await searchService.hybridSearch(phrase, topK);
+        return await searchService.hybridSearch(phrase, topK, undefined, {
+          offset,
+        });
       } catch (error) {
         console.error("Error during hybrid search:", error);
         if (error && typeof error === "object" && "data" in error) {
@@ -82,6 +93,15 @@ const searchRoutes = new Elysia({ name: "search", prefix: "/search" })
           examples: [5],
           minimum: 1,
           title: "Top K Results",
+        }),
+        offset: t.Number({
+          default: 0,
+          description: "The number of ranked results to skip",
+          error: "Offset must be a non-negative integer",
+          examples: [0, 5, 10],
+          maximum: 100,
+          minimum: 0,
+          title: "Result Offset",
         }),
       }),
     },

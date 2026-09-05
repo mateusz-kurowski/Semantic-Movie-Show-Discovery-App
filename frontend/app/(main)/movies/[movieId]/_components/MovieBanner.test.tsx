@@ -7,6 +7,7 @@ import MovieBanner from "./MovieBanner";
 const { useSession } = vi.hoisted(() => ({ useSession: vi.fn() }));
 vi.mock("@/lib/auth/auth-client", () => ({ authClient: { useSession } }));
 vi.mock("@/lib/api/watchlist", () => ({
+	WATCHLIST_PAGE_SIZE: 20,
 	watchlistService: {
 		addToWatchlist: vi.fn(),
 		getWatchlist: vi.fn(),

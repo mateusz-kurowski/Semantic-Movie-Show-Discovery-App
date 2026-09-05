@@ -1,10 +1,10 @@
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { chatService } from "@/lib/api/chat";
 import { watchlistService } from "@/lib/api/watchlist";
 import { renderWithQuery } from "@/test/render";
-import AskPageContent from "./AskPageContent";
+import AskPageContent, { CHAT_HISTORY_PAGE_SIZE } from "./AskPageContent";
 
 const { useChat, useSession, sendMessage, setMessages, stop } = vi.hoisted(
 	() => ({
@@ -36,6 +36,7 @@ vi.mock("@/lib/api/chat", () => ({
 	chatStreamUrl: (id: string) => `http://api.test/chat/${id}/stream`,
 }));
 vi.mock("@/lib/api/watchlist", () => ({
+	WATCHLIST_PAGE_SIZE: 20,
 	watchlistService: {
 		addToWatchlist: vi.fn(),
 		getWatchlist: vi.fn(),
@@ -142,6 +143,28 @@ describe("AskPageContent", () => {
 		expect(
 			screen.getByText("These three keep the warmth."),
 		).toBeInTheDocument();
+		expect(screen.getByText("Coco")).toBeInTheDocument();
+	});
+
+	it("renders films from a dynamic-tool searchMovies part", () => {
+		chatWith([
+			{
+				id: "m1",
+				parts: [{ text: "Something hopeful", type: "text" }],
+				role: "user",
+			},
+			{
+				id: "m2",
+				parts: [
+					{ text: "These three keep the warmth.", type: "text" },
+					{ ...moviePart, toolName: "searchMovies", type: "dynamic-tool" },
+				],
+				role: "assistant",
+			},
+		]);
+
+		renderWithQuery(<AskPageContent />);
+
 		expect(screen.getByText("Coco")).toBeInTheDocument();
 	});
 
@@ -553,5 +576,95 @@ describe("AskPageContent", () => {
 		);
 
 		expect(trigger).toHaveTextContent("claude-opus-5");
+	});
+
+	it("requests the first page of past chats with limit and offset", async () => {
+		const user = userEvent.setup();
+		renderWithQuery(<AskPageContent />);
+
+		await user.click(screen.getByRole("button", { name: /Past chats/ }));
+
+		expect(
+			await screen.findByRole("button", { name: "Old chat" }),
+		).toBeInTheDocument();
+		expect(chatService.listChats).toHaveBeenCalledWith({
+			limit: CHAT_HISTORY_PAGE_SIZE,
+			offset: 0,
+		});
+	});
+
+	it("hides the scroll sentinel when the first page comes back short", async () => {
+		const user = userEvent.setup();
+		renderWithQuery(<AskPageContent />);
+
+		await user.click(screen.getByRole("button", { name: /Past chats/ }));
+		expect(
+			await screen.findByRole("button", { name: "Old chat" }),
+		).toBeInTheDocument();
+
+		expect(screen.queryByTestId("chat-history-sentinel")).toBeNull();
+	});
+
+	it("loads the next page when the sentinel scrolls into view", async () => {
+		const user = userEvent.setup();
+		const firstPage = Array.from(
+			{ length: CHAT_HISTORY_PAGE_SIZE },
+			(_, index) => ({
+				createdAt: "",
+				id: `c${index}`,
+				title: `Chat ${index}`,
+				updatedAt: "",
+			}),
+		);
+		vi.mocked(chatService.listChats).mockImplementation(async (params) => {
+			if ((params?.offset ?? 0) === 0) return firstPage;
+			return [
+				{ createdAt: "", id: "c-next", title: "Chat next", updatedAt: "" },
+			];
+		});
+		// jsdom ships no IntersectionObserver, so a stub class records the
+		// component's callback and the test fires it by hand. A class (not
+		// vi.fn) because the component instantiates it with `new`. Only
+		// isIntersecting is faked because it is the only field the component
+		// reads, and the observer instance is omitted because the component
+		// never touches it.
+		type IntersectHandler = (entries: { isIntersecting: boolean }[]) => void;
+		const seenCallbacks: IntersectHandler[] = [];
+		class IntersectionObserverStub {
+			constructor(callback: IntersectHandler) {
+				seenCallbacks.push(callback);
+			}
+			observe() {}
+			unobserve() {}
+			disconnect() {}
+		}
+		vi.stubGlobal("IntersectionObserver", IntersectionObserverStub);
+		renderWithQuery(<AskPageContent />);
+
+		await user.click(screen.getByRole("button", { name: /Past chats/ }));
+		expect(
+			await screen.findByRole("button", { name: "Chat 0" }),
+		).toBeInTheDocument();
+		expect(
+			await screen.findByTestId("chat-history-sentinel"),
+		).toBeInTheDocument();
+
+		await act(async () => {
+			for (const callback of seenCallbacks) {
+				callback([{ isIntersecting: true }]);
+			}
+		});
+
+		expect(
+			await screen.findByRole("button", { name: "Chat next" }),
+		).toBeInTheDocument();
+		expect(chatService.listChats).toHaveBeenCalledWith({
+			limit: CHAT_HISTORY_PAGE_SIZE,
+			offset: CHAT_HISTORY_PAGE_SIZE,
+		});
+		// The second page came back short, so there is nothing left to fetch.
+		await waitFor(() =>
+			expect(screen.queryByTestId("chat-history-sentinel")).toBeNull(),
+		);
 	});
 });

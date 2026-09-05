@@ -31,13 +31,14 @@ Rules:
 - Always call searchMovies before answering, including on follow-ups — never answer from conversation context alone.
 - Translate the mood, plot fragment or comparison the user gives you into a descriptive search phrase. Search again with a different phrase when they narrow the request.
 - When the user states a decade or years, pass yearFrom/yearTo to searchMovies and keep the phrase to vibe and plot only.
+- Never pass yearFrom/yearTo as 0; omit both unless the user stated a decade or years.
 - Always present the closest matches the tool returns, with honest caveats when they fall outside the requested years (e.g. "closest in the catalogue, outside your decade") — never end with zero cards shown when the tool returned movies.
 - Never claim to filter by family-suitability or age rating: the catalogue carries no certification data, only an adult flag. If asked, say suitability cannot be verified from catalogue data.
 - Keep replies to two or three sentences before that line. Say why the picks fit the request, and name anything you deliberately left out.
 - The tool result is already shown to the user as film cards, so do not repeat titles, years or ratings as a list.
 - If the search comes back empty, say so and suggest how to loosen the request.
-- When the user asks about a specific film (names a title, "tell me about X", "the spider-man movie from 2002"), call getMovieDetails with that title and the stated year when one is given, and prefer it over searchMovies for such asks.
-- Keep searchMovies for mood/vibe/discovery requests ("something like...", "show me...", "find...").
+- When the user asks about a specific film with no discovery intent (pure detail ask like "tell me about X" or "the spider-man movie from 2002"), call getMovieDetails with that title and the stated year when one is given, and prefer it over searchMovies for such asks.
+- Comparison/discovery intent ("something like X, but...", "similar to X", "less/more <tone> than X", "show me...", "find...") ALWAYS calls searchMovies, even when a title is named; when a comparison query names a title, call searchMovies in the same turn (translate the comparison into a descriptive vibe-and-plot phrase, never the title itself).
 - Details answers are prose built from the getMovieDetails result; film cards still come only from searchMovies output, so do not present the details result as a card list.
 - If getMovieDetails returns found false, say so and suggest how to loosen the request (check spelling, drop the year) instead of inventing details.
 - End EVERY reply with a standalone last line in exactly this format: Try: <one concrete follow-up search the user could send next> (e.g. a loosened phrase adding setting, decade, or actor).`;
@@ -78,17 +79,32 @@ const toPick = (payload: SearchPayload): MoviePick | null => {
 	};
 };
 
+// The model sometimes emits yearFrom/yearTo as 0 (or other implausible
+// values) when the user stated no years; Qdrant would then pre-filter to
+// "0-01-01".."0-12-31" and match zero points. Drop anything non-finite,
+// <= 0, or outside plausible film history (< 1880 or > 2100).
+const sanitizeYear = (year: number | undefined): number | undefined => {
+	if (year === undefined || !Number.isFinite(year)) return undefined;
+	if (year <= 0 || year < 1880 || year > 2100) return undefined;
+	return year;
+};
+
 const searchMovies = tool({
 	description:
 		"Search the ReelFind catalogue for films matching a natural-language description of mood, theme or plot. Returns the films to show the user. Optionally pre-filters by release year when the user states a decade or years.",
 	execute: async ({ phrase, limit, yearFrom, yearTo }) => {
+		const cleanYearFrom = sanitizeYear(yearFrom);
+		const cleanYearTo = sanitizeYear(yearTo);
+		console.log(
+			`[searchMovies] phrase: ${phrase}, limit: ${limit ?? 4}, yearFrom: ${yearFrom ?? "none"}->${cleanYearFrom ?? "none"}, yearTo: ${yearTo ?? "none"}->${cleanYearTo ?? "none"}`,
+		);
 		// Per-movie collapse, rerank, and slicing to the requested count all
 		// happen in searchService.hybridSearch; the byId guard below only
 		// protects against residual duplicates.
 		const yearFilter =
-			yearFrom === undefined && yearTo === undefined
+			cleanYearFrom === undefined && cleanYearTo === undefined
 				? undefined
-				: { yearFrom, yearTo };
+				: { yearFrom: cleanYearFrom, yearTo: cleanYearTo };
 		const points = await searchService.hybridSearch(
 			phrase,
 			limit ?? 4,
@@ -124,12 +140,12 @@ const searchMovies = tool({
 			},
 			yearFrom: {
 				description:
-					"Earliest release year (inclusive), e.g. 1990 for '90s films. Only set when the user states a decade or years.",
+					"Earliest release year (inclusive), e.g. 1990 for '90s films. Omit unless the user states a decade or years; never pass 0.",
 				type: "number",
 			},
 			yearTo: {
 				description:
-					"Latest release year (inclusive), e.g. 1999. Only set when the user states a decade or years.",
+					"Latest release year (inclusive), e.g. 1999. Omit unless the user states a decade or years; never pass 0.",
 				type: "number",
 			},
 		},
@@ -147,6 +163,7 @@ const getMovieDetails = tool({
 	description:
 		"Look up details for a specific film by title, optionally disambiguated by release year. Use for asks naming a film ('tell me about X', 'the spider-man movie from 2002'). Falls back to a catalogue search when no title row matches.",
 	execute: async ({ title, year }) => {
+		console.log(`[getMovieDetails] title: ${title}, year: ${year ?? "none"}`);
 		const normalized = title.trim();
 		const conditions = [
 			sql`lower(${movie.title}) = ${normalized.toLowerCase()}`,
@@ -171,6 +188,17 @@ const getMovieDetails = tool({
 			return {
 				found: true,
 				genres,
+				movies: [
+					{
+						genres,
+						id: first.id,
+						posterPath: first.poster_path ?? null,
+						releaseDate,
+						runtime: first.runtime,
+						title: first.title,
+						voteAverage: first.vote_average,
+					},
+				],
 				overview: first.overview,
 				posterPath: first.poster_path,
 				releaseDate,
@@ -193,12 +221,19 @@ const getMovieDetails = tool({
 		);
 		const payload = points[0]?.payload as SearchPayload | undefined;
 		if (!payload?.title) {
-			return { found: false, title: normalized, year: year ?? null };
+			return {
+				found: false,
+				movies: [],
+				title: normalized,
+				year: year ?? null,
+			};
 		}
 		const releaseDate = payload.release_date ?? null;
+		const pick = toPick(payload);
 		return {
 			found: true,
 			genres: payload.genres ?? [],
+			movies: pick ? [pick] : [],
 			overview: payload.overview ?? null,
 			posterPath: payload.poster_path ?? null,
 			releaseDate,
@@ -236,11 +271,14 @@ const textOf = (message: UIMessage) =>
 		.join("")
 		.trim();
 
-// Tool outputs arrive as UI parts (static `tool-searchMovies` or
+// Tool outputs arrive as UI parts (static `tool-<name>` or
 // `dynamic-tool` with toolName), each carrying the execute() result
 // { movies, phrase } once the state is output-available.
+// searchMovies output is the card source; getMovieDetails `movies: [pick]`
+// is a 1-card fallback so a misrouted comparison still renders a card.
 const moviesOf = (message: UIMessage): MoviePick[] => {
-	const byId = new Map<number, MoviePick>();
+	const searchById = new Map<number, MoviePick>();
+	const detailsById = new Map<number, MoviePick>();
 	for (const part of message.parts) {
 		const toolPart = part as {
 			type: string;
@@ -252,18 +290,24 @@ const moviesOf = (message: UIMessage): MoviePick[] => {
 			toolPart.type === "tool-searchMovies" ||
 			(toolPart.type === "dynamic-tool" &&
 				toolPart.toolName === "searchMovies");
+		const isGetMovieDetails =
+			toolPart.type === "tool-getMovieDetails" ||
+			(toolPart.type === "dynamic-tool" &&
+				toolPart.toolName === "getMovieDetails");
 		if (
-			!isSearchMovies ||
+			(!isSearchMovies && !isGetMovieDetails) ||
 			toolPart.state !== "output-available" ||
 			!Array.isArray(toolPart.output?.movies)
 		) {
 			continue;
 		}
+		const byId = isSearchMovies ? searchById : detailsById;
 		for (const movie of toolPart.output.movies ?? []) {
 			if (movie && !byId.has(movie.id)) byId.set(movie.id, movie);
 		}
 	}
-	return [...byId.values()];
+	if (searchById.size > 0) return [...searchById.values()];
+	return [...detailsById.values()];
 };
 
 const persist = async (

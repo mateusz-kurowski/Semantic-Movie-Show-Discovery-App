@@ -11,13 +11,32 @@ const watchlistRoutes = new Elysia({ name: "watchlist", prefix: "/watchlist" })
 	.get(
 		"/",
 		// biome-ignore lint/suspicious/noExplicitAny: Elysia context requires any for macro-injected user
-		async ({ user, status }: any) => {
+		async ({ user, query, status }: any) => {
 			try {
-				return await watchlistService.getWatchlist(user.id);
+				const limit = query.limit ?? 20;
+				const offset = query.offset ?? 0;
+				return await watchlistService.getWatchlist(user.id, limit, offset);
 			} catch (error) {
 				console.error("[WatchlistRoutes] Error fetching watchlist:", error);
 				return status(500, "Failed to fetch watchlist");
 			}
+		},
+		{
+			query: t.Object({
+				limit: t.Number({
+					default: 20,
+					description: "Number of watchlist entries to return",
+					examples: [10, 20, 50],
+					maximum: 100,
+					minimum: 1,
+				}),
+				offset: t.Number({
+					default: 0,
+					description: "Number of watchlist entries to skip",
+					examples: [0, 20, 40],
+					minimum: 0,
+				}),
+			}),
 		},
 	)
 	.post(

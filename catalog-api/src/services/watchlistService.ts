@@ -2,13 +2,15 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "../clients";
 import { movie, watchlist } from "../db/catalog-schema";
 
-const getWatchlist = async (userId: string) => {
+const getWatchlist = async (userId: string, limit = 20, offset = 0) => {
 	const rows = await db
 		.select({ movie })
 		.from(watchlist)
 		.innerJoin(movie, eq(movie.id, watchlist.movie_id))
 		.where(eq(watchlist.user_id, userId))
-		.orderBy(desc(watchlist.id));
+		.orderBy(desc(watchlist.created_at), desc(watchlist.id))
+		.limit(limit)
+		.offset(offset);
 
 	return rows.map((row) => row.movie);
 };

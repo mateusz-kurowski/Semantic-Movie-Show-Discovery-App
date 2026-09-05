@@ -9,6 +9,7 @@ export interface SearchResult {
 
 export interface SearchRequest {
 	topK?: number;
+	offset?: number;
 	phrase: string;
 }
 

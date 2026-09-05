@@ -1,9 +1,9 @@
-import { screen } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Movie } from "@/lib/api/movies";
 import { type SearchResult, searchService } from "@/lib/api/search";
 import { renderWithQuery } from "@/test/render";
-import SearchResultsLayout from "./SearchResultsLayout";
+import SearchResultsLayout, { SEARCH_PAGE_SIZE } from "./SearchResultsLayout";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/lib/api/search", () => ({
@@ -42,6 +42,7 @@ describe("SearchResultsLayout", () => {
 		expect(hybridSearch).toHaveBeenCalledWith({
 			phrase: "hopeful sci-fi",
 			topK: 10,
+			offset: 0,
 		});
 	});
 
@@ -84,4 +85,107 @@ describe("SearchResultsLayout", () => {
 
 		expect(screen.queryByText(/ranked by meaning/)).toBeNull();
 	});
+
+	it("explains an empty result set instead of showing a blank grid", async () => {
+		hybridSearch.mockResolvedValue([]);
+
+		renderWithQuery(<SearchResultsLayout phrase="hopeful sci-fi" />);
+
+		expect(
+			await screen.findByRole("heading", { name: "No matches found" }),
+		).toBeInTheDocument();
+	});
+
+	it("hides the scroll sentinel when the first page comes back short", async () => {
+		renderWithQuery(<SearchResultsLayout phrase="hopeful sci-fi" />);
+
+		expect(await screen.findByText("Arrival")).toBeInTheDocument();
+		expect(screen.queryByTestId("search-results-sentinel")).toBeNull();
+	});
+
+	it("loads the next page when the sentinel scrolls into view", async () => {
+		const firstPage = Array.from({ length: SEARCH_PAGE_SIZE }, (_, index) =>
+			resultFor(`${index}`, `Film ${index}`),
+		);
+		hybridSearch.mockImplementation(async (request) => {
+			if ((request.offset ?? 0) === 0) return firstPage;
+			return [resultFor("10", "Film 10")];
+		});
+		const seenCallbacks = stubIntersectionObserver();
+		renderWithQuery(<SearchResultsLayout phrase="hopeful sci-fi" />);
+
+		expect(await screen.findByText("Film 0")).toBeInTheDocument();
+		expect(
+			await screen.findByTestId("search-results-sentinel"),
+		).toBeInTheDocument();
+
+		await fireSentinels(seenCallbacks);
+
+		expect(await screen.findByText("Film 10")).toBeInTheDocument();
+		expect(hybridSearch).toHaveBeenCalledWith({
+			phrase: "hopeful sci-fi",
+			topK: SEARCH_PAGE_SIZE,
+			offset: SEARCH_PAGE_SIZE,
+		});
+		// The second page came back short, so there is nothing left to fetch.
+		await waitFor(() =>
+			expect(screen.queryByTestId("search-results-sentinel")).toBeNull(),
+		);
+	});
+
+	it("stops paging once one hundred results are loaded", async () => {
+		hybridSearch.mockImplementation(async (request) => {
+			const start = request.offset ?? 0;
+			return Array.from({ length: SEARCH_PAGE_SIZE }, (_, index) =>
+				resultFor(`${start + index}`, `Film ${start + index}`),
+			);
+		});
+		const seenCallbacks = stubIntersectionObserver();
+		renderWithQuery(<SearchResultsLayout phrase="hopeful sci-fi" />);
+
+		expect(await screen.findByText("Film 0")).toBeInTheDocument();
+		for (let loaded = SEARCH_PAGE_SIZE; loaded < 100; loaded += 10) {
+			await fireSentinels(seenCallbacks);
+			expect(await screen.findByText(`Film ${loaded}`)).toBeInTheDocument();
+		}
+
+		await waitFor(() => expect(hybridSearch).toHaveBeenCalledTimes(10));
+		expect(hybridSearch).toHaveBeenLastCalledWith({
+			phrase: "hopeful sci-fi",
+			topK: SEARCH_PAGE_SIZE,
+			offset: 90,
+		});
+		await waitFor(() =>
+			expect(screen.queryByTestId("search-results-sentinel")).toBeNull(),
+		);
+	});
 });
+
+// jsdom ships no IntersectionObserver, so a stub class records the
+// component's callbacks and the tests fire them by hand. A class (not vi.fn)
+// because the component instantiates it with `new`. Only isIntersecting is
+// faked because it is the only field the component reads, and the observer
+// instance is omitted because the component never touches it.
+type IntersectHandler = (entries: { isIntersecting: boolean }[]) => void;
+
+const stubIntersectionObserver = () => {
+	const seenCallbacks: IntersectHandler[] = [];
+	class IntersectionObserverStub {
+		constructor(callback: IntersectHandler) {
+			seenCallbacks.push(callback);
+		}
+		observe() {}
+		unobserve() {}
+		disconnect() {}
+	}
+	vi.stubGlobal("IntersectionObserver", IntersectionObserverStub);
+	return seenCallbacks;
+};
+
+const fireSentinels = async (callbacks: IntersectHandler[]) => {
+	await act(async () => {
+		for (const callback of callbacks) {
+			callback([{ isIntersecting: true }]);
+		}
+	});
+};

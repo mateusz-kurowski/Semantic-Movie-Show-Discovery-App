@@ -25,6 +25,22 @@ describe("watchlistService", () => {
 		expect(init.credentials).toBe("include");
 	});
 
+	it("requests a page of the watchlist with limit and offset", async () => {
+		await watchlistService.getWatchlist({ limit: 20, offset: 20 });
+
+		const [url, init] = fetchMock.mock.calls[0];
+		expect(url).toBe("http://api.test/watchlist?limit=20&offset=20");
+		expect(init.credentials).toBe("include");
+	});
+
+	it("sends only the pagination params it is given", async () => {
+		await watchlistService.getWatchlist({ offset: 40 });
+
+		expect(fetchMock.mock.calls[0][0]).toBe(
+			"http://api.test/watchlist?offset=40",
+		);
+	});
+
 	it("posts the movie id when saving", async () => {
 		await watchlistService.addToWatchlist(27205);
 
