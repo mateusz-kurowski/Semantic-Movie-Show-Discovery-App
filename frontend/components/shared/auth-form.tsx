@@ -37,6 +37,7 @@ const baseFormSchema = z.object({
 		.string()
 		.min(6, "Password must be at least 6 characters.")
 		.max(100, "Password must be at most 100 characters."),
+	rememberMe: z.boolean(),
 });
 
 const signInFormSchema = baseFormSchema.extend({
@@ -74,8 +75,14 @@ export function AuthForm({ mode }: AuthFormProps) {
 		resolver: zodResolver(authFormSchema),
 		defaultValues:
 			mode === "sign-up"
-				? { mode, email: "", password: "", passwordConfirm: "" }
-				: { mode, email: "", password: "" },
+				? {
+						mode,
+						email: "",
+						password: "",
+						passwordConfirm: "",
+						rememberMe: false,
+					}
+				: { mode, email: "", password: "", rememberMe: false },
 	});
 
 	const password = form.watch("password");
@@ -87,7 +94,12 @@ export function AuthForm({ mode }: AuthFormProps) {
 				]
 			: [];
 
-	const onSubmit = async ({ email, password, mode }: AuthFormValues) => {
+	const onSubmit = async ({
+		email,
+		password,
+		rememberMe,
+		mode,
+	}: AuthFormValues) => {
 		setFormError(null);
 		const fetchOptions = {
 			onSuccess: () => {
@@ -108,6 +120,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 			await authClient.signIn.email({
 				email,
 				password,
+				rememberMe,
 				fetchOptions,
 			});
 		}
@@ -242,6 +255,35 @@ export function AuthForm({ mode }: AuthFormProps) {
 									)}
 								/>
 							)}
+							<Controller
+								name="rememberMe"
+								control={form.control}
+								render={({ field }) => (
+									<Field orientation="horizontal" className="items-start gap-3">
+										<input
+											id="auth-form-remember"
+											type="checkbox"
+											checked={field.value}
+											onChange={(e) => field.onChange(e.target.checked)}
+											onBlur={field.onBlur}
+											name={field.name}
+											ref={field.ref}
+											className="mt-0.5 size-4 shrink-0 cursor-pointer accent-primary"
+										/>
+										<div className="flex flex-col gap-0.5 leading-snug">
+											<FieldLabel
+												htmlFor="auth-form-remember"
+												className="cursor-pointer text-sm font-medium"
+											>
+												Remember session
+											</FieldLabel>
+											<p className="text-[13px] text-outline">
+												Keep me signed in for 30 days
+											</p>
+										</div>
+									</Field>
+								)}
+							/>
 							{formError && (
 								<div
 									role="alert"
