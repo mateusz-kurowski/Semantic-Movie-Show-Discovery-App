@@ -85,7 +85,7 @@ def explore_dataset(df: pl.DataFrame) -> None:
     for col_name in df.columns:
         # Extract unique Python types from the column's evaluated values
         col_series = df[col_name].drop_nulls()
-        unique_types = set(type(val).__name__ for val in col_series.to_list())
+        unique_types = {type(val).__name__ for val in col_series.to_list()}
         types_str = ", ".join(sorted(unique_types))
 
         # Grab a few real sample values

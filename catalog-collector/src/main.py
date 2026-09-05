@@ -1,4 +1,5 @@
 import os
+import sys
 
 from dataset import explore_dataset, filter_df, get_tmdb_dataset, scan_and_load_dataset
 from db import insert_movies_in_batches
@@ -47,5 +48,5 @@ if __name__ == "__main__":
     envs = get_envs()
     if not envs.catalog_collector_service_on:
         log.info("Service is not running")
-        exit(0)
+        sys.exit(0)
     main()
