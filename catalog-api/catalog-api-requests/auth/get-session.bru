@@ -1,0 +1,20 @@
+meta {
+  name: get-session
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{url}}/auth/get-session
+  body: none
+  auth: inherit
+}
+
+docs {
+  Requires authentication. Returns the current session and user, or null when signed out. Useful to verify the cookie jar holds a valid `better-auth.session_token`.
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

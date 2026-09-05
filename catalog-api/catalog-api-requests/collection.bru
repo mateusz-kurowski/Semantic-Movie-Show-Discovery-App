@@ -2,3 +2,7 @@ meta {
   name: catalog-api-requests
   type: collection
 }
+
+docs {
+  Auth: better-auth uses an HttpOnly cookie (`better-auth.session_token`) — there is no bearer plugin (see `src/authMacro.ts`). Authenticated requests (chat, watchlist) need the session cookie: sign in via `auth/sign-in` first so Bruno's cookie jar stores it, or set a manual `Cookie:` header. Public endpoints (auth sign-up/sign-in, embeddings, search, movies) use `auth:none`.
+}

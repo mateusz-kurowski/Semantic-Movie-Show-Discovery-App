@@ -5,15 +5,15 @@ meta {
 }
 
 get {
-  url: {{url}}/movies?limit=40&sortBy=popularity&order=desc
+  url: {{url}}/movies?limit={{moviesLimit}}&sortBy={{moviesSortBy}}&order={{moviesOrder}}
   body: none
-  auth: inherit
+  auth: none
 }
 
 params:query {
-  limit: 40
-  sortBy: popularity
-  order: desc
+  limit: {{moviesLimit}}
+  sortBy: {{moviesSortBy}}
+  order: {{moviesOrder}}
 }
 
 settings {

@@ -1,0 +1,20 @@
+meta {
+  name: openapi
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{url}}/openapi.json
+  body: none
+  auth: none
+}
+
+docs {
+  Public. Returns the OpenAPI spec for the API. No authentication required.
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

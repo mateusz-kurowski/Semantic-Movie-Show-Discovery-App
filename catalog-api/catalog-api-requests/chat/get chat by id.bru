@@ -11,11 +11,11 @@ get {
 }
 
 params:path {
-  id: replace-me
+  id: {{chatId}}
 }
 
 docs {
-  Requires authentication. Fetches a single chat by ID including its messages ordered by createdAt asc. Replace `replace-me` with a real chat ID (cuid, e.g. cm1234567890abcdef). Returns 404 if not found or not owned by user.
+  Requires authentication. Fetches a single chat by ID including its messages ordered by createdAt asc. Set the `chatId` env var (`{{chatId}}`) to a real chat ID (cuid, e.g. cm1234567890abcdef) from create-chat. Returns 404 if not found or not owned by user.
 }
 
 settings {

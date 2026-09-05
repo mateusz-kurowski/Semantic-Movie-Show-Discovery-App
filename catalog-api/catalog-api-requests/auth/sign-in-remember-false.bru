@@ -1,0 +1,32 @@
+meta {
+  name: sign-in-remember-false
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{url}}/auth/sign-in/email
+  body: json
+  auth: none
+}
+
+headers {
+  Origin: {{origin}}
+}
+
+body:json {
+  {
+    "email":"{{email}}",
+    "password":"{{password}}",
+    "rememberMe":false
+  }
+}
+
+docs {
+  Public. Same as sign-in but with rememberMe=false: sets a session `better-auth.session_token` cookie (~1 day max) instead of a persistent cookie (~30 days). Compare with sign-in-remember-true.
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

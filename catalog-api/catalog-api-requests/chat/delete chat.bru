@@ -11,11 +11,11 @@ delete {
 }
 
 params:path {
-  id: replace-me
+  id: {{chatId}}
 }
 
 docs {
-  Requires authentication. Deletes a chat by ID (cascades to messages). Replace `replace-me` with a real chat ID. Returns 404 if not found or not owned by user.
+  Requires authentication. Deletes a chat by ID (cascades to messages). Set the `chatId` env var (`{{chatId}}`) to a real chat ID from create-chat. Returns 404 if not found or not owned by user.
 }
 
 settings {

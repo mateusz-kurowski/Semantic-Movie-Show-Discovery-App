@@ -11,18 +11,18 @@ post {
 }
 
 params:path {
-  id: replace-me
+  id: {{chatId}}
 }
 
 body:json {
   {
-    "role": "user",
-    "content": "Hello, find me a sci-fi movie like Interstellar"
+    "role": "{{messageRole}}",
+    "content": "{{messageContent}}"
   }
 }
 
 docs {
-  Requires authentication. Creates a message in the specified chat. Params: id (chat ID). Body: role "user" | "assistant" | "system", content 1-10000 chars. Updates chat updatedAt on success.
+  Requires authentication. Creates a message in the specified chat. Params: id (chat ID — set the `chatId` env var to a real ID from create-chat). Body: role "user" | "assistant" | "system", content 1-10000 chars. Updates chat updatedAt on success.
 }
 
 settings {

@@ -5,14 +5,14 @@ meta {
 }
 
 get {
-  url: {{url}}/chat?limit=20&offset=0
+  url: {{url}}/chat?limit={{chatsLimit}}&offset={{chatsOffset}}
   body: none
   auth: inherit
 }
 
 params:query {
-  limit: 20
-  offset: 0
+  limit: {{chatsLimit}}
+  offset: {{chatsOffset}}
 }
 
 docs {

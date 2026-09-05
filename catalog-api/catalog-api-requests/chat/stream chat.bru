@@ -11,7 +11,7 @@ post {
 }
 
 params:path {
-  id: replace-me
+  id: {{chatId}}
 }
 
 body:json {
@@ -29,7 +29,7 @@ body:json {
 }
 
 docs {
-  Requires authentication. Runs the given conversation (AI SDK UIMessage[]) through the ReelFind AI model and streams back a UI message stream (text/event-stream). The chat must already exist and belong to the signed-in user — create one first and replace `replace-me` with its ID. Every turn resends the full message list, since the endpoint is stateless per request; only the final user/assistant turn is persisted to `messages` server-side. The model may call a searchMovies tool, whose result parts carry the film cards shown in the UI — Bruno will show the raw SSE stream rather than a rendered chat.
+  Requires authentication. Runs the given conversation (AI SDK UIMessage[]) through the ReelFind AI model and streams back a UI message stream (text/event-stream). The chat must already exist and belong to the signed-in user — create one first and set the `chatId` env var (`{{chatId}}`) to its ID. Every turn resends the full message list, since the endpoint is stateless per request; only the final user/assistant turn is persisted to `messages` server-side. The model may call a searchMovies tool, whose result parts carry the film cards shown in the UI — Bruno will show the raw SSE stream rather than a rendered chat. Optionally include `"model": "<id from GET /chat/models>"` in the body to override the default model.
 }
 
 settings {

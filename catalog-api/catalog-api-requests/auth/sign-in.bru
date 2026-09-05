@@ -7,13 +7,17 @@ meta {
 post {
   url: {{url}}/auth/sign-in/email
   body: json
-  auth: inherit
+  auth: none
+}
+
+headers {
+  Origin: {{origin}}
 }
 
 body:json {
   {
-    "email":"mateusz.kurowski28@gmail.com",
-    "password":"test"
+    "email":"{{email}}",
+    "password":"{{password}}"
   }
 }
 

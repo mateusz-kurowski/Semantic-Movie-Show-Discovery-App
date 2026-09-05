@@ -7,18 +7,18 @@ meta {
 post {
   url: {{url}}/auth/sign-up/email
   body: json
-  auth: inherit
+  auth: none
 }
 
 headers {
-  Origin: http://localhost:3000
+  Origin: {{origin}}
 }
 
 body:json {
   {
-    "email":"mateusz.kurowski28@gmail.com",
-      "name":"mateusz.kurowski28@gmail.com",
-    "password":"test"
+    "email":"{{email}}",
+      "name":"{{email}}",
+    "password":"{{password}}"
   }
 }
 
