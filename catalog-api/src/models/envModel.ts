@@ -31,6 +31,7 @@ const envSchema = t.Object({
   redisUrl: t.String({ format: "uri" }),
   rerankCandidateMax: t.Number({ default: 24, minimum: 1 }),
   rerankCandidateMultiplier: t.Number({ default: 4, minimum: 1 }),
+  rerankPageCacheTtlSeconds: t.Number({ default: 90, minimum: 1 }),
   rerankEnabled: t.Boolean({ default: false }),
   rerankModel: t.String({ default: "rerank-2.5-lite", minLength: 1 }),
   rerankTimeoutMs: t.Number({ default: 500, minimum: 1 }),
@@ -68,6 +69,9 @@ export const validateEnvs = (): Env => {
     rerankCandidateMultiplier: process.env.RERANK_CANDIDATE_MULTIPLIER
       ? parseInt(process.env.RERANK_CANDIDATE_MULTIPLIER, 10)
       : 4,
+    rerankPageCacheTtlSeconds: process.env.RERANK_PAGE_CACHE_TTL_SECONDS
+      ? parseInt(process.env.RERANK_PAGE_CACHE_TTL_SECONDS, 10)
+      : 90,
     rerankEnabled: process.env.RERANK_ENABLED === "true",
     rerankModel: process.env.RERANK_MODEL || "rerank-2.5-lite",
     rerankTimeoutMs: process.env.RERANK_TIMEOUT_MS
