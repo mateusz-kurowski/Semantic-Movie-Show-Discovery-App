@@ -46,7 +46,7 @@ const ProfilePageLayout = () => {
 	return (
 		<div className="mx-auto flex w-full max-w-115 flex-1 flex-col items-center gap-5 px-4 py-16 text-center">
 			<Avatar size="lg" className="ring-1 ring-foreground/12">
-				<AvatarImage src={image!} alt={name} />
+				<AvatarImage src={image ?? undefined} alt={name} />
 				<AvatarFallback>
 					{name
 						?.split(" ")

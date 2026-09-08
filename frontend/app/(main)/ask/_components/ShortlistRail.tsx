@@ -55,9 +55,11 @@ const ShortlistRail = ({
 							<Image
 								src={getTmdbImageUrl(movie.posterPath)}
 								alt={movie.title}
-								className="w-12 rounded-lg object-cover"
+								className="w-12 rounded-lg bg-muted object-cover"
 								width={100}
 								height={150}
+								loading="lazy"
+								sizes="48px"
 							/>
 						</Link>
 					)}

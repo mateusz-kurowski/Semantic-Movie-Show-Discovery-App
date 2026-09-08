@@ -37,13 +37,13 @@ describe("Header", () => {
 		);
 	});
 
-	it("swaps the auth links for a profile avatar once signed in", () => {
+	it("swaps the auth links for a profile avatar once signed in", async () => {
 		useSession.mockReturnValue(signedIn);
 
 		render(<Header />);
 
 		expect(screen.queryByRole("link", { name: "Sign In" })).toBeNull();
-		expect(screen.getByText("AL")).toBeInTheDocument();
+		expect(await screen.findByText("AL")).toBeInTheDocument();
 		expect(screen.getByRole("link", { name: "AL" })).toHaveAttribute(
 			"href",
 			"/profile",

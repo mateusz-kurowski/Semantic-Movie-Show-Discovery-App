@@ -48,9 +48,11 @@ const AiMovieCard = ({
 					<Image
 						src={getTmdbImageUrl(movie.posterPath)}
 						alt={movie.title}
-						className="aspect-[2/3] w-full object-cover"
+						className="aspect-[2/3] w-full bg-muted object-cover"
 						width={500}
 						height={750}
+						loading="lazy"
+						sizes="(max-width: 640px) 176px, 224px"
 					/>
 				)}
 			</Link>

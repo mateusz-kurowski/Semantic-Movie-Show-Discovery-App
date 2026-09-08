@@ -4,10 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Movie } from "@/lib/api/movies";
 import { useWatchlistEntry } from "@/lib/hooks/useWatchlistEntry";
+import { getTmdbImageUrl } from "@/lib/utils/tmdbUtils";
 import { Button } from "../ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
-const MovieCard = ({ movie }: { movie: Movie }) => {
+const MovieCard = ({
+	movie,
+	priority = false,
+}: {
+	movie: Movie;
+	priority?: boolean;
+}) => {
 	const releaseYear = new Date(movie.release_date).getFullYear();
 	const watchlist = useWatchlistEntry(movie.id);
 
@@ -16,12 +23,14 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
 			<Link href={`/movies/${movie.id}`}>
 				<div className="absolute inset-0 z-30 " />
 				<Image
-					src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+					src={getTmdbImageUrl(movie.poster_path)}
 					alt={movie.title}
-					className="relative z-20 aspect-[2/3] w-full object-cover"
+					className="relative z-20 aspect-[2/3] w-full bg-muted object-cover"
 					width={500}
-					loading="eager"
+					loading={priority ? undefined : "lazy"}
 					height={750}
+					sizes="(max-width: 768px) 50vw, 33vw"
+					priority={priority}
 				/>
 				{watchlist.canSave && (
 					<Button

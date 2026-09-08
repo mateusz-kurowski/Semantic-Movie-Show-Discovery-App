@@ -32,13 +32,14 @@ const MovieBanner = ({ movie }: MovieBannerProps) => {
 
 	return (
 		<>
-			<div className="top-container relative h-[38vh] w-full sm:h-[46vh] md:h-[52vh]">
+			<div className="top-container relative h-[38vh] w-full bg-muted sm:h-[46vh] md:h-[52vh]">
 				<Image
 					className="object-cover"
 					src={getTmdbImageUrl(movie.backdrop_path, "original")}
 					alt={movie.title}
 					fill
 					priority
+					sizes="100vw"
 				/>
 				<div className="absolute inset-0 bg-linear-to-t from-background from-[4%] via-background/35 via-[55%] to-background/75" />
 				<Button
@@ -52,11 +53,13 @@ const MovieBanner = ({ movie }: MovieBannerProps) => {
 			<div className="relative -mt-24 mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 sm:px-6 md:-mt-35 md:flex-row md:gap-10">
 				<div className="flex w-full shrink-0 flex-col gap-4 md:w-65">
 					<Image
-						className="w-40 self-center rounded-2xl border border-foreground/10 object-cover shadow-[0_24px_60px_rgba(0,0,0,0.6)] md:w-full md:self-auto"
+						className="w-40 self-center rounded-2xl border border-foreground/10 bg-muted object-cover shadow-[0_24px_60px_rgba(0,0,0,0.6)] md:w-full md:self-auto"
 						src={getTmdbImageUrl(movie.poster_path)}
 						alt={`${movie.title} poster`}
 						width={500}
 						height={750}
+						loading="eager"
+						sizes="(max-width: 768px) 160px, 260px"
 					/>
 					{watchlist.canSave && (
 						<Button

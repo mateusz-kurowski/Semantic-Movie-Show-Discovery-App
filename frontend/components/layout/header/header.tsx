@@ -26,7 +26,15 @@ function Header() {
 				<Nav />
 			</div>
 
-			{session?.user ? (
+			{isPending ? (
+				<div
+					className="flex items-center gap-2 sm:gap-4"
+					aria-label="Authentication"
+					aria-busy="true"
+				>
+					<Skeleton className="h-8 w-8 rounded-full" />
+				</div>
+			) : session?.user ? (
 				<div className="flex items-center gap-2 sm:gap-4">
 					<Tooltip>
 						<TooltipTrigger
@@ -45,21 +53,17 @@ function Header() {
 							<p>Sign Out</p>
 						</TooltipContent>
 					</Tooltip>
-					{isPending ? (
-						<Skeleton className="h-8 w-8 rounded-full" />
-					) : (
-						<Link href="/profile">
-							<Avatar className="size-8 ring-1 ring-foreground/12">
-								<AvatarImage src={image!} alt={name} />
-								<AvatarFallback>
-									{name
-										?.split(" ")
-										.map((n) => n[0])
-										.join("")}
-								</AvatarFallback>
-							</Avatar>
-						</Link>
-					)}
+					<Link href="/profile">
+						<Avatar className="size-8 ring-1 ring-foreground/12">
+							<AvatarImage src={image ?? undefined} alt={name} />
+							<AvatarFallback>
+								{name
+									?.split(" ")
+									.map((n) => n[0])
+									.join("")}
+							</AvatarFallback>
+						</Avatar>
+					</Link>
 				</div>
 			) : (
 				<div className="flex items-center gap-2" aria-label="Authentication">
