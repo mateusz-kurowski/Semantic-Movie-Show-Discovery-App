@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.1.0](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/compare/v1.0.0...v1.1.0) (2026-09-13)
+
+
+### Features
+
+* add movies support to chat messages and enhance chat functionality ([7c5a9f9](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/7c5a9f94db341670bf8611e5fde2f1a6a46af6b9))
+* add rerank page cache TTL configuration and enhance hybrid search caching logic ([279c8c7](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/279c8c70e75c5f8e9b558be58291ae8cba82de29))
+* enhance chat functionality with movie details retrieval and year filtering ([e6f4275](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/e6f42755883906836fdfec2871cfef11453d5d81))
+* enhance image loading and caching strategies across components ([a922a72](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/a922a725f5e164d1521c9d492d3c81bbe1d01add))
+* enhance movie details layout with improved error handling and loading states ([c98a6fc](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/c98a6fc8f387bc1034b5394a16e9361fc28bcf44))
+* implement infinite scrolling for popular movies and search results ([f60b049](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/f60b04987512b3f097196552be31d73bfea001b0))
+* implement reranking functionality with configurable options and integrate into search service ([e11c35a](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/e11c35ab3bdf4724534ee8512151e9d2b4f0a439))
+* improve search results layout and user interaction ([c98a6fc](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/c98a6fc8f387bc1034b5394a16e9361fc28bcf44))
+* integrate Redis caching for embeddings and improve ingestion pr… ([#18](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/issues/18)) ([5f1527f](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/5f1527f81960c474a7021531db700a42c64ae7fe))
+* refine featured movies grid and home page layout ([c98a6fc](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/c98a6fc8f387bc1034b5394a16e9361fc28bcf44))
+* update page components for better async handling and metadata ([c98a6fc](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/c98a6fc8f387bc1034b5394a16e9361fc28bcf44))
+
+
+### Bug Fixes
+
+* improve search form validation and user feedback ([c98a6fc](https://github.com/mateusz-kurowski/Semantic-Movie-Show-Discovery-App/commit/c98a6fc8f387bc1034b5394a16e9361fc28bcf44))
+
 ## 1.0.0 (2026-09-05)
 
 
