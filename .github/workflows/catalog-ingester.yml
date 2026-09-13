@@ -27,13 +27,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version: "1.26"
+          go-version: "1.27.1"
           cache-dependency-path: ${{ env.SERVICE_NAME }}/go.sum
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9.3.0
         with:
-          version: v2.12
+          version: v2.13.2
           working-directory: ${{ env.SERVICE_NAME }}
 
       - name: Test Go code
