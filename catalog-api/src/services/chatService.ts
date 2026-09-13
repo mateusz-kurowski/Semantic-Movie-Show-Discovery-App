@@ -1,4 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
+import { propagateAttributes } from "@langfuse/tracing";
 import {
 	convertToModelMessages,
 	jsonSchema,
@@ -331,19 +332,34 @@ const persist = async (
 const streamChat = async (
 	chatId: string,
 	uiMessages: UIMessage[],
+	userId: string,
 	model?: string,
 ) => {
 	const lastMessage = uiMessages[uiMessages.length - 1];
 	if (lastMessage?.role === "user") {
 		await persist(chatId, "user", textOf(lastMessage));
 	}
-
+	await propagateAttributes(
+		{
+			traceName: "chat",
+			userId,
+			sessionId: chatId,
+			tags: ["chat"],
+			metadata: {
+				feature: "chat-assistant",
+			},
+		},
+		() => {},
+	);
 	const result = streamText({
 		messages: await convertToModelMessages(uiMessages),
 		model: openai.chat(model || env.openAIChatModel),
 		stopWhen: stepCountIs(4),
 		system: SYSTEM_PROMPT,
 		tools: chatTools,
+		telemetry: {
+			functionId: "reelfind-chat",
+		},
 	});
 
 	return result.toUIMessageStreamResponse({
