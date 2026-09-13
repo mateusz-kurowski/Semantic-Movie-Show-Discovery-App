@@ -20,19 +20,25 @@
       "environment": {
         "QDRANT_URL": "{env:MOVIE_QDRANT_URL}",
         "QDRANT_API_KEY": "{env:MOVIE_QDRANT_API_KEY}",
-        "COLLECTION_NAME": "{env:MOVIE_QDRANT_COLLECTION_NAME}",
-        "EMBEDDING_PROVIDER": "fastembed",
-        "EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2"
+        "COLLECTION_NAME": "{env:MOVIE_QDRANT_COLLECTION_NAME}"
       }
     },
     "postgres": {
       "type": "local",
-      "command": ["bunx", "@modelcontextprotocol/server-postgres", "{env:MOVIE_DATABASE_URL}"],
+      "command": [
+        "bunx",
+        "@modelcontextprotocol/server-postgres",
+        "{env:MOVIE_DATABASE_URL}"
+      ],
       "enabled": true
     },
     "redis": {
       "type": "local",
-      "command": ["bunx", "@modelcontextprotocol/server-redis", "{env:MOVIE_REDIS_URL}"],
+      "command": [
+        "bunx",
+        "@modelcontextprotocol/server-redis",
+        "{env:MOVIE_REDIS_URL}"
+      ],
       "enabled": true
     }
   }

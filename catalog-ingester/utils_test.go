@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestFloat64ArrayToFloat32(t *testing.T) {
 	t.Parallel()
@@ -38,5 +41,35 @@ func TestStringSliceToAnySlicePlusTrimElements(t *testing.T) {
 		if v != expectedResult[i] {
 			t.Fatalf("Expected value %v at index %d, got %v", expectedResult[i], i, v)
 		}
+	}
+}
+
+func TestDedupeStrings(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		source   []string
+		expected []string
+	}{
+		{
+			name:     "removes duplicates keeping first-seen order",
+			source:   []string{"a", "b", "a", "c", "b"},
+			expected: []string{"a", "b", "c"},
+		},
+		{
+			name:     "empty input returns empty result",
+			source:   nil,
+			expected: []string{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := dedupeStrings(tc.source); !reflect.DeepEqual(got, tc.expected) {
+				t.Fatalf("dedupeStrings() = %v, want %v", got, tc.expected)
+			}
+		})
 	}
 }

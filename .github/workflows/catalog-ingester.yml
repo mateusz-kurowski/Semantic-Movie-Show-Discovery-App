@@ -31,7 +31,7 @@ jobs:
           cache-dependency-path: ${{ env.SERVICE_NAME }}/go.sum
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v9
+        uses: golangci/golangci-lint-action@v9.3.0
         with:
           version: v2.12
           working-directory: ${{ env.SERVICE_NAME }}

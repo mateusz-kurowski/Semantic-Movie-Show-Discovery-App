@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -15,12 +16,15 @@ type GlobalEnv struct {
 	Logger         *slog.Logger
 	TracingContext *context.Context
 	DB             *gorm.DB
+	CacheClient    *redis.Client
 }
 
 type MovieEmbedding struct {
 	Movie     Movie
 	Embedding []float32
 }
+
+const defaultIngestPeriodSeconds = 15
 
 func main() {
 	env := GlobalEnv{
@@ -31,6 +35,17 @@ func main() {
 	ctx := context.Background()
 
 	vars := ReadAndValidateEnvs(env)
+
+	// Create cache client
+	cacheClient, err := createCacheClient(vars)
+	if err != nil {
+		env.Logger.Error("Failed to create cache client", "error", err.Error())
+		return
+	}
+
+	defer cacheClient.Close()
+
+	env.CacheClient = cacheClient
 
 	// connect to DB
 	db, err := initDB(env.Logger, vars.DatabaseURL)
@@ -76,27 +91,10 @@ func main() {
 	// If INGEST_PERIOD_SECONDS is set to 0, run ingestion in a continuous loop until no more movies are available
 	if vars.IngestPeriodSeconds == 0 {
 		env.Logger.Info("INGEST_PERIOD_SECONDS is 0, running ingestion in continuous loop mode")
-		for {
-			count, ingestErr := ingest()
-			if ingestErr != nil {
-				env.Logger.Error("Failed to ingest movies", "error", ingestErr.Error())
-			}
-
-			if count == 0 {
-				env.Logger.Info("No more movies to ingest. Entering CRON mode. Exiting ingestion loop.")
-				break
-			}
-		}
+		totalCount += runContinuousLoop(env, ingest)
 	}
 
-	var ingestPeriodSeconds int
-
-	// If INGEST_PERIOD_SECONDS is set to a positive value, run ingestion in a CRON-like mode with the specified period
-	if vars.IngestPeriodSeconds > 0 {
-		ingestPeriodSeconds = vars.IngestPeriodSeconds
-	} else {
-		ingestPeriodSeconds = 15
-	}
+	ingestPeriodSeconds := resolveIngestPeriodSeconds(vars)
 
 	ticker := time.NewTicker(time.Duration(ingestPeriodSeconds) * time.Second)
 	defer ticker.Stop()
@@ -107,6 +105,7 @@ func main() {
 		env.Logger.Error("Failed to run initial ingestion", "error", err.Error())
 		return
 	}
+	totalCount += count
 	env.Logger.InfoContext(ctx, "Initial ingestion completed", "count", count, "total_count", totalCount)
 
 	for range ticker.C {
@@ -114,8 +113,39 @@ func main() {
 		if ingestErr != nil {
 			env.Logger.Error("Failed to ingest movies", "error", ingestErr.Error())
 		}
+		totalCount += ingestCount
 		env.Logger.InfoContext(ctx, "Ingestion completed", "count", ingestCount, "total_count", totalCount)
 	}
 
 	env.Logger.Info("Ingestion process completed. Exiting application.", "total_count", totalCount)
+}
+
+// runContinuousLoop ingests until a batch comes back empty, returning the total ingested.
+func runContinuousLoop(env GlobalEnv, ingest func() (int, error)) int {
+	total := 0
+
+	for {
+		count, ingestErr := ingest()
+		if ingestErr != nil {
+			env.Logger.Error("Failed to ingest movies", "error", ingestErr.Error())
+		}
+
+		total += count
+
+		if count == 0 {
+			env.Logger.Info("No more movies to ingest. Entering CRON mode. Exiting ingestion loop.")
+			break
+		}
+	}
+
+	return total
+}
+
+// resolveIngestPeriodSeconds defaults the ticker period unless configured.
+func resolveIngestPeriodSeconds(vars EnvVars) int {
+	if vars.IngestPeriodSeconds > 0 {
+		return vars.IngestPeriodSeconds
+	}
+
+	return defaultIngestPeriodSeconds
 }
