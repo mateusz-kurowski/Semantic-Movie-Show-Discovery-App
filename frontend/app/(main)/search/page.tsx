@@ -3,7 +3,7 @@ import SearchPageContent from "./_components/SearchPageContent";
 
 const Page = () => {
 	return (
-		<Suspense>
+		<Suspense fallback={null}>
 			<SearchPageContent />
 		</Suspense>
 	);

@@ -1,5 +1,5 @@
 "use client";
-import { BookmarkPlus, Loader2, Star, X } from "lucide-react";
+import { Bookmark, BookmarkPlus, Loader2, Star, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,7 @@ const ShortlistRail = ({
 			{movies.map((movie) => (
 				<div
 					key={movie.id}
-					className="flex gap-3 rounded-[14px] border border-border bg-card p-2.5"
+					className="flex gap-3 rounded-[14px] bg-card p-2.5 shadow-[0_4px_16px_rgb(0_0_0/0.35)]"
 				>
 					{movie.posterPath && (
 						<Link href={`/movies/${movie.id}`} className="flex-none">
@@ -95,10 +95,15 @@ const ShortlistRail = ({
 			))}
 
 			{movies.length === 0 && (
-				<p className="rounded-[14px] border border-dashed border-foreground/14 p-3.5 text-[13px] leading-5 text-outline">
-					Films you shortlist stay here for the whole conversation — send them
-					to your watchlist in one action.
-				</p>
+				<div className="flex flex-col items-start gap-2.5 rounded-[14px] border border-dashed border-foreground/14 p-3.5">
+					<span className="flex size-8 items-center justify-center rounded-[10px] bg-primary/14 text-primary">
+						<Bookmark className="size-4" />
+					</span>
+					<p className="text-[13px] leading-5 text-outline">
+						Films you shortlist stay here for the whole conversation — send them
+						to your watchlist in one action.
+					</p>
+				</div>
 			)}
 		</div>
 

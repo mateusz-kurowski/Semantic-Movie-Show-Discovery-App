@@ -22,7 +22,7 @@ const SKELETON_GRID_CLASS =
 	"grid w-full grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6";
 
 const PopularPage = () => {
-	// Note: the key is deliberately NOT `${POPULARITY}-movies` — the home
+	// Note: the key is deliberately NOT ["featured-movies", ...] — the home
 	// rail (featured-movies-grid) caches a plain array under that key, while
 	// this page caches paged InfiniteData. Sharing it would corrupt both.
 	const popular = useInfiniteQuery<
@@ -46,7 +46,7 @@ const PopularPage = () => {
 				limit: POPULAR_PAGE_SIZE,
 				offset: pageParam,
 			}),
-		queryKey: [`${ComparableMovieField.POPULARITY}-movies`, "paged"],
+		queryKey: ["popular-movies", "paged"],
 	});
 	const movies = useMemo(
 		() => popular.data?.pages.flat() ?? [],
@@ -83,14 +83,18 @@ const PopularPage = () => {
 	}, [fetchNextPopularPage, hasMorePopular, isFetchingMorePopular]);
 
 	return (
-		<main className="flex flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+		<main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-8 px-5 py-8 sm:py-12 lg:px-16">
 			<div className="flex flex-col gap-2">
-				<p className="text-xs font-semibold tracking-[0.1em] text-outline">
-					DISCOVER
+				<p className="text-xs font-semibold tracking-[0.1em] text-secondary uppercase">
+					Discover
 				</p>
 				<h1 className="text-2xl leading-8 font-bold tracking-[-0.03em] sm:text-3xl sm:leading-9">
 					Popular movies
 				</h1>
+				<p className="max-w-2xl text-sm leading-5 text-on-surface-variant sm:text-base sm:leading-6">
+					ReelFind — Self-hosted, polyglot semantic search + AI-chat movie
+					discovery platform over ~930k TMDB movies.
+				</p>
 			</div>
 			{popular.isPending && (
 				<div className={SKELETON_GRID_CLASS}>
@@ -100,11 +104,20 @@ const PopularPage = () => {
 				</div>
 			)}
 			{popular.isError && (
-				<EmptyState
-					icon={Frown}
-					title="Couldn't load popular movies"
-					description="Something went wrong fetching popular movies. Please try again later."
-				/>
+				<div className="flex flex-col items-center gap-4">
+					<EmptyState
+						icon={Frown}
+						title="Couldn't load popular movies"
+						description="Something went wrong fetching popular movies. Please try again later."
+					/>
+					<Button
+						variant="outline"
+						className="cursor-pointer rounded-full"
+						onClick={() => void popular.refetch()}
+					>
+						Retry
+					</Button>
+				</div>
 			)}
 			{!popular.isPending && !popular.isError && movies.length === 0 && (
 				<EmptyState

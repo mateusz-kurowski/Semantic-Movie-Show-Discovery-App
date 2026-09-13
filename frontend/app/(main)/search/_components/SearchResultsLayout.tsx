@@ -4,7 +4,8 @@ import {
 	type QueryKey,
 	useInfiniteQuery,
 } from "@tanstack/react-query";
-import { Frown, Search } from "lucide-react";
+import { Bookmark, Frown, Search, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useRef } from "react";
 import SearchForm from "@/components/discover/main-search";
 import EmptyState from "@/components/shared/empty-state";
@@ -14,11 +15,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { type SearchResult, searchService } from "@/lib/api/search";
 
 export const SEARCH_PAGE_SIZE = 10;
-// The search service clamps offset + topK to 100, so paging stops there.
+// Keeps in step with POPULAR_PAGE_SIZE = 10 on discover/popular: one page of
+// posters per fetch. The search service clamps offset + topK to 100, so
+// paging stops there.
 const SEARCH_MAX_RESULTS = 100;
 
 const SKELETON_GRID_CLASS =
-	"grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6";
+	"grid w-full grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6";
 
 interface SearchResultsLayoutProps {
 	phrase: string;
@@ -88,17 +91,20 @@ const SearchResultsLayout = ({ phrase }: SearchResultsLayoutProps) => {
 	}, [fetchNextResultPage, hasMoreResults, isFetchingMoreResults]);
 
 	return (
-		<main className="flex flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+		<main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
 			<div className="top-results-section flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-				<div className="title-and-count-section flex flex-col gap-2">
-					<p className="text-xs font-semibold tracking-[0.1em] text-outline">
-						SEMANTIC MATCH
+				<div className="title-and-count-section flex flex-col items-start gap-2">
+					<p className="text-xs font-semibold tracking-[0.1em] text-outline uppercase">
+						Semantic match
 					</p>
 					<h1 className="text-2xl leading-8 font-bold tracking-[-0.03em] sm:text-3xl sm:leading-9">
 						<span className="text-primary">“{phrase}”</span>
 					</h1>
 					{search.data && (
-						<p className="flex items-center gap-2.5 text-sm text-outline">
+						<p
+							aria-live="polite"
+							className="flex items-center gap-2.5 text-sm text-outline"
+						>
 							<span>
 								<span className="font-medium text-on-surface">
 									{results.length} films
@@ -107,6 +113,13 @@ const SearchResultsLayout = ({ phrase }: SearchResultsLayoutProps) => {
 							</span>
 						</p>
 					)}
+					<Link
+						href={`/ask?q=${encodeURIComponent(phrase)}`}
+						className="mt-1 inline-flex h-8 items-center gap-1.5 rounded-full border border-border px-3 text-[13px] font-medium text-on-surface-variant transition-colors hover:border-primary/40 hover:text-primary"
+					>
+						<Sparkles className="size-3.5" aria-hidden="true" />
+						Ask AI about this search
+					</Link>
 				</div>
 				<SearchForm
 					togglesVisible={false}
@@ -116,24 +129,36 @@ const SearchResultsLayout = ({ phrase }: SearchResultsLayoutProps) => {
 					compact
 				/>
 			</div>
-			{/* todo: fix the count, this should not be the length of the data array */}
 			{search.isPending && (
-				<div className={SKELETON_GRID_CLASS}>
+				<div
+					className={SKELETON_GRID_CLASS}
+					aria-label="Loading search results"
+					role="status"
+				>
 					{Array.from({ length: 12 }, (_, i) => `skeleton-${i}`).map((key) => (
 						<Skeleton key={key} className="aspect-[2/3] w-full rounded-2xl" />
 					))}
 				</div>
 			)}
 			{search.isError && (
-				<EmptyState
-					icon={Frown}
-					title="Couldn't run that search"
-					description={search.error.message}
-				/>
+				<div className="flex flex-col items-center gap-5">
+					<EmptyState
+						icon={Frown}
+						title="Couldn't run that search"
+						description={search.error.message}
+					/>
+					<Button
+						variant="outline"
+						className="h-9 cursor-pointer rounded-full px-4 text-sm"
+						onClick={() => void search.refetch()}
+					>
+						Retry
+					</Button>
+				</div>
 			)}
 			{!search.isPending && !search.isError && results.length === 0 && (
 				<EmptyState
-					icon={Search}
+					icon={Bookmark}
 					title="No matches found"
 					description="Try describing the feeling, plot, or film a little differently."
 				/>

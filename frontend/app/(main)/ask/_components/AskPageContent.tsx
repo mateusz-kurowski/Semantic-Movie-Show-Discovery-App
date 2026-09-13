@@ -47,6 +47,10 @@ interface SearchMoviesOutput {
 	phrase: string;
 }
 
+// Cards render only searchMovies tool output ({ movies, phrase }). Intentionally
+// no confidence %, chunk ids, citation lines, AI-match rings, or source quotes:
+// TODO P0.2 is not built, so nothing here invents them.
+
 const textOf = (message: UIMessage) =>
 	message.parts
 		.filter((part) => part.type === "text")
@@ -380,6 +384,7 @@ const AskPageContent = () => {
 						<Button
 							variant="outline"
 							className="h-8.5 cursor-pointer rounded-full text-[13px]"
+							aria-expanded={isHistoryOpen}
 							onClick={() => setHistoryOpen((open) => !open)}
 						>
 							<History /> Past chats
@@ -486,7 +491,11 @@ const AskPageContent = () => {
 					</div>
 				)}
 
-				<div className="flex flex-1 flex-col gap-7 overflow-y-auto px-4 py-8 sm:px-6 lg:px-12">
+				<div
+					role="log"
+					aria-label="Conversation"
+					className="flex flex-1 flex-col gap-7 overflow-y-auto px-4 py-8 sm:px-6 lg:px-12"
+				>
 					{messages.length === 0 && (
 						<div className="mx-auto flex max-w-2xl flex-col gap-5 pt-8 text-center">
 							<h2 className="text-2xl leading-8 font-bold tracking-[-0.03em] sm:text-3xl">
@@ -565,24 +574,36 @@ const AskPageContent = () => {
 											);
 										}
 
-										const { movies } = part.output as SearchMoviesOutput;
+										const { movies, phrase } =
+											part.output as SearchMoviesOutput;
 										if (movies.length === 0) return null;
 
 										return (
 											<div
 												key={partKey(message, part, index)}
-												className="flex gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+												className="flex flex-col gap-2"
 											>
-												{movies.map((movie) => (
-													<AiMovieCard
-														key={movie.id}
-														movie={movie}
-														isShortlisted={shortlist.some(
-															(item) => item.id === movie.id,
-														)}
-														onToggleShortlist={toggleShortlist}
-													/>
-												))}
+												<p className="text-xs font-semibold tracking-[0.1em] text-secondary uppercase">
+													Semantic match
+													{phrase ? (
+														<span className="text-outline normal-case">
+															{" "}
+															· {phrase}
+														</span>
+													) : null}
+												</p>
+												<div className="flex gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+													{movies.map((movie) => (
+														<AiMovieCard
+															key={movie.id}
+															movie={movie}
+															isShortlisted={shortlist.some(
+																(item) => item.id === movie.id,
+															)}
+															onToggleShortlist={toggleShortlist}
+														/>
+													))}
+												</div>
 											</div>
 										);
 									})}

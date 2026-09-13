@@ -54,7 +54,7 @@ const ChatComposer = ({
 	return (
 		<form
 			onSubmit={handleSubmit}
-			className="flex flex-col gap-2.5 rounded-[20px] border border-foreground/12 bg-card p-3.5"
+			className="flex flex-col gap-2.5 rounded-[20px] border border-foreground/12 bg-[#121214] p-3.5 transition-colors focus-within:border-primary focus-within:shadow-[0_0_0_1px_var(--primary),0_0_28px_color-mix(in_oklch,var(--primary)_28%,transparent)]"
 		>
 			<label htmlFor="ai-composer" className="sr-only">
 				Message ReelFind AI
@@ -107,7 +107,7 @@ const ChatComposer = ({
 						type="button"
 						aria-label="Stop generating"
 						onClick={onStop}
-						className="ml-auto size-10 cursor-pointer rounded-full"
+						className="ml-auto size-10 cursor-pointer rounded-full shadow-[0_0_20px_color-mix(in_oklch,var(--primary)_35%,transparent)]"
 					>
 						<Square />
 					</Button>
@@ -116,7 +116,7 @@ const ChatComposer = ({
 						type="submit"
 						aria-label="Send"
 						disabled={!text.trim()}
-						className="ml-auto size-10 cursor-pointer rounded-full"
+						className="ml-auto size-10 cursor-pointer rounded-full shadow-[0_0_20px_color-mix(in_oklch,var(--primary)_35%,transparent)] disabled:shadow-none"
 					>
 						<ArrowUp />
 					</Button>

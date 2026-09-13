@@ -13,15 +13,19 @@ const MovieRecommendationBadge = ({
 }: PropsWithChildren<MovieRecommendationBadgeProps>) => (
 	<Button
 		variant="outline"
-		className="h-auto cursor-pointer flex-col items-start gap-2.5 rounded-2xl border-border bg-card p-4.5 text-left whitespace-normal hover:border-primary/35 hover:bg-card"
+		type="button"
+		className="h-auto w-full min-w-0 cursor-pointer flex-col items-start justify-start gap-2.5 self-stretch rounded-2xl border-border bg-card p-4.5 text-left whitespace-normal hover:border-primary/35 hover:bg-card"
 		onClick={() => onClick?.(children as string)}
 	>
 		{Icon && (
-			<span className="flex size-8 items-center justify-center rounded-[10px] bg-secondary/15 text-secondary">
+			<span
+				aria-hidden="true"
+				className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-secondary/15 text-secondary"
+			>
 				<Icon className="size-4" />
 			</span>
 		)}
-		<span className="text-sm leading-5 font-semibold text-on-surface">
+		<span className="min-w-0 text-sm leading-5 font-semibold break-words text-on-surface">
 			{children}
 		</span>
 	</Button>

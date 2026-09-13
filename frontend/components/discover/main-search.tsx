@@ -53,7 +53,9 @@ const SearchForm = ({
 		icon && (showIconWhenNotEmpty ? true : !form.formState.isDirty);
 
 	const onSubmit = ({ query }: z.infer<typeof searchFormSchema>) => {
-		router.push(`/search?q=${query}`);
+		const trimmed = query.trim();
+		if (!trimmed) return;
+		router.push(`/search?q=${trimmed}`);
 	};
 
 	const handleRecommendationClick = (query: string) => {
@@ -66,7 +68,7 @@ const SearchForm = ({
 		<div className={`flex flex-col ${compact ? "" : "w-full"}`}>
 			<form
 				id={formId}
-				className={`${compact ? "w-full max-w-[280px] sm:w-105" : "mx-auto w-full max-w-215"} flex flex-col items-center gap-2`}
+				className={`${compact ? "w-full max-w-70 sm:w-105" : "mx-auto w-full max-w-215"} flex flex-col items-center gap-2`}
 				onSubmit={form.handleSubmit(onSubmit)}
 			>
 				<FieldGroup>
@@ -75,6 +77,9 @@ const SearchForm = ({
 						control={form.control}
 						render={({ field, fieldState: { invalid } }) => (
 							<Field data-invalid={invalid}>
+								<label htmlFor={field.name} className="sr-only">
+									Describe the film you can&apos;t name
+								</label>
 								<InputGroup
 									className={
 										compact
@@ -91,7 +96,7 @@ const SearchForm = ({
 										{...field}
 										id={field.name}
 										aria-invalid={invalid}
-										placeholder="A hopeful sci-fi adventure about rebellion..."
+										placeholder="cozy rainy-day mystery with a twist…"
 										autoComplete="off"
 										className={compact ? undefined : "text-base sm:text-lg"}
 									/>
@@ -109,6 +114,7 @@ const SearchForm = ({
 												className={`${compact ? "size-7" : "size-10 sm:size-12"} cursor-pointer rounded-full`}
 												type="submit"
 												form={formId}
+												aria-label="Search"
 											>
 												<ArrowRight />
 											</Button>

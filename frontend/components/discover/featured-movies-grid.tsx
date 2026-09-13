@@ -1,9 +1,10 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clapperboard } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
 import { ComparableMovieField, movieService } from "@/lib/api/movies";
+import EmptyState from "../shared/empty-state";
 import MovieCard from "../shared/movie-card";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
@@ -20,8 +21,10 @@ const FeaturedMoviesGrid = ({
 }: FeaturedMoviesProps) => {
 	const railRef = useRef<HTMLDivElement>(null);
 
-	const { data, isPending, isError, error } = useQuery({
-		queryKey: order === "desc" ? [`${type}-movies`] : [`${type}-movies`, order],
+	// Note: kept distinct from the popular page key ["popular-movies", "paged"],
+	// which caches paged InfiniteData. This rail caches a plain array.
+	const { data, isPending, isError, error, refetch } = useQuery({
+		queryKey: ["featured-movies", type, order],
 		queryFn: () =>
 			order === "desc"
 				? movieService.getFeaturedMovies(type)
@@ -36,21 +39,22 @@ const FeaturedMoviesGrid = ({
 	};
 
 	return (
-		<section className="flex flex-col gap-4">
-			<div className="flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+		<section
+			aria-label={heading || "Featured movies"}
+			className="flex flex-col gap-4"
+		>
+			<div className="flex items-center justify-between gap-4 px-5 lg:px-16">
 				<h2 className="font-heading text-xl font-semibold tracking-[-0.01em] sm:text-2xl">
 					{heading}
 				</h2>
 				<div className="flex items-center gap-2">
 					{isPopular && (
-						<Button variant="link" className="cursor-pointer">
-							<Link
-								href="/discover/popular"
-								className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface"
-							>
-								View all
-							</Link>
-						</Button>
+						<Link
+							href="/discover/popular"
+							className="flex items-center gap-1 rounded-full px-2 py-1 text-sm font-medium text-on-surface-variant transition-colors hover:text-on-surface"
+						>
+							View all
+						</Link>
 					)}
 					<Button
 						variant="outline"
@@ -73,7 +77,7 @@ const FeaturedMoviesGrid = ({
 				</div>
 			</div>
 			{isPending && (
-				<div className="flex gap-4 overflow-hidden px-4 sm:gap-6 sm:px-6 lg:px-8">
+				<div className="flex gap-4 overflow-hidden px-5 sm:gap-6 lg:px-16">
 					{Array.from({ length: 7 }, (_, i) => `skeleton-${i}`).map((key) => (
 						<Skeleton
 							key={key}
@@ -83,14 +87,30 @@ const FeaturedMoviesGrid = ({
 				</div>
 			)}
 			{isError && (
-				<p className="px-4 py-8 text-center text-destructive sm:px-6 lg:px-8">
-					Error: {error.message}
-				</p>
+				<div className="flex flex-col items-center gap-3 px-5 py-8 text-center lg:px-16">
+					<p className="text-sm text-destructive">Error: {error.message}</p>
+					<Button
+						variant="outline"
+						className="cursor-pointer rounded-full"
+						onClick={() => void refetch()}
+					>
+						Retry
+					</Button>
+				</div>
 			)}
-			{data && (
+			{!isPending && !isError && data && data.length === 0 && (
+				<EmptyState
+					icon={Clapperboard}
+					title="No movies found"
+					description="Check back once the catalogue has films to rank."
+				/>
+			)}
+			{data && data.length > 0 && (
 				<div
 					ref={railRef}
-					className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:gap-6 sm:px-6 lg:px-8 [&::-webkit-scrollbar]:hidden"
+					role="region"
+					aria-label={`${heading} movies`}
+					className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 [scrollbar-width:none] sm:gap-6 lg:px-16 [&::-webkit-scrollbar]:hidden"
 				>
 					{data.map((movie) => (
 						<div key={movie.id} className="w-38 flex-none snap-start sm:w-53">

@@ -32,6 +32,10 @@ interface AiMovieCardProps {
 	onToggleShortlist: (movie: MoviePick) => void;
 }
 
+// Renders only catalogue fields from the tool output (title, year, runtime,
+// rating, first genre). No confidence %, no citations, no source quotes —
+// TODO P0.2 (confidence/chunkIds/citation line) is not built, so nothing here
+// invents an AI-match ring or quote lines.
 const AiMovieCard = ({
 	movie,
 	isShortlisted,
@@ -42,8 +46,11 @@ const AiMovieCard = ({
 		.join(" · ");
 
 	return (
-		<div className="flex w-44 flex-none flex-col overflow-hidden rounded-2xl border border-border bg-card sm:w-56">
-			<Link href={`/movies/${movie.id}`} className="relative block">
+		<div className="flex w-44 flex-none flex-col overflow-hidden rounded-2xl bg-card shadow-[0_8px_28px_rgb(0_0_0/0.45)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgb(0_0_0/0.5),0_0_24px_color-mix(in_oklch,var(--primary)_22%,transparent)] sm:w-56">
+			<Link
+				href={`/movies/${movie.id}`}
+				className="relative block focus-visible:outline-2 focus-visible:outline-primary"
+			>
 				{movie.posterPath && (
 					<Image
 						src={getTmdbImageUrl(movie.posterPath)}
@@ -55,6 +62,10 @@ const AiMovieCard = ({
 						sizes="(max-width: 640px) 176px, 224px"
 					/>
 				)}
+				<span
+					aria-hidden="true"
+					className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"
+				/>
 			</Link>
 			<div className="flex flex-1 flex-col gap-2.5 px-3.5 pt-3 pb-3.5">
 				<div className="flex flex-col gap-1">
@@ -81,6 +92,7 @@ const AiMovieCard = ({
 				)}
 				<Button
 					variant={isShortlisted ? "default" : "outline"}
+					aria-pressed={isShortlisted}
 					className="mt-auto h-8.5 w-full cursor-pointer rounded-[10px] text-[13px] font-semibold"
 					onClick={() => onToggleShortlist(movie)}
 				>

@@ -7,7 +7,11 @@ interface RecommendationBadgesProps {
 
 const RecommendationBadges = ({ onClick }: RecommendationBadgesProps) => {
 	return (
-		<div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+		<div
+			role="group"
+			aria-label="Try a preset search"
+			className="mt-4 grid w-full grid-cols-1 gap-4 sm:grid-cols-3"
+		>
 			<MovieRecommendationBadge icon={Clapperboard} onClick={onClick}>
 				Like Interstellar, but lighter
 			</MovieRecommendationBadge>
