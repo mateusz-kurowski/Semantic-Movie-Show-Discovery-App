@@ -139,7 +139,7 @@ func TestBuildSemanticText(t *testing.T) {
 		}
 
 		result := movie.buildSemanticText()
-		expected := "Inception. Your mind is the scene of the crime. Action, Adventure, Science Fiction. dream, heist, subconscious, multi-layered, mind-bending. A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O., but his tragic past may doom the project and his team to disaster"
+		expected := "Inception. Your mind is the scene of the crime. Action, Adventure, Science Fiction. dream, heist, mind-bending, multi-layered, subconscious. A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O., but his tragic past may doom the project and his team to disaster"
 
 		if result != expected {
 			t.Errorf("got:  %s\nwant: %s", result, expected)
@@ -195,6 +195,26 @@ func TestBuildSemanticText(t *testing.T) {
 		result := movie.buildSemanticText()
 		if result != "" {
 			t.Errorf("got: %q, want empty string", result)
+		}
+	})
+
+	t.Run("genre and keyword order does not affect output", func(t *testing.T) {
+		t.Parallel()
+		first := Movie{
+			Title:    "Inception",
+			Genres:   []Genre{{ID: 1, Name: "Action"}, {ID: 2, Name: "Comedy"}},
+			Keywords: []Keyword{{ID: 1, Name: "dream"}, {ID: 2, Name: "heist"}},
+			Overview: "Some plot.",
+		}
+		second := Movie{
+			Title:    "Inception",
+			Genres:   []Genre{{ID: 2, Name: "Comedy"}, {ID: 1, Name: "Action"}},
+			Keywords: []Keyword{{ID: 2, Name: "heist"}, {ID: 1, Name: "dream"}},
+			Overview: "Some plot.",
+		}
+
+		if got, want := first.buildSemanticText(), second.buildSemanticText(); got != want {
+			t.Errorf("got %q and %q, want identical", got, want)
 		}
 	})
 }

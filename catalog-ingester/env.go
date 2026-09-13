@@ -22,6 +22,7 @@ type EnvVars struct {
 	VectorDimension        int    `validate:"gte=1"`
 	OpenAiAPIKey           string `validate:"required"`
 	OpenAiBaseURL          string `validate:"required,url"`
+	CacheURL               string `validate:"required,uri,startswith=redis"`
 }
 
 const defaultIngestBatchSize = 8
@@ -84,6 +85,7 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		VectorDimension:        vectorDimensionInt,
 		OpenAiAPIKey:           os.Getenv("OPENAI_EMBEDDING_KEY"),
 		OpenAiBaseURL:          os.Getenv("OPENAI_BASE_URL"),
+		CacheURL:               os.Getenv("REDIS_URL"),
 	}
 
 	errVal := genv.Validate.Struct(&env)
@@ -92,14 +94,5 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		os.Exit(1)
 	}
 
-	genv.Logger.Info("Environment variables loaded",
-		"PRODUCTION", isProduction,
-		"QDRANT_COLLECTION_NAME", qdrantCollectionName,
-		"QDRANT_DENSE_VECTOR_NAME", os.Getenv("QDRANT_DENSE_VECTOR_NAME"),
-		"QDRANT_SPARSE_VECTOR_NAME", os.Getenv("QDRANT_SPARSE_VECTOR_NAME"),
-		"QDRANT_HOST", os.Getenv("QDRANT_HOST"),
-		"QDRANT_PORT", qdrantPort,
-		"VECTOR_DIMENSION", vectorDimensionInt,
-	)
 	return env
 }

@@ -40,7 +40,7 @@ services:
       - EMBEDDING_MAX_PARALLEL=${EMBEDDING_MAX_PARALLEL:-2}
       - CHUNK_SIZE=${CHUNK_SIZE:-1200}
       - VECTOR_DIMENSION=${VECTOR_DIMENSION:-256}
-
+      - REDIS_URL=${REDIS_URL}
   catalog-api:
     container_name: catalog-api
     build:

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log/slog"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -53,7 +54,6 @@ func (m *Movie) toMap() map[string]any {
 		"vote_average":      m.VoteAverage,
 		"vote_count":        m.VoteCount,
 		"status":            m.Status,
-		"release_date":      m.ReleaseDate.Format(time.RFC3339),
 		"revenue":           m.Revenue,
 		"runtime":           m.Runtime,
 		"adult":             m.Adult,
@@ -75,6 +75,9 @@ func (m *Movie) toMap() map[string]any {
 
 	if m.ChunkID != 0 {
 		result["chunk_id"] = m.ChunkID
+	}
+	if m.ReleaseDate != nil {
+		result["release_date"] = m.ReleaseDate.Format(time.RFC3339)
 	}
 	if m.SemanticText != "" {
 		result["semantic_text"] = m.SemanticText
@@ -120,10 +123,13 @@ func (m *Movie) ToQdrantPayload(
 }
 
 func (m *Movie) buildSemanticText() string {
-	genres := strings.Join(namesFrom(m.Genres), ", ")
-	keywords := strings.Join(namesFrom(m.Keywords), ", ")
+	genres := namesFrom(m.Genres)
+	keywords := namesFrom(m.Keywords)
+	// Sort so the text (and its cache key) is stable regardless of DB row order.
+	slices.Sort(genres)
+	slices.Sort(keywords)
 
-	parts := []string{m.Title, m.Tagline, genres, keywords, m.Overview}
+	parts := []string{m.Title, m.Tagline, strings.Join(genres, ", "), strings.Join(keywords, ", "), m.Overview}
 	nonEmpty := make([]string, 0, len(parts))
 	for _, p := range parts {
 		p = strings.TrimRight(p, ". ,")
