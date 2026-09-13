@@ -1,7 +1,16 @@
 {
-	"biome.lsp.bin": "frontend/node_modules/@biomejs/biome/bin/biome",
+	// Do NOT point biome.lsp.bin at a repo JS shim: it needs `node`
+	// (this repo runs on bun-only) and breaks the Biome LSP, making VS Code
+	// silently fall back to the built-in TS formatter (spaces) while lefthook
+	// enforces biome `indentStyle: tab`. Let the Biome extension use its
+	// bundled native binary; repo pins keep the version aligned.
 	"biome.requireConfiguration": true,
 	"editor.formatOnSave": true,
+	// Match biome.json `indentStyle: tab` in the editor as well so unsaved
+	// buffers and non-biome languages also use tabs.
+	"editor.insertSpaces": false,
+	"editor.detectIndentation": false,
+	"editor.tabSize": 2,
 	"editor.codeActionsOnSave": {
 		"source.fixAll.biome": "explicit"
 	},
@@ -25,5 +34,26 @@
 	},
 	"[css]": {
 		"editor.defaultFormatter": "biomejs.biome"
-	}
+	},
+	// Match lefthook: catalog-collector runs `ruff check --fix` + `ruff format`.
+	"[python]": {
+		"editor.defaultFormatter": "charliermarsh.ruff",
+		"editor.codeActionsOnSave": {
+			"source.fixAll.ruff": "explicit",
+			"source.organizeImports.ruff": "explicit"
+		}
+	},
+	// Match lefthook: catalog-ingester runs `go fmt` (+ golangci-lint --fix
+	// with goimports/golines). gopls with goimports covers formatOnSave;
+	// golines line-length is enforced by the hook.
+	"[go]": {
+		"editor.defaultFormatter": "golang.go",
+		"editor.codeActionsOnSave": {
+			"source.organizeImports": "explicit"
+		}
+	},
+	"gopls": {
+		"usePlaceholders": true
+	},
+	"go.formatTool": "goimports"
 }
