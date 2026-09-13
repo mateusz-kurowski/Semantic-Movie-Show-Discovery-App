@@ -16,7 +16,7 @@ import {
 	movieService,
 } from "@/lib/api/movies";
 
-export const POPULAR_PAGE_SIZE = 10;
+const POPULAR_PAGE_SIZE = 10;
 
 const SKELETON_GRID_CLASS =
 	"grid w-full grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6";

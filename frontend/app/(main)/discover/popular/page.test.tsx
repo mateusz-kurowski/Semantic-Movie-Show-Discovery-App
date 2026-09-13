@@ -6,7 +6,11 @@ import {
 	movieService,
 } from "@/lib/api/movies";
 import { renderWithQuery } from "@/test/render";
-import PopularPage, { POPULAR_PAGE_SIZE } from "./page";
+import PopularPage from "./page";
+
+// Mirrors the page size in ./page.tsx (route files cannot export arbitrary
+// values in Next 16, so the test keeps its own copy of the expectation).
+const POPULAR_PAGE_SIZE = 10;
 
 vi.mock("@/lib/api/movies", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@/lib/api/movies")>()),

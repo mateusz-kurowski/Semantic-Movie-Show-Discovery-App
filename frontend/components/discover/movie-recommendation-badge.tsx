@@ -14,7 +14,7 @@ const MovieRecommendationBadge = ({
 	<Button
 		variant="outline"
 		type="button"
-		className="h-auto w-full min-w-0 cursor-pointer flex-col items-start justify-start gap-2.5 self-stretch rounded-2xl border-border bg-card p-4.5 text-left whitespace-normal hover:border-primary/35 hover:bg-card"
+		className="h-auto w-full min-w-0 cursor-pointer flex-row items-center justify-start gap-2.5 self-stretch overflow-hidden rounded-2xl border-border bg-card p-4.5 text-left whitespace-nowrap hover:border-primary/35 hover:bg-card"
 		onClick={() => onClick?.(children as string)}
 	>
 		{Icon && (
@@ -25,7 +25,7 @@ const MovieRecommendationBadge = ({
 				<Icon className="size-4" />
 			</span>
 		)}
-		<span className="min-w-0 text-sm leading-5 font-semibold break-words text-on-surface">
+		<span className="min-w-0 flex-1 overflow-hidden text-sm leading-5 font-semibold whitespace-nowrap text-ellipsis text-on-surface">
 			{children}
 		</span>
 	</Button>
