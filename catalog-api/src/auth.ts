@@ -52,3 +52,25 @@ export const auth = betterAuth({
 		Boolean,
 	) ?? ["http://localhost:3000", "https://movies.mkurowski.dev"],
 });
+
+let _schema: ReturnType<typeof auth.api.generateOpenAPISchema>;
+const getSchema = async () => (_schema ??= auth.api.generateOpenAPISchema());
+export const OpenAPI = {
+	getPaths: (prefix = "/auth/api") =>
+		getSchema().then(({ paths }) => {
+			const reference: typeof paths = Object.create(null);
+			for (const path of Object.keys(paths)) {
+				const key = prefix + path;
+				reference[key] = paths[path];
+				for (const method of Object.keys(paths[path])) {
+					// biome-ignore lint/suspicious/noExplicitAny: Elysia's OpenAPI plugin typing is not compatible with better-auth's OpenAPI schema typing
+					const operation = (reference[key] as any)[method];
+					operation.tags = ["Better Auth"];
+				}
+			}
+			return reference;
+			// biome-ignore lint/suspicious/noExplicitAny: Elysia's OpenAPI plugin typing is not compatible with better-auth's OpenAPI schema typing
+		}) as Promise<any>,
+	// biome-ignore lint/suspicious/noExplicitAny: better-auth's OpenAPI schema typing is not compatible with Elysia's OpenAPI plugin typing
+	components: getSchema().then(({ components }) => components) as Promise<any>,
+} as const;

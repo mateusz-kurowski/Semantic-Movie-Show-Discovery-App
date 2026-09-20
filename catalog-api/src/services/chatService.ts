@@ -2,10 +2,12 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { propagateAttributes } from "@langfuse/tracing";
 import {
 	convertToModelMessages,
+	createUIMessageStreamResponse,
+	isStepCount,
 	jsonSchema,
-	stepCountIs,
 	streamText,
 	tool,
+	toUIMessageStream,
 	type UIMessage,
 } from "ai";
 import { and, eq, sql } from "drizzle-orm";
@@ -101,27 +103,26 @@ const searchMovies = tool({
 		console.log(
 			`[searchMovies] phrase: ${phrase}, limit: ${limit ?? 4}, yearFrom: ${yearFrom ?? "none"}->${cleanYearFrom ?? "none"}, yearTo: ${yearTo ?? "none"}->${cleanYearTo ?? "none"}`,
 		);
-		// Per-movie collapse, rerank, and slicing to the requested count all
-		// happen in searchService.hybridSearch; the byId guard below only
-		// protects against residual duplicates.
+		// Collapse, rerank, and slicing to the requested count live in hybridSearch.
 		const yearFilter =
 			cleanYearFrom === undefined && cleanYearTo === undefined
 				? undefined
 				: { yearFrom: cleanYearFrom, yearTo: cleanYearTo };
-		const points = await searchService.hybridSearch(
-			phrase,
-			limit ?? 4,
-			yearFilter,
-		);
-		const byId = new Map<number, MoviePick>();
-		for (const point of points) {
-			const pick = toPick(point.payload as SearchPayload);
-			if (pick && !byId.has(pick.id)) byId.set(pick.id, pick);
+		try {
+			const points = await searchService.hybridSearch(
+				phrase,
+				limit ?? 4,
+				yearFilter,
+			);
+			const movies = points
+				.map((point) => toPick(point.payload as SearchPayload))
+				.filter((pick): pick is MoviePick => pick !== null);
+			return { movies, phrase };
+		} catch (error) {
+			return {
+				error: `Failed to search movies: ${error instanceof Error ? error.message : String(error)}`,
+			};
 		}
-		return {
-			movies: [...byId.values()].slice(0, limit ?? 4),
-			phrase,
-		};
 	},
 	inputSchema: jsonSchema<{
 		phrase: string;
@@ -339,31 +340,39 @@ const streamChat = async (
 	if (lastMessage?.role === "user") {
 		await persist(chatId, "user", textOf(lastMessage));
 	}
-	await propagateAttributes(
+
+	const convertedMessages = await convertToModelMessages(uiMessages);
+
+	// Owijamy wywołanie streamText w propagateAttributes,
+	// aby powiązać traceName, userId oraz sessionId na poziomie spanu:
+	const result = await propagateAttributes(
 		{
-			traceName: "chat",
+			traceName: "reelfind-chat",
 			userId,
 			sessionId: chatId,
-			tags: ["chat"],
+			tags: ["chat", "streaming"],
 			metadata: {
 				feature: "chat-assistant",
 			},
 		},
-		() => {},
+		() =>
+			streamText({
+				messages: convertedMessages,
+				model: openai.chat(model || env.openAIChatModel),
+				stopWhen: isStepCount(4),
+				instructions: SYSTEM_PROMPT,
+				tools: chatTools,
+				telemetry: {
+					functionId: "streamChat",
+					isEnabled: true,
+				},
+			}),
 	);
-	const result = streamText({
-		messages: await convertToModelMessages(uiMessages),
-		model: openai.chat(model || env.openAIChatModel),
-		stopWhen: stepCountIs(4),
-		system: SYSTEM_PROMPT,
-		tools: chatTools,
-		telemetry: {
-			functionId: "reelfind-chat",
-		},
-	});
 
-	return result.toUIMessageStreamResponse({
-		onFinish: async ({ responseMessage }) => {
+	const stream = toUIMessageStream({
+		stream: result.stream,
+		originalMessages: uiMessages,
+		onEnd: async ({ responseMessage }) => {
 			await persist(
 				chatId,
 				"assistant",
@@ -372,6 +381,8 @@ const streamChat = async (
 			);
 		},
 	});
+
+	return createUIMessageStreamResponse({ stream });
 };
 
 interface LiteLLMModel {

@@ -1,8 +1,9 @@
 import { cors } from "@elysia/cors";
 import openapi from "@elysiajs/openapi";
 import { Elysia } from "elysia";
-import { auth } from "./auth";
+import { auth, OpenAPI } from "./auth";
 import { validateEnvs } from "./models/envModel";
+import betterAuthRoutes from "./routes/betterAuth";
 import chatRoutes from "./routes/chatRoutes";
 import embeddingRoutes from "./routes/embeddingRoutes";
 import movieRoutes from "./routes/movieRoutes";
@@ -19,11 +20,19 @@ const corsOrigins = process.env.CORS_ORIGINS?.split(",").filter(Boolean) ?? [
 import "./instrumentation";
 
 const app = new Elysia({ name: "api", prefix: "/api" })
-	.use(openapi())
+	.use(cors({ credentials: true, origin: corsOrigins }))
+	.use(
+		openapi({
+			documentation: {
+				components: await OpenAPI.components,
+				paths: await OpenAPI.getPaths(),
+			},
+		}),
+	)
+	.use(betterAuthRoutes)
 	.use(embeddingRoutes)
 	.use(searchRoutes)
 	.use(movieRoutes)
-	.use(cors({ credentials: true, origin: corsOrigins }))
 	.mount(auth.handler)
 	.use(chatRoutes)
 	.use(watchlistRoutes)

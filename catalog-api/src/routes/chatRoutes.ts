@@ -16,19 +16,15 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 	.use(authMacro)
 	.guard({
 		auth: true,
-		// biome-ignore lint/suspicious/noExplicitAny: Elysia macro typing requires cast for auth guard
-	} as any)
+	})
 	.post(
 		"/",
-		// biome-ignore lint/suspicious/noExplicitAny: Elysia context requires any for macro-injected user
-		async ({ body, user, status }: any) => {
+		async ({ body, user, status }) => {
 			try {
 				const values: { userId: string; title?: string } = {
 					userId: user.id,
+					title: body?.title,
 				};
-				if (body.title !== undefined) {
-					values.title = body.title;
-				}
 				const [chat] = await db.insert(chats).values(values).returning();
 				return chat;
 			} catch (error) {
@@ -37,6 +33,7 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 			}
 		},
 		{
+			auth: true,
 			body: t.Object({
 				title: t.Optional(
 					t.String({
@@ -50,8 +47,7 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 	)
 	.post(
 		"/create",
-		// biome-ignore lint/suspicious/noExplicitAny: Elysia context requires any for macro-injected user
-		async ({ body, user, status }: any) => {
+		async ({ body, user, status }) => {
 			try {
 				const values: { userId: string; title?: string } = {
 					userId: user.id,
@@ -67,6 +63,7 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 			}
 		},
 		{
+			auth: true,
 			body: t.Object({
 				title: t.Optional(
 					t.String({
@@ -80,8 +77,7 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 	)
 	.get(
 		"/",
-		// biome-ignore lint/suspicious/noExplicitAny: Elysia context requires any for macro-injected user
-		async ({ query, user, status }: any) => {
+		async ({ query, user, status }) => {
 			try {
 				const limit = query.limit ?? 20;
 				const offset = query.offset ?? 0;
@@ -100,6 +96,8 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 			}
 		},
 		{
+			auth: true,
+
 			query: t.Object({
 				limit: t.Optional(
 					t.Number({
@@ -119,35 +117,25 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 			}),
 		},
 	)
-	.get(
-		"/models",
-		// biome-ignore lint/suspicious/noExplicitAny: Elysia context requires any for macro-injected user
-		async ({ status }: any) => {
-			try {
-				return await chatService.listModels();
-			} catch (error) {
-				console.error("[ChatRoutes] Error listing chat models:", error);
-				return status(500, "Failed to list chat models");
-			}
-		},
-	)
+	.get("/models", async ({ status }) => {
+		try {
+			return await chatService.listModels();
+		} catch (error) {
+			console.error("[ChatRoutes] Error listing chat models:", error);
+			return status(500, "Failed to list chat models");
+		}
+	})
 	.get(
 		"/:id",
-		// biome-ignore lint/suspicious/noExplicitAny: Elysia context requires any for macro-injected user
-		async ({ params, user, status }: any) => {
+		async ({ params, user, status }) => {
 			try {
-				const userId = user.id;
 				const [chat] = await db
 					.select()
 					.from(chats)
 					.where(eq(chats.id, params.id))
 					.limit(1);
 
-				if (!chat) {
-					return status(404, "Chat not found");
-				}
-
-				if (chat.userId !== userId) {
+				if (!chat || chat.userId !== user.id) {
 					return status(404, "Chat not found");
 				}
 
@@ -218,21 +206,15 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 	)
 	.post(
 		"/:id/messages",
-		// biome-ignore lint/suspicious/noExplicitAny: Elysia context requires any for macro-injected user
-		async ({ params, body, user, status }: any) => {
+		async ({ params, body, user, status }) => {
 			try {
-				const userId = user.id;
 				const [chat] = await db
 					.select()
 					.from(chats)
 					.where(eq(chats.id, params.id))
 					.limit(1);
 
-				if (!chat) {
-					return status(404, "Chat not found");
-				}
-
-				if (chat.userId !== userId) {
+				if (!chat || chat.userId !== user.id) {
 					return status(404, "Chat not found");
 				}
 
@@ -280,8 +262,7 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 	)
 	.post(
 		"/:id/stream",
-		// biome-ignore lint/suspicious/noExplicitAny: Elysia context requires any for macro-injected user
-		async ({ params, body, user, status }: any) => {
+		async ({ params, body, user, status }) => {
 			try {
 				const [chat] = await db
 					.select()

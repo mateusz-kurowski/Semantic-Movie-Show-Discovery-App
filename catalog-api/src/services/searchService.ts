@@ -10,13 +10,8 @@ type ScoredPoint = Awaited<
 	ReturnType<typeof qdrantService.hybridSearch>
 >[number];
 
-// The ingester splits long overviews into several points, so one film can
-// come back more than once — collapse to the best-ranked (first) hit per
-// film. Points without a numeric id cannot be deduped and are kept as-is, so
-// collapsing never drops a candidate.
-export const collapseToBestPerMovie = (
-	points: ScoredPoint[],
-): ScoredPoint[] => {
+// Chunk dedup: keep the best-ranked hit per film; non-numeric ids are kept.
+const collapseToBestPerMovie = (points: ScoredPoint[]): ScoredPoint[] => {
 	const seen = new Set<number>();
 	return points.filter((point) => {
 		const id = (point.payload as RerankCandidatePayload | undefined)?.id;
@@ -35,9 +30,7 @@ export interface HybridSearchOptions {
 	offset?: number;
 }
 
-// Offset pagination window cap: offset+topK can never exceed this, so deep
-// pages cannot force unbounded Qdrant fetches or rerank payloads. Matches
-// the max-100 convention on the list endpoints.
+// Window cap: offset+topK can never exceed 100.
 const MAX_SEARCH_WINDOW = 100;
 
 const clampWindow = (topK: number, offset: number) => {
@@ -46,15 +39,8 @@ const clampWindow = (topK: number, offset: number) => {
 	return { safeOffset, safeTopK };
 };
 
-// Per-query ranked-list cache so every page slices ONE ranking. Without it,
-// each paged request reranks independently (500ms timeout + silent RRF
-// fallback), so page 1 can rerank while page 2 falls back (or vice versa)
-// and the two pages slice different orders with repeats scattered through.
-// Key includes phrase + yearFilter + rerank flag + candidate sizing. The
-// rerank flag keeps chat's getMovieDetails fallback ({rerank:false}) on
-// entries that NEVER mix with reranked results. Offset/topK stay out of the
-// key so all pages share the same cached order and slice their window.
-export const buildHybridCacheKey = (
+// Rerank flag is in-key (rerank:false entries never mix); offset/topK stay out so pages share one ranking.
+const buildHybridCacheKey = (
 	phrase: string,
 	yearFilter: YearFilter | undefined,
 	rerankRequested: boolean,
@@ -67,10 +53,7 @@ export const buildHybridCacheKey = (
 	return `hybrid:v1:phrase=${phrase}:yf=${yearPart}:rr=${rerankRequested ? 1 : 0}:ck=${candidateK}:mult=${env.rerankCandidateMultiplier}:max=${env.rerankCandidateMax}`;
 };
 
-// Prefix-preserving merge for hit-short refetches: keep the cached head
-// verbatim (it may already have served pages), append only movies missing
-// from it. Same numeric-id dedup semantics as the per-movie collapse —
-// points without a numeric id cannot be deduped and are always appended.
+// Prefix-preserving merge: keep the cached head verbatim, append only missing movies.
 const mergeRankings = (
 	oldList: ScoredPoint[],
 	fresh: ScoredPoint[],
@@ -115,14 +98,6 @@ const hybridSearch = async (
 	yearFilter?: YearFilter,
 	options?: HybridSearchOptions,
 ) => {
-	// Single choke point for POST /search/hybrid and the chat tools: fetch
-	// headroom for the per-movie collapse plus the page offset, rerank
-	// movie-level docs, then cut the requested page out of the final ranking
-	// so page 2 continues page 1's order. The full ranking (capped at
-	// MAX_SEARCH_WINDOW) is cached per query in Redis: hits covering the page
-	// slice it without touching Qdrant or rerank, misses run the pipeline
-	// once and store it for the following pages, and hits shorter than the
-	// page refetch with the deeper offset and overwrite the longer list.
 	const { safeOffset, safeTopK } = clampWindow(topK, options?.offset ?? 0);
 	if (safeTopK === 0) return [];
 	const candidateK = Math.min(
@@ -136,15 +111,6 @@ const hybridSearch = async (
 		rerankRequested,
 		candidateK,
 	);
-	// A hit only serves when the cached ranking covers the requested page.
-	// The cached list is only as long as the FIRST miss fetched (candidateK +
-	// that miss's offset), so a deeper page can outgrow it — refetching with
-	// the deeper offset and prefix-merging extends the same ranking. The old
-	// head is kept verbatim because it may already have served pages: a fresh
-	// rerank over a larger candidate set can interleave new docs ahead of old
-	// ones (or flip to RRF fallback on timeout), shifting old items across
-	// page boundaries and re-scattering repeats. Merging keeps served pages
-	// immutable; only unseen tail movies are appended.
 	let cached: ScoredPoint[] | null = null;
 	try {
 		if (cacheClient.isOpen) {
@@ -191,9 +157,7 @@ const hybridSearch = async (
 	const ordered = rerankRequested
 		? await rerankingService.rerank(phrase, movies)
 		: movies;
-	// On a hit-short refetch, prefix-merge with the outgrown cached ranking
-	// so already-served pages stay immutable; on a true miss there is no
-	// cached head and the fresh ranking stands alone.
+	// Prefix-merge on hit-short refetch so served pages stay immutable.
 	const full = (cached ? mergeRankings(cached, ordered) : ordered).slice(
 		0,
 		MAX_SEARCH_WINDOW,
@@ -215,9 +179,6 @@ const hybridSearch = async (
 	return full.slice(safeOffset, safeOffset + safeTopK);
 };
 export const searchService = {
-	buildHybridCacheKey,
-	collapseToBestPerMovie,
 	hybridSearch,
 	semanticSearch,
 };
-export type { YearFilter };
