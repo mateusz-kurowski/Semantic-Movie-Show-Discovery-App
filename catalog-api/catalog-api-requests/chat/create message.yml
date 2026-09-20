@@ -1,0 +1,29 @@
+info:
+  name: create message
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{url}}/chat/:id/messages"
+  params:
+    - name: id
+      value: "{{chatId}}"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "role": "{{messageRole}}",
+        "content": "{{messageContent}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: 'Requires authentication. Creates a message in the specified chat. Params: id (chat ID — set the `chatId` env var to a real ID from create-chat). Body: role "user" | "assistant" | "system", content 1-10000 chars. Updates chat updatedAt on success.'

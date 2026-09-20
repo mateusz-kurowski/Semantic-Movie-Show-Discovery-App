@@ -1,0 +1,37 @@
+variables:
+  - name: url
+    value: http://localhost:8080/api
+  - name: origin
+    value: http://localhost:3000
+  - name: email
+    value: mateusz.kurowski28@gmail.com
+  - name: password
+    value: mateusz.kurowski28@gmail.com
+  - name: movieId
+    value: "634649"
+  - name: chatId
+    value: tkc1jsmkh8dyoj9ojtckqabg
+  - name: searchPhrase
+    value: bat man 8
+  - name: embedPhrase
+    value: What are some good movies to watch?
+  - name: topK
+    value: "20"
+  - name: moviesLimit
+    value: "40"
+  - name: moviesSortBy
+    value: popularity
+  - name: moviesOrder
+    value: desc
+  - name: chatsLimit
+    value: "20"
+  - name: chatsOffset
+    value: "0"
+  - name: chatTitle
+    value: My first chat
+  - name: messageRole
+    value: user
+  - name: messageContent
+    value: Hello, find me a sci-fi movie like Interstellar
+  - name: model
+    value: ""

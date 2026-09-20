@@ -1,0 +1,22 @@
+info:
+  name: delete chat
+  type: http
+  seq: 5
+
+http:
+  method: DELETE
+  url: "{{url}}/chat/:id"
+  params:
+    - name: id
+      value: "{{chatId}}"
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Requires authentication. Deletes a chat by ID (cascades to messages). Set the `chatId` env var (`{{chatId}}`) to a real chat ID from create-chat. Returns 404 if not found or not owned by user.

@@ -1,0 +1,37 @@
+variables:
+  - name: url
+    value: https://catalog-api.mkurowski.dev/api
+  - name: origin
+    value: https://movies.mkurowski.dev
+  - name: email
+    value: you@example.com
+  - name: password
+    value: changeme
+  - name: movieId
+    value: "634649"
+  - name: chatId
+    value: replace-me
+  - name: searchPhrase
+    value: bat man 8
+  - name: embedPhrase
+    value: What are some good movies to watch?
+  - name: topK
+    value: "5"
+  - name: moviesLimit
+    value: "40"
+  - name: moviesSortBy
+    value: popularity
+  - name: moviesOrder
+    value: desc
+  - name: chatsLimit
+    value: "20"
+  - name: chatsOffset
+    value: "0"
+  - name: chatTitle
+    value: My first chat
+  - name: messageRole
+    value: user
+  - name: messageContent
+    value: Hello, find me a sci-fi movie like Interstellar
+  - name: model
+    value: ""

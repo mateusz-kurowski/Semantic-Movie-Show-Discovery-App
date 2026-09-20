@@ -1,0 +1,28 @@
+info:
+  name: sign-in-remember-true
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{url}}/auth/sign-in/email"
+  headers:
+    - name: Origin
+      value: "{{origin}}"
+  body:
+    type: json
+    data: |-
+      {
+        "email":"{{email}}",
+        "password":"{{password}}",
+        "rememberMe":true
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Public. Same as sign-in but with rememberMe=true: sets a persistent `better-auth.session_token` cookie (~30 days) instead of a session cookie (~1 day max). Compare with sign-in-remember-false."
