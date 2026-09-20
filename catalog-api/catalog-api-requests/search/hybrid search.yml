@@ -1,0 +1,22 @@
+info:
+  name: hybrid search
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{url}}/search/hybrid"
+  body:
+    type: json
+    data: |-
+      {
+        "phrase":"{{searchPhrase}}",
+        "topK":{{topK}}
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

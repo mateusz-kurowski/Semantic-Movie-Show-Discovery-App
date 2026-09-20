@@ -1,6 +1,0 @@
-{
-	"ignore": ["node_modules", ".git"],
-	"name": "catalog-api-requests",
-	"type": "collection",
-	"version": "1"
-}

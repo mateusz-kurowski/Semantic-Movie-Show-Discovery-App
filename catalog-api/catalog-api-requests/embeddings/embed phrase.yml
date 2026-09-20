@@ -1,0 +1,23 @@
+info:
+  name: embed phrase
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{url}}/embedding"
+  body:
+    type: json
+    data: |-
+      {
+        "phrase": "{{embedPhrase}}"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Returns the (cached or freshly computed) embedding vector for a phrase, or [] for an empty phrase. No authentication required.

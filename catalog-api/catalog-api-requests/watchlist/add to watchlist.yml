@@ -1,0 +1,24 @@
+info:
+  name: add to watchlist
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{url}}/watchlist"
+  body:
+    type: json
+    data: |-
+      {
+        "movieId": {{movieId}}
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Requires authentication. Saves a movie to the signed-in user's watchlist. Body: movieId (number, >=1). Saving a movie that is already on the list is a no-op."

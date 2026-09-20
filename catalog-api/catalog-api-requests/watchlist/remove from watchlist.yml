@@ -1,0 +1,22 @@
+info:
+  name: remove from watchlist
+  type: http
+  seq: 3
+
+http:
+  method: DELETE
+  url: "{{url}}/watchlist/:movieId"
+  params:
+    - name: movieId
+      value: "{{movieId}}"
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Requires authentication. Removes a movie from the signed-in user's watchlist. Removing a movie that isn't saved is a no-op.
