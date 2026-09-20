@@ -296,6 +296,7 @@ const chatRoutes = new Elysia({ name: "chat", prefix: "/chat" })
 				return await chatService.streamChat(
 					params.id,
 					body.messages,
+					user.id,
 					body.model,
 				);
 			} catch (error) {

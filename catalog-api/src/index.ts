@@ -12,23 +12,25 @@ import watchlistRoutes from "./routes/watchlistRoutes";
 export const envs = validateEnvs();
 
 const corsOrigins = process.env.CORS_ORIGINS?.split(",").filter(Boolean) ?? [
-  "http://localhost:3000",
-  "https://movies.mkurowski.dev",
+	"http://localhost:3000",
+	"https://movies.mkurowski.dev",
 ];
 
+import "./instrumentation";
+
 const app = new Elysia({ name: "api", prefix: "/api" })
-  .use(openapi())
-  .use(embeddingRoutes)
-  .use(searchRoutes)
-  .use(movieRoutes)
-  .use(cors({ credentials: true, origin: corsOrigins }))
-  .mount(auth.handler)
-  .use(chatRoutes)
-  .use(watchlistRoutes)
-  .listen(envs.apiPort);
+	.use(openapi())
+	.use(embeddingRoutes)
+	.use(searchRoutes)
+	.use(movieRoutes)
+	.use(cors({ credentials: true, origin: corsOrigins }))
+	.mount(auth.handler)
+	.use(chatRoutes)
+	.use(watchlistRoutes)
+	.listen(envs.apiPort);
 
 export type App = typeof app;
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
+	`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );
