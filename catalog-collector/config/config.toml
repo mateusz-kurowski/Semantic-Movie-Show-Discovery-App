@@ -1,0 +1,13 @@
+[imdb]
+
+name_basics = "https://datasets.imdbws.com/name.basics.tsv.gz"
+akas = "https://datasets.imdbws.com/title.akas.tsv.gz"
+title_basics = "https://datasets.imdbws.com/title.basics.tsv.gz"
+crew = "https://datasets.imdbws.com/title.crew.tsv.gz"
+episode = "https://datasets.imdbws.com/title.episode.tsv.gz"
+principals = "https://datasets.imdbws.com/title.principals.tsv.gz"
+ratings = "https://datasets.imdbws.com/title.ratings.tsv.gz"
+
+[tmdb]
+
+dataset_name = "asaniczka/tmdb-movies-dataset-2023-930k-movies"

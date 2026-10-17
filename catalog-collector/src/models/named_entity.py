@@ -12,14 +12,14 @@ class NamedEntity(SQLModel):
     name: str
 
 
-def get_all_records(engine: Engine, model: type[T]) -> Sequence[T]:
+def get_all_records[T: NamedEntity](engine: Engine, model: type[T]) -> Sequence[T]:
     with Session(engine) as session:
         stmt = select(model)
         records = session.exec(stmt)
         return records.all()
 
 
-def create_entries(engine: Engine, entries: list[T]) -> None:
+def create_entries[T: NamedEntity](engine: Engine, entries: list[T]) -> None:
     with Session(engine) as session:
         for entry in entries:
             session.add(entry)

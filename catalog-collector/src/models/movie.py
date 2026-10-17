@@ -24,7 +24,7 @@ class Movie(SQLModel, table=True):
     id: int | None = Field(
         default=None, sa_column=Column(BigInteger(), primary_key=True)
     )
-    title: str | None = None
+    title: str
     vote_average: float
     vote_count: int
     status: str
@@ -38,15 +38,15 @@ class Movie(SQLModel, table=True):
     imdb_id: str | None = None
     original_language: str
     original_title: str | None = None
-    overview: str | None = None
+    overview: str
     popularity: float
     poster_path: str | None = None
     tagline: str | None = None
 
-    genres: list["Genre"] = Relationship(link_model=MovieGenreLink)
-    production_companies: list["Company"] = Relationship(link_model=MovieCompanyLink)
-    production_countries: list["Country"] = Relationship(link_model=MovieCountryLink)
-    spoken_languages: list["Language"] = Relationship(link_model=MovieLanguageLink)
-    keywords: list["Keyword"] = Relationship(link_model=MovieKeywordLink)
+    genres: list[Genre] = Relationship(link_model=MovieGenreLink)
+    production_companies: list[Company] = Relationship(link_model=MovieCompanyLink)
+    production_countries: list[Country] = Relationship(link_model=MovieCountryLink)
+    spoken_languages: list[Language] = Relationship(link_model=MovieLanguageLink)
+    keywords: list[Keyword] = Relationship(link_model=MovieKeywordLink)
 
     is_present_in_search: bool = Field(default=False)

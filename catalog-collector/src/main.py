@@ -1,24 +1,25 @@
 import os
 import sys
 
-from dataset import explore_dataset, filter_df, get_tmdb_dataset, scan_and_load_dataset
-from db import insert_movies_in_batches
+import kagglehub
 from dotenv import load_dotenv
+
+from config import get_config
+from dataset import (
+    explore_dataset,
+    filter_df,
+    scan_and_load_dataset,
+)
+from db import insert_movies_in_batches
 from env import get_envs
 from logger import log
 
-dotenv_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path)
-else:
-    from dotenv import load_dotenv as _load
-
-    _load()
-
 
 def main():
-    dataset_file_path = get_tmdb_dataset()
-    log.info("Downloading dataset...")
+    config = get_config()
+    tmdb_dataset_name = config.tmdb.dataset_name
+    log.info(f"Downloading TMDB dataset: {tmdb_dataset_name}")
+    dataset_file_path = kagglehub.dataset_download(tmdb_dataset_name)
     df = scan_and_load_dataset(dataset_file_path)
 
     filtered_df = filter_df(df)
@@ -45,8 +46,14 @@ def main():
 
 
 if __name__ == "__main__":
+    if not os.environ["PRODUCTION"]:
+        set = load_dotenv()
+        if not set:
+            log.warn(".env file did not set any environment variable")
+
     envs = get_envs()
     if not envs.catalog_collector_service_on:
-        log.info("Service is not running")
+        log.info("CATALOG_COLLECTOR_SERVICE_ON set to False")
+        log.info("catallog_collector gracefully closes...")
         sys.exit(0)
     main()

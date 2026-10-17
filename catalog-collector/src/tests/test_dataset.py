@@ -1,6 +1,7 @@
 import polars as pl
 import pytest
-from dataset import get_unique_values_from_df_col, str_to_str_list
+
+from dataset import get_unique_values_from_df_col, is_dataset_present, str_to_str_list
 
 
 # Arrange
@@ -55,3 +56,17 @@ def test_get_unique_values_from_df_col(test_dataset):
     # Assert
     assert sorted(genres) == ["Action", "Comedy", "Drama", "Romance"]
     assert sorted(keywords) == ["action", "drama", "french", "test"]
+
+
+def test_is_dataset_present(monkeypatch, tmp_path):
+    (tmp_path / "short.csv").write_text("id,title\n1,a\n")
+    monkeypatch.setenv("DATASET_OUTPUT_DIR", str(tmp_path))
+
+    assert is_dataset_present("short.csv")
+
+
+def test_is_dataset_present_ignores_directories(monkeypatch, tmp_path):
+    (tmp_path / "subdir").mkdir()
+    monkeypatch.setenv("DATASET_OUTPUT_DIR", str(tmp_path))
+
+    assert not is_dataset_present("subdir")

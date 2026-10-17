@@ -1,15 +1,14 @@
+import os
 from pathlib import Path
 
-import kagglehub
 import polars as pl
+
 from env import get_envs
 from logger import log
 
-# Download latest version
 
-
-def get_tmdb_dataset() -> str:
-    return kagglehub.dataset_download("asaniczka/tmdb-movies-dataset-2023-930k-movies")
+def is_dataset_present(dataset_name: str) -> bool:
+    return (Path(os.environ["DATASET_OUTPUT_DIR"]) / dataset_name).is_file()
 
 
 def _resolve_dataset_csv(path: str) -> Path:

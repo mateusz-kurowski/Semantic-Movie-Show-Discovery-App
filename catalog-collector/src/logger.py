@@ -2,10 +2,12 @@
 
 Outputs to stdout (captured by Docker).
 Set STRUCTLOG_FORMAT=json for JSON output (machine parsing) or omit for human-readable console.
+Set LOG_LEVEL (default INFO) to change verbosity.
 """
 
 import logging
 import os
+import sys
 from typing import Any
 
 import structlog
@@ -22,14 +24,22 @@ def _build_processors() -> list[Any]:
     ]
 
     if os.environ.get("STRUCTLOG_FORMAT", "").lower() == "json":
-        return [*shared, structlog.processors.JSONRenderer()]
+        return [
+            *shared,
+            structlog.processors.dict_tracebacks,
+            structlog.processors.JSONRenderer(),
+        ]
 
-    return [*shared, structlog.dev.ConsoleRenderer()]
+    return [*shared, structlog.dev.ConsoleRenderer(colors=sys.stdout.isatty())]
 
 
 structlog.configure(
     processors=_build_processors(),
-    wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
+    wrapper_class=structlog.make_filtering_bound_logger(
+        logging.getLevelNamesMapping().get(
+            os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO
+        )
+    ),
     context_class=dict,
     logger_factory=structlog.PrintLoggerFactory(),
     cache_logger_on_first_use=True,

@@ -15,4 +15,6 @@ uv run ruff check --fix .        # lint
 uv run ruff format .             # format
 ```
 
+Ruff runs on staged `*.py` files through Lefthook (`.lefthook.yml`, extended by the root `.lefthook.yml`). Run `lefthook run pre-commit` from the repo root to execute the hook manually; run the ruff commands above after Python changes.
+
 Requires Python >=3.14.
