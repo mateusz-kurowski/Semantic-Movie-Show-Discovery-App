@@ -1,4 +1,7 @@
 import polars as pl
+from sqlalchemy.dialects.postgresql import insert
+from sqlmodel import Session, create_engine
+
 from env import get_envs
 from logger import log
 from models.company import Company
@@ -15,8 +18,6 @@ from models.links import (
 )
 from models.movie import Movie
 from models.named_entity import create_entries, get_all_records
-from sqlalchemy.dialects.postgresql import insert
-from sqlmodel import Session, create_engine
 
 envs = get_envs()
 connect_args = {}
