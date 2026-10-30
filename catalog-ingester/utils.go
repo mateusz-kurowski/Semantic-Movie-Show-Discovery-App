@@ -10,8 +10,8 @@ func float64ArrayToFloat32(array []float64) []float32 {
 	return result
 }
 
-func StringSliceToAnySlicePlusTrimElements(strs []string) []any {
-	res := make([]any, len(strs))
+func StringSliceToAnySlicePlusTrimElements(strs []string) []string {
+	res := make([]string, len(strs))
 	for i, s := range strs {
 		res[i] = strings.TrimSpace(s)
 	}

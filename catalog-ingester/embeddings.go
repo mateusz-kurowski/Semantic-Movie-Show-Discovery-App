@@ -8,8 +8,6 @@ import (
 	"github.com/openai/openai-go/v3/packages/param"
 )
 
-const voyage4Large = "voyage/voyage-4-lite"
-
 func newOpenaiClient(env EnvVars) openai.Client {
 	return openai.NewClient(
 		option.WithAPIKey(env.OpenAiAPIKey),
@@ -25,7 +23,7 @@ func embedBatch(
 ) (*openai.CreateEmbeddingResponse, error) {
 	return client.Embeddings.New(ctx, openai.EmbeddingNewParams{
 		Input:      openai.EmbeddingNewParamsInputUnion{OfArrayOfStrings: inputs},
-		Model:      voyage4Large,
+		Model:      vars.OpenAiEmbeddingModel,
 		Dimensions: param.Opt[int64]{Value: int64(vars.VectorDimension)},
 	})
 }

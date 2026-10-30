@@ -37,7 +37,12 @@ The service is configured entirely via environment variables. You can provide th
 | `QDRANT_DENSE_VECTOR_NAME`    | The named vector field for the embeddings               | `overview-dense-vector`                    |
 | `QDRANT_API_KEY`              | API Key for Qdrant (if using Cloud or secured instance) |                                            |
 | `QDRANT_USE_SSL`              | Enable TLS/SSL for Qdrant connection                    | `false`                                    |
-| `QDRANT_INFERENCE_MODEL`      | Qdrant Cloud Inference Model ID (if enabled)            |                                            |
+| `QDRANT_SPARSE_VECTOR_NAME`   | The named vector field for BM25 sparse vectors          | `overview-sparse-vector`                   |
+| `VECTOR_DIMENSION`            | Dense vector size (must match catalog-api)              | `256`                                      |
+| `OPENAI_BASE_URL`             | OpenAI-compatible embeddings API base URL               | `https://api.openai.com/v1`                |
+| `OPENAI_EMBEDDING_KEY`        | API key for the embeddings provider                     |                                            |
+| `OPENAI_EMBEDDING_MODEL`      | Embedding model name sent to the provider               | `voyage/voyage-4-lite`                     |
+| `REDIS_URL`                   | Redis connection string for the embedding cache         | `redis://localhost:6379`                   |
 
 ## Running Locally
 

@@ -22,6 +22,7 @@ type EnvVars struct {
 	VectorDimension        int    `validate:"gte=1"`
 	OpenAiAPIKey           string `validate:"required"`
 	OpenAiBaseURL          string `validate:"required,url"`
+	OpenAiEmbeddingModel   string `validate:"required"`
 	CacheURL               string `validate:"required,uri,startswith=redis"`
 }
 
@@ -85,6 +86,7 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 		VectorDimension:        vectorDimensionInt,
 		OpenAiAPIKey:           os.Getenv("OPENAI_EMBEDDING_KEY"),
 		OpenAiBaseURL:          os.Getenv("OPENAI_BASE_URL"),
+		OpenAiEmbeddingModel:   os.Getenv("OPENAI_EMBEDDING_MODEL"),
 		CacheURL:               os.Getenv("REDIS_URL"),
 	}
 

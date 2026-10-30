@@ -93,7 +93,7 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 	cacheEmbeddings, notCached, err := getEmbeddingsFromCache(
 		ctx,
 		semanticTexts,
-		voyage4Large,
+		vars.OpenAiEmbeddingModel,
 		vars.VectorDimension,
 		env.CacheClient,
 	)
@@ -138,7 +138,7 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 		if cacheErr := setEmbeddingsInCache(
 			ctx,
 			fresh,
-			voyage4Large,
+			vars.OpenAiEmbeddingModel,
 			vars.VectorDimension,
 			env.CacheClient,
 		); cacheErr != nil {

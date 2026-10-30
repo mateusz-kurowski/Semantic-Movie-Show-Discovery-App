@@ -3,9 +3,7 @@ package main
 import (
 	"context"
 	"log/slog"
-	"slices"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/qdrant/go-client/qdrant"
@@ -120,26 +118,6 @@ func (m *Movie) ToQdrantPayload(
 		}),
 		Payload: qdrant.NewValueMap(m.toMap()),
 	}
-}
-
-func (m *Movie) buildSemanticText() string {
-	genres := namesFrom(m.Genres)
-	keywords := namesFrom(m.Keywords)
-	// Sort so the text (and its cache key) is stable regardless of DB row order.
-	slices.Sort(genres)
-	slices.Sort(keywords)
-
-	parts := []string{m.Title, m.Tagline, strings.Join(genres, ", "), strings.Join(keywords, ", "), m.Overview}
-	nonEmpty := make([]string, 0, len(parts))
-	for _, p := range parts {
-		p = strings.TrimRight(p, ". ,")
-		if p != "" {
-			nonEmpty = append(nonEmpty, p)
-		}
-	}
-	semanticText := strings.Join(nonEmpty, ". ")
-	m.SemanticText = semanticText
-	return semanticText
 }
 
 func GetMovieIDs(movies []Movie) []uint64 {
