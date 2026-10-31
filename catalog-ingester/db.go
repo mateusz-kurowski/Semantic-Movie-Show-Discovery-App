@@ -1,22 +1,31 @@
 package main
 
 import (
-	"log/slog"
+	"time"
 
-	slogGorm "github.com/orandin/slog-gorm"
+	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/plugin/opentelemetry/tracing"
+	gormlogger "gorm.io/gorm/logger"
+	gormlogrus "gorm.io/plugin/opentelemetry/logging/logrus"
 )
 
 const (
 	defaultMaxOpenCons  = 100
 	defaultMaxIdleConns = 10
+	slowQueryThreshold  = 200 * time.Millisecond
 )
 
-func initDB(logger *slog.Logger, dsn string) (*gorm.DB, error) {
-	gormLogger := slogGorm.New(
-		slogGorm.WithHandler(logger.Handler()),
+func initDB(logger *logrus.Logger, dsn string) (*gorm.DB, error) {
+	// WithLogger keeps GORM on the app's logrus instance; the default writer
+	// would reconfigure logrus's global logger instead.
+	gormLogger := gormlogger.New(
+		gormlogrus.NewWriter(gormlogrus.WithLogger(logger)),
+		gormlogger.Config{
+			SlowThreshold: slowQueryThreshold,
+			LogLevel:      gormlogger.Warn,
+			Colorful:      false,
+		},
 	)
 
 	db, openErr := gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -26,10 +35,6 @@ func initDB(logger *slog.Logger, dsn string) (*gorm.DB, error) {
 		return nil, openErr
 	}
 
-	// Add OpenTelemetry tracing plugin to instrument all operations
-	if err := db.Use(tracing.NewPlugin()); err != nil {
-		return nil, err
-	}
 	// Set connection pool
 	sqlDB, connErr := db.DB()
 	if connErr != nil {
@@ -41,3 +46,9 @@ func initDB(logger *slog.Logger, dsn string) (*gorm.DB, error) {
 
 	return db, nil
 }
+
+const (
+	fieldCount      = "count"
+	fieldCollection = "collection"
+	fieldTotalCount = "total_count"
+)

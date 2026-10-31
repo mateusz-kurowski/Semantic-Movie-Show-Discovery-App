@@ -8,15 +8,14 @@ import (
 
 	"github.com/openai/openai-go/v3"
 	"github.com/qdrant/go-client/qdrant"
+	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func initQdrant(ctx context.Context, env GlobalEnv, vars EnvVars) (*qdrant.Client, error) {
-	env.Logger.InfoContext(ctx, "Initializing Qdrant client",
-		"host", vars.QdrantHost,
-		"port", vars.QdrantPort,
-		"collection", vars.QdrantCollectionName,
-		"vector_name", vars.QdrantDenseVectorName,
-		"vector_dimension", vars.VectorDimension)
+	env.Logger.WithContext(ctx).
+		WithFields(logrus.Fields{"host": vars.QdrantHost, "port": vars.QdrantPort, fieldCollection: vars.QdrantCollectionName, "vector_name": vars.QdrantDenseVectorName, "vector_dimension": vars.VectorDimension}).
+		Info("Initializing Qdrant client")
 
 	client, err := qdrant.NewClient(&qdrant.Config{
 		APIKey: vars.QdrantAPIKey,
@@ -33,11 +32,15 @@ func initQdrant(ctx context.Context, env GlobalEnv, vars EnvVars) (*qdrant.Clien
 		return nil, err
 	}
 	if exists {
-		env.Logger.InfoContext(ctx, "Collection exists", "collection", vars.QdrantCollectionName)
+		env.Logger.WithContext(ctx).
+			WithFields(logrus.Fields{fieldCollection: vars.QdrantCollectionName}).
+			Info("Collection exists")
 		return client, nil
 	}
 
-	env.Logger.InfoContext(ctx, "Creating collection", "collection", vars.QdrantCollectionName)
+	env.Logger.WithContext(ctx).
+		WithFields(logrus.Fields{fieldCollection: vars.QdrantCollectionName}).
+		Info("Creating collection")
 	if err = client.CreateCollection(ctx, &qdrant.CreateCollection{
 		CollectionName: vars.QdrantCollectionName,
 		VectorsConfig: qdrant.NewVectorsConfigMap(map[string]*qdrant.VectorParams{
@@ -75,7 +78,7 @@ func upsertPoints(
 }
 
 func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
-	qdrantClient *qdrant.Client, openaiClient openai.Client, vars EnvVars) (int, error) {
+	qdrantClient *qdrant.Client, openaiClient openai.Client, vars EnvVars) (_ int, retErr error) {
 	movies, err := getMovies(ctx, env.DB, env.Logger, vars.IngestBatchSize)
 	if err != nil {
 		return 0, fmt.Errorf("fetch movies from DB: %w", err)
@@ -83,6 +86,9 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 	if len(movies) == 0 {
 		return 0, nil
 	}
+
+	ctx, endSpan := startIngestSpan(ctx, movies)
+	defer func() { endSpan(retErr) }()
 
 	semanticTexts := make([]string, len(movies))
 	for i := range movies {
@@ -106,12 +112,9 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 
 	// Only embed texts missing from cache.
 	uniqueToEmbed := dedupeStrings(notCached)
-	env.Logger.InfoContext(ctx, "Embedding cache lookup",
-		"cached", len(cacheEmbeddings),
-		"openai_calls", len(uniqueToEmbed),
-		"total", len(semanticTexts),
-		"cache_db", env.CacheClient.Options().DB,
-	)
+	env.Logger.WithContext(ctx).
+		WithFields(logrus.Fields{"cached": len(cacheEmbeddings), "openai_calls": len(uniqueToEmbed), "total": len(semanticTexts), "cache_db": env.CacheClient.Options().DB}).
+		Info("Embedding cache lookup")
 
 	if len(uniqueToEmbed) > 0 {
 		vectors, embedErr := embedBatch(ctx, openaiClient, vars, uniqueToEmbed)
@@ -142,7 +145,7 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 			vars.VectorDimension,
 			env.CacheClient,
 		); cacheErr != nil {
-			env.Logger.WarnContext(ctx, "cache fresh embeddings", "error", cacheErr)
+			env.Logger.WithContext(ctx).WithError(cacheErr).Warn("cache fresh embeddings")
 		}
 	}
 
@@ -169,6 +172,8 @@ func getMoviesAndIngest(ctx context.Context, env GlobalEnv,
 	if err != nil {
 		return 0, fmt.Errorf("update movies in DB: %w", err)
 	}
+
+	setSpanJSON(trace.SpanFromContext(ctx), attrObservationOutput, map[string]any{"ingested": len(movies)})
 
 	return len(movies), nil
 }

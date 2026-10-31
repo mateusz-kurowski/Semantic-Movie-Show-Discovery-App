@@ -2,18 +2,17 @@ package main
 
 import (
 	"context"
-	"log/slog"
-	"os"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/redis/go-redis/v9"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type GlobalEnv struct {
 	Validate       *validator.Validate
-	Logger         *slog.Logger
+	Logger         *logrus.Logger
 	TracingContext *context.Context
 	DB             *gorm.DB
 	CacheClient    *redis.Client
@@ -26,9 +25,10 @@ type MovieEmbedding struct {
 
 const defaultIngestPeriodSeconds = 15
 
+//nolint:funlen // linear startup wiring; tracing init pushed it over the limit.
 func main() {
 	env := GlobalEnv{
-		Logger:   slog.New(slog.NewTextHandler(os.Stderr, nil)),
+		Logger:   logrus.New(),
 		Validate: validator.New(validator.WithRequiredStructEnabled()),
 	}
 
@@ -36,10 +36,21 @@ func main() {
 
 	vars := ReadAndValidateEnvs(env)
 
+	shutdownTracing, err := initTracing(ctx)
+	if err != nil {
+		env.Logger.WithError(err).Error("Failed to init tracing")
+		return
+	}
+	defer func() {
+		if shutdownErr := shutdownTracing(ctx); shutdownErr != nil {
+			env.Logger.WithError(shutdownErr).Error("Failed to flush traces")
+		}
+	}()
+
 	// Create cache client
 	cacheClient, err := createCacheClient(vars)
 	if err != nil {
-		env.Logger.Error("Failed to create cache client", "error", err.Error())
+		env.Logger.WithError(err).Error("Failed to create cache client")
 		return
 	}
 
@@ -50,7 +61,7 @@ func main() {
 	// connect to DB
 	db, err := initDB(env.Logger, vars.DatabaseURL)
 	if err != nil {
-		env.Logger.Error("Connection to DB failed", "error", err.Error())
+		env.Logger.WithError(err).Error("Connection to DB failed")
 		return
 	}
 	env.DB = db
@@ -64,7 +75,7 @@ func main() {
 	// Create Qdrant client
 	qdrantClient, err := initQdrant(ctx, env, vars)
 	if err != nil {
-		env.Logger.Error("Failed to create Qdrant client", "error", err.Error())
+		env.Logger.WithError(err).Error("Failed to create Qdrant client")
 		defer qdrantClient.Close()
 		return
 	}
@@ -75,8 +86,9 @@ func main() {
 	// test openai client connection
 	_, errModelsList := openaiClient.Models.List(ctx)
 	if errModelsList != nil {
-		env.Logger.ErrorContext(ctx, "OpenAI client not working",
-			"error", errModelsList.Error())
+		env.Logger.WithContext(ctx).
+			WithFields(logrus.Fields{"error": errModelsList.Error()}).
+			Error("OpenAI client not working")
 		return
 	}
 
@@ -102,22 +114,27 @@ func main() {
 	// Initial ingestion before starting the ticker
 	count, err := ingest()
 	if err != nil {
-		env.Logger.Error("Failed to run initial ingestion", "error", err.Error())
+		env.Logger.WithError(err).Error("Failed to run initial ingestion")
 		return
 	}
 	totalCount += count
-	env.Logger.InfoContext(ctx, "Initial ingestion completed", "count", count, "total_count", totalCount)
+	env.Logger.WithContext(ctx).
+		WithFields(logrus.Fields{fieldCount: count, fieldTotalCount: totalCount}).
+		Info("Initial ingestion completed")
 
 	for range ticker.C {
 		ingestCount, ingestErr := ingest()
 		if ingestErr != nil {
-			env.Logger.Error("Failed to ingest movies", "error", ingestErr.Error())
+			env.Logger.WithError(ingestErr).Error("Failed to ingest movies")
 		}
 		totalCount += ingestCount
-		env.Logger.InfoContext(ctx, "Ingestion completed", "count", ingestCount, "total_count", totalCount)
+		env.Logger.WithContext(ctx).
+			WithFields(logrus.Fields{fieldCount: ingestCount, fieldTotalCount: totalCount}).
+			Info("Ingestion completed")
 	}
 
-	env.Logger.Info("Ingestion process completed. Exiting application.", "total_count", totalCount)
+	env.Logger.WithFields(logrus.Fields{fieldTotalCount: totalCount}).
+		Info("Ingestion process completed. Exiting application.")
 }
 
 // runContinuousLoop ingests until a batch comes back empty, returning the total ingested.
@@ -127,7 +144,7 @@ func runContinuousLoop(env GlobalEnv, ingest func() (int, error)) int {
 	for {
 		count, ingestErr := ingest()
 		if ingestErr != nil {
-			env.Logger.Error("Failed to ingest movies", "error", ingestErr.Error())
+			env.Logger.WithError(ingestErr).Error("Failed to ingest movies")
 		}
 
 		total += count

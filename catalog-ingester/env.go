@@ -43,14 +43,15 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 	qdrantPort := os.Getenv("QDRANT_PORT")
 	qdrantPortInt, err := strconv.Atoi(qdrantPort)
 	if err != nil {
-		genv.Logger.Error("Error while converting QDRANT_PORT to int.", "Error", err)
+		genv.Logger.WithError(err).Error("Error while converting QDRANT_PORT to int.")
 		os.Exit(1)
 	}
 
 	ingestPeriodSeconds := os.Getenv("INGEST_PERIOD_SECONDS")
 	ingestPeriodSecondsInt, err := strconv.Atoi(ingestPeriodSeconds)
 	if err != nil {
-		genv.Logger.Error("Error while converting INGEST_PERIOD_SECONDS to int.", "Error", err)
+		genv.Logger.WithError(err).
+			Error("Error while converting INGEST_PERIOD_SECONDS to int.")
 		os.Exit(1)
 	}
 
@@ -59,7 +60,7 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 	ingestBatchSize := os.Getenv("INGEST_BATCH_SIZE")
 	ingestBatchSizeInt, err := strconv.Atoi(ingestBatchSize)
 	if err != nil {
-		genv.Logger.Error("Error while converting INGEST_BATCH_SIZE to int.", "Error", err)
+		genv.Logger.WithError(err).Error("Error while converting INGEST_BATCH_SIZE to int.")
 		ingestBatchSizeInt = defaultIngestBatchSize
 	}
 
@@ -92,7 +93,7 @@ func ReadAndValidateEnvs(genv GlobalEnv) EnvVars {
 
 	errVal := genv.Validate.Struct(&env)
 	if errVal != nil {
-		genv.Logger.Error("Environment variables validation failed.", "Error", errVal.Error())
+		genv.Logger.WithError(errVal).Error("Environment variables validation failed.")
 		os.Exit(1)
 	}
 

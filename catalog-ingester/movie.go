@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"log/slog"
 	"strconv"
 	"time"
 
 	"github.com/qdrant/go-client/qdrant"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -128,7 +128,7 @@ func GetMovieIDs(movies []Movie) []uint64 {
 	return ids
 }
 
-func getMovies(ctx context.Context, db *gorm.DB, logger *slog.Logger, batchSize int) ([]Movie, error) {
+func getMovies(ctx context.Context, db *gorm.DB, logger *logrus.Logger, batchSize int) ([]Movie, error) {
 	movies := make([]Movie, 0)
 
 	tx := db.Preload("Genres").
@@ -143,12 +143,12 @@ func getMovies(ctx context.Context, db *gorm.DB, logger *slog.Logger, batchSize 
 		return nil, tx.Error
 	}
 
-	logger.InfoContext(ctx, "Fetched movies from DB", "count", len(movies))
-	logger.DebugContext(ctx, "Movie IDs fetched", "ids", GetMovieIDs(movies))
+	logger.WithContext(ctx).WithFields(logrus.Fields{fieldCount: len(movies)}).Info("Fetched movies from DB")
+	logger.WithContext(ctx).WithFields(logrus.Fields{"ids": GetMovieIDs(movies)}).Debug("Movie IDs fetched")
 	return movies, nil
 }
 
-func updateMoviesExistInSearch(ctx context.Context, movies []Movie, db *gorm.DB, logger *slog.Logger) error {
+func updateMoviesExistInSearch(ctx context.Context, movies []Movie, db *gorm.DB, logger *logrus.Logger) error {
 	ids := make([]uint64, len(movies))
 	for i, m := range movies {
 		ids[i] = m.ID
@@ -158,8 +158,10 @@ func updateMoviesExistInSearch(ctx context.Context, movies []Movie, db *gorm.DB,
 	if result.Error != nil {
 		return result.Error
 	}
-	logger.InfoContext(ctx, "Updated movies to be present in search", "count", result.RowsAffected)
-	logger.DebugContext(ctx, "Movie IDs updated to present in search", "ids", ids)
+	logger.WithContext(ctx).
+		WithFields(logrus.Fields{fieldCount: result.RowsAffected}).
+		Info("Updated movies to be present in search")
+	logger.WithContext(ctx).WithFields(logrus.Fields{"ids": ids}).Debug("Movie IDs updated to present in search")
 	return nil
 }
 
