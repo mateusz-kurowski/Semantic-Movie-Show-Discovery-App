@@ -7,7 +7,7 @@
 		"@langfuse/otel": "^5.11.1",
 		"@langfuse/tracing": "^5.11.1",
 		"@langfuse/vercel-ai-sdk": "^5.11.1",
-		"@opentelemetry/sdk-node": "^0.222.0",
+		"@opentelemetry/sdk-node": "^0.301.0",
 		"@paralleldrive/cuid2": "^3.3.0",
 		"@qdrant/js-client-rest": "^1.19.0",
 		"ai": "^7.0.99",
@@ -22,7 +22,7 @@
 		"zod": "^4.6.4"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.5.7",
+		"@biomejs/biome": "2.6.7",
 		"@types/pg": "^8.20.4",
 		"bun-types": "latest",
 		"drizzle-kit": "^0.31.10",
