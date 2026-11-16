@@ -5,7 +5,7 @@
 		"@elysiajs/openapi": "^1.4.15",
 		"@langfuse/client": "^5.11.1",
 		"@langfuse/otel": "^5.11.1",
-		"@langfuse/tracing": "^5.11.1",
+		"@langfuse/tracing": "^6.0.0",
 		"@langfuse/vercel-ai-sdk": "^5.11.1",
 		"@opentelemetry/sdk-node": "^0.222.0",
 		"@paralleldrive/cuid2": "^3.3.0",
