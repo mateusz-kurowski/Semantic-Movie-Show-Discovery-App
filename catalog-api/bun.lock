@@ -9,7 +9,7 @@
         "@elysia/cors": "^1.4.2",
         "@elysiajs/openapi": "^1.4.15",
         "@langfuse/client": "^5.11.1",
-        "@langfuse/otel": "^5.11.1",
+        "@langfuse/otel": "^6.0.0",
         "@langfuse/tracing": "^5.11.1",
         "@langfuse/vercel-ai-sdk": "^5.11.1",
         "@opentelemetry/sdk-node": "^0.222.0",
@@ -27,7 +27,7 @@
         "zod": "^4.6.4",
       },
       "devDependencies": {
-        "@biomejs/biome": "^2.5.7",
+        "@biomejs/biome": "2.5.7",
         "@types/pg": "^8.20.4",
         "bun-types": "latest",
         "drizzle-kit": "^0.31.10",
@@ -159,7 +159,7 @@
 
     "@langfuse/core": ["@langfuse/core@5.11.1", "", { "peerDependencies": { "@opentelemetry/api": "^1.9.0" } }, "sha512-Oor1z4BlgI5RaUrRYYKf3ijyCAx0tiGCWsABzfm6ZDAgbaaFuiwvJVtXGohiq5evcnjGGE5h4Mf4ZjH1yd5vjw=="],
 
-    "@langfuse/otel": ["@langfuse/otel@5.11.1", "", { "dependencies": { "@langfuse/core": "^5.11.1" }, "peerDependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/core": "^2.0.1", "@opentelemetry/exporter-trace-otlp-http": ">=0.202.0 <1.0.0", "@opentelemetry/sdk-trace-base": "^2.0.1" } }, "sha512-Urn2WMvOINh7tNCTrq7qvDvNuA1VkxnJstLAHZghDeo1TFGQE7Ok9GoWmyBEwl6uX3D04TL2vkX9Vr7XDORvxQ=="],
+    "@langfuse/otel": ["@langfuse/otel@6.1.1", "", { "dependencies": { "@langfuse/core": "^6.1.1" }, "peerDependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/core": "^2.0.1", "@opentelemetry/exporter-trace-otlp-http": ">=0.202.0 <0.300.0", "@opentelemetry/otlp-exporter-base": ">=0.202.0 <0.300.0", "@opentelemetry/sdk-trace-base": "^2.0.1" } }, "sha512-6sX7yFL4rTpBSAJi3WdbOuz2wzJUK3wLbUI14v4nWBEeEXOEJyM5j/Y9MJlfT467KNfLxCvNVF4UCf9zzPZjNg=="],
 
     "@langfuse/tracing": ["@langfuse/tracing@5.11.1", "", { "dependencies": { "@langfuse/core": "^5.11.1" }, "peerDependencies": { "@opentelemetry/api": "^1.9.0" } }, "sha512-5lT0VhKSI3P5z3jylAE7Qf+V6GJ6IT0TZhvAQdU5bP0oUx2kRoXcnpdxwqEr7NdKIzaAPiN9E08ehO9wk/8xTA=="],
 
@@ -454,6 +454,8 @@
     "@better-auth/core/zod": ["zod@4.4.3", "", {}, "sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ=="],
 
     "@esbuild-kit/core-utils/esbuild": ["esbuild@0.18.20", "", { "optionalDependencies": { "@esbuild/android-arm": "0.18.20", "@esbuild/android-arm64": "0.18.20", "@esbuild/android-x64": "0.18.20", "@esbuild/darwin-arm64": "0.18.20", "@esbuild/darwin-x64": "0.18.20", "@esbuild/freebsd-arm64": "0.18.20", "@esbuild/freebsd-x64": "0.18.20", "@esbuild/linux-arm": "0.18.20", "@esbuild/linux-arm64": "0.18.20", "@esbuild/linux-ia32": "0.18.20", "@esbuild/linux-loong64": "0.18.20", "@esbuild/linux-mips64el": "0.18.20", "@esbuild/linux-ppc64": "0.18.20", "@esbuild/linux-riscv64": "0.18.20", "@esbuild/linux-s390x": "0.18.20", "@esbuild/linux-x64": "0.18.20", "@esbuild/netbsd-x64": "0.18.20", "@esbuild/openbsd-x64": "0.18.20", "@esbuild/sunos-x64": "0.18.20", "@esbuild/win32-arm64": "0.18.20", "@esbuild/win32-ia32": "0.18.20", "@esbuild/win32-x64": "0.18.20" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-ceqxoedUrcayh7Y7ZX6NdbbDzGROiyVBgC4PriJThBKSVPWnnFHZAkfI1lJT8QFkOwH4qOS2SJkS4wvpGl8BpA=="],
+
+    "@langfuse/otel/@langfuse/core": ["@langfuse/core@6.1.1", "", { "peerDependencies": { "@opentelemetry/api": "^1.9.0" } }, "sha512-vIZBxzbN06P865d8CQHkVOGaFASwoNjX/pQndAQxnX1uUrxGSw1b0oqYlRlirzWzCXhKqBLYjwd68iIv3pfGeg=="],
 
     "better-auth/zod": ["zod@4.4.3", "", {}, "sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ=="],
 
