@@ -4,7 +4,7 @@
 		"@elysia/cors": "^1.4.2",
 		"@elysiajs/openapi": "^1.4.15",
 		"@langfuse/client": "^5.11.1",
-		"@langfuse/otel": "^5.11.1",
+		"@langfuse/otel": "^6.0.0",
 		"@langfuse/tracing": "^5.11.1",
 		"@langfuse/vercel-ai-sdk": "^5.11.1",
 		"@opentelemetry/sdk-node": "^0.222.0",
